@@ -1,6 +1,6 @@
 import pygame
 
-class Menu():
+class Menu:
     def __init__(self, parent, base_color):
         self.base_color = base_color
         self.parent = parent
@@ -10,13 +10,12 @@ class Menu():
     def init_buttons_general(self):
         self.buttons_general = {
             "font": pygame.font.SysFont("Century Gothic", 40),
-            "coords": (200, 200, 500, 600),
+                "coords": (200, 200, 250, 100),
             "layout": (1, 3),
-            "size": 50
         }
-        param_button_start = {"text": "играть", "func": self.parent.game_start}
+        param_button_start = {"text": "играть", "func":lambda: self.parent.display_change("game")}
         param_button_sett = {"text": "настройки", "func":lambda: print("settings")}
-        param_button_quit = {"text": "выход", "func":self.parent.game_quit}
+        param_button_quit = {"text": "выход", "func":self.parent.display_quit}
         array_buttons = [param_button_start, param_button_sett, param_button_quit]
         for key in array_buttons[0].keys(): self.buttons_general[key+"s"] = list(map(lambda b: b[key], array_buttons))
         print("\nINIT MENU GENERAL BUTTONS" + "-"*200)

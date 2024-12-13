@@ -1,11 +1,11 @@
 import pygame
 import pygame_widgets
-from pygame_widgets.button import ButtonArray
+from pygame_widgets.button import ButtonArray, Button
 
 from menu import Menu
 from game import Game
 
-class Main():
+class Main:
     def __init__(self):
         pygame.init()
         pygame.mixer.init()
@@ -23,20 +23,21 @@ class Main():
         }
 
         self.display = pygame.display.set_mode((self.display_w, self.display_h))
-        self.display.fill(self.colors["dark"])
 
         self.menu = Menu(self, self.colors)
         self.game = Game(self, self.colors)
 
+        self.display.fill(self.colors["dark"])
         pygame.display.set_caption("Office Nightmare")
         self.clock = pygame.time.Clock()
 
 
     def buttons(self, coords, layout, texts, fonts, funcs):
         # !!! Если понадобиться разные цвета кнопок - делаем именованный аргумент colors
+        print(texts, coords[0], coords[1], coords[2]*layout[0], coords[3]*layout[1])
         return ButtonArray(
             self.display,  # Surface to place button array on
-            coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1],
+            coords[0], coords[1], coords[2]*layout[0], coords[3]*layout[1],
             layout,
             # border=100,  # Distance between buttons and edge of array
             texts=texts,
@@ -49,20 +50,22 @@ class Main():
             onClicks=funcs
         )
 
-    def button(self, coords, layout, text, font, func):
-        return ButtonArray(
+    def button(self, coords, text, font, func, inv_clr=0):
+        if inv_clr == 1:
+            colour, hoverColour = self.colors["base2"], self.colors["base1"]
+        else:
+            colour, hoverColour = self.colors["base1"], self.colors["base2"]
+        return Button(
             self.display,  # Surface to place button array on
-            coords[0], coords[1], coords[2] - coords[0], coords[3] - coords[1],
-            layout,
+            coords[0], coords[1], coords[2], coords[3],
             # border=100,  # Distance between buttons and edge of array
-            texts=text,
-            fonts=font,
-            colour=self.colors["base2"],
-            inactiveColour=self.colors["base1"],  # Colour of button when not being interacted with
-            hoverColour=self.colors["base2"],  # Colour of button when being hovered over
-            pressedColours=self.colors["light"],  # Colour of button when being clicked
-            textColours=self.colors["light"],
-            onClicks=func
+            text=text,
+            font=font,
+            colour=colour,
+            hoverColour=hoverColour,  # Colour of button when being hovered over
+            pressedColour=self.colors["light"],  # Colour of button when being clicked
+            textColour=self.colors["light"],
+            onClick=func
         )
 
     def label_text(self, coords, text, font):
@@ -72,11 +75,11 @@ class Main():
         pygame.display.update()
         return res_label
 
-    def game_quit(self):
+    def display_quit(self):
         self.running = 0
 
-    def game_start(self):
-        self.type_display = "game"
+    def display_change(self, type_display):
+        self.type_display = type_display
 
     def show(self):
         while self.running:
