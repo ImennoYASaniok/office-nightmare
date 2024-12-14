@@ -11,7 +11,7 @@ class Main:
         pygame.mixer.init()
 
         self.display_w, self.display_h = pygame.display.Info().current_w-10,pygame.display.Info().current_h-50
-        self.fps = 30
+        self.FPS = 30
         self.running = 1
         self.type_display = "menu"
         self.flag_type_display = 0 # 0 - menu | 1 - game
@@ -30,11 +30,12 @@ class Main:
         self.display.fill(self.colors["dark"])
         pygame.display.set_caption("Office Nightmare")
         self.clock = pygame.time.Clock()
+        self.clock.tick(self.FPS)
 
 
     def buttons(self, coords, layout, texts, fonts, funcs):
         # !!! Если понадобиться разные цвета кнопок - делаем именованный аргумент colors
-        print(texts, coords[0], coords[1], coords[2]*layout[0], coords[3]*layout[1])
+        # print(texts, coords[0], coords[1], coords[2]*layout[0], coords[3]*layout[1])
         return ButtonArray(
             self.display,  # Surface to place button array on
             coords[0], coords[1], coords[2]*layout[0], coords[3]*layout[1],
@@ -84,24 +85,24 @@ class Main:
     def show(self):
         while self.running:
             events = pygame.event.get()
-            self.clock.tick(self.fps)
 
             if self.type_display == "menu" and self.flag_type_display == 0:
-                print(self.type_display, self.flag_type_display)
                 self.display.fill(self.colors["dark"])
                 self.menu.reinstall("show")
                 self.game.reinstall("hide")
+                print(self.type_display, self.flag_type_display)
                 self.flag_type_display = 1
             elif self.type_display == "game" and self.flag_type_display == 1:
-                print(self.type_display, self.flag_type_display)
                 self.display.fill(self.colors["dark"])
                 self.menu.reinstall("hide")
                 self.game.reinstall("show")
+                print(self.type_display, self.flag_type_display)
                 self.flag_type_display = 0
-
 
             for event in events:
                 if event.type == pygame.QUIT: self.running = False
+                if self.type_display == "game":
+                    self.game.check_event(event)
             pygame_widgets.update(events)
             pygame.display.update()
 

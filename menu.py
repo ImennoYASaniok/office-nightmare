@@ -18,9 +18,9 @@ class Menu:
         param_button_quit = {"text": "выход", "func":self.parent.display_quit}
         array_buttons = [param_button_start, param_button_sett, param_button_quit]
         for key in array_buttons[0].keys(): self.buttons_general[key+"s"] = list(map(lambda b: b[key], array_buttons))
-        print("\nINIT MENU GENERAL BUTTONS" + "-"*200)
-        print(*list(map(lambda x: f"{x[0]}: {x[1]}", self.buttons_general.items())), sep="\n") # ({len(x[1]) if type(x[1]) not in (int, pygame.font.Font, None) else None})
-        print("-"*200 + "\n")
+        # print("\nINIT MENU GENERAL BUTTONS" + "-"*200)
+        # print(*list(map(lambda x: f"{x[0]}: {x[1]}", self.buttons_general.items())), sep="\n") # ({len(x[1]) if type(x[1]) not in (int, pygame.font.Font, None) else None})
+        # print("-"*200 + "\n")
         self.buttons_general["buttons"] = self.parent.buttons(coords=self.buttons_general["coords"],
                                                           layout=self.buttons_general["layout"],
                                                           fonts=[self.buttons_general["font"]] * len(array_buttons),
@@ -43,6 +43,6 @@ class Menu:
         if _type == "hide":
             self.buttons_general["buttons"].hide()
         elif _type == "show":
-            self.init_buttons_general()
+            self.buttons_general["buttons"].show()
             self.parent.display.blit(self.label_title["label"], self.label_title["coords"])
 

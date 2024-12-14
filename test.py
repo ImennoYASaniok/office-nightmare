@@ -77,35 +77,63 @@
 #     )
 
 # label text
-import pygame as pg
-import sys
+import pygame
 
-pg.init()
+class Main:
+    def __init__(self):
+        pygame.init()
+        pygame.mixer.init()
+        self.display = pygame.display.set_mode((800, 800))
+        self.clock = pygame.time.Clock()
+        self.clock.tick(30)
 
-sc = pg.display.set_mode((400, 300))
-sc.fill((200, 255, 200))
+        self.running = True
+        # self.surf = pygame.Surface((300, 300))
+        # self.surf.fill((255, 255, 255))
+        # self.rect = pygame.Rect(20, 20, 20, 20)
+        # self.display.blit(self.surf, self.rect)
+        pygame.draw.rect(
+            self.display, (255, 255, 255), (50, 50, 100, 100),
+        )
 
-font = pg.font.Font(None, 72)
-text = font.render("Hello Wold", True, (0, 100, 0))
-place = text.get_rect(center=(200, 150))
-sc.blit(text, place)
+    def show(self):
+        while self.running:
+            events = pygame.event.get()
 
-pg.display.update()
+            for event in events:
+                if event.type == pygame.QUIT: self.running = False
+            pygame.display.update()
 
-while 1:
-    for i in pg.event.get():
-        if i.type == pg.QUIT:
-            sys.exit()
+if __name__ == "__main__":
+    menu = Main()
+    menu.show()
 
-    pressed = pg.key.get_pressed()
-    if pressed[pg.K_LEFT]:
-        place.x -= 1
-    elif pressed[pg.K_RIGHT]:
-        place.x += 1
-
-    sc.fill((200, 255, 200))
-    sc.blit(text, place)
-
-    pg.display.update()
-
-    pg.time.delay(20)
+# import pygame
+# import sys
+#
+# GREEN = (200, 255, 200)
+# WHITE = (255, 255, 255)
+#
+# sc = pygame.display.set_mode((300, 300))
+#
+# surf = pygame.Surface((100, 100))
+# surf.fill(WHITE)
+#
+# rect = surf.get_rect()  # создается экземпляр Rect
+#
+# print(surf.get_width())  # 100
+# print(rect.width)  # 100
+# print(rect.x, rect.y)  # 0 0
+#
+# while 1:
+#     for i in pygame.event.get():
+#         if i.type == pygame.QUIT:
+#             sys.exit()
+#
+#     sc.fill(GREEN)
+#     sc.blit(surf, rect)
+#     pygame.display.update()
+#
+#     rect.x += 1
+#
+#     pygame.time.delay(20)
