@@ -5,6 +5,7 @@ from pygame_widgets.button import ButtonArray, Button
 from menu import Menu
 from game import Game
 
+# 35% моего ЦП при запуске игры сьедает виджеты библиотеки pygame_widgets, в дальнейшем это может стать проблемой оптимизации
 class Main:
     def __init__(self):
         pygame.init()
@@ -19,7 +20,8 @@ class Main:
             "light": (187, 148, 87),
             "base1": (153, 88, 42),
             "base2": (111, 29, 27),
-            "dark": (67, 40, 24)
+            "dark": (67, 40, 24),
+            "black": (0, 0, 0)
         }
 
         self.display = pygame.display.set_mode((self.display_w, self.display_h))
@@ -76,6 +78,19 @@ class Main:
         pygame.display.update()
         return res_label
 
+    def format_commands(self, commands):
+        res_commands = {}
+        for type_key, type_val in commands.items():
+            res_commands[type_key] = {}
+            # print("---------------")
+            # print(type_val)
+            for key, val in type_val.items():
+                if type(key) in (list, tuple):
+                    for mini_key in key: res_commands[type_key][mini_key] = val
+                else:
+                    res_commands[key] = val
+        return res_commands
+
     def display_quit(self):
         self.running = 0
 
@@ -93,7 +108,7 @@ class Main:
                 print(self.type_display, self.flag_type_display)
                 self.flag_type_display = 1
             elif self.type_display == "game" and self.flag_type_display == 1:
-                self.display.fill(self.colors["dark"])
+                self.display.fill(self.colors["black"])
                 self.menu.reinstall("hide")
                 self.game.reinstall("show")
                 print(self.type_display, self.flag_type_display)
@@ -103,6 +118,9 @@ class Main:
                 if event.type == pygame.QUIT: self.running = False
                 if self.type_display == "game":
                     self.game.check_event(event)
+            if self.type_display == "game":
+                self.game.draw()
+
             pygame_widgets.update(events)
             pygame.display.update()
 

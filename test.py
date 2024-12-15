@@ -77,36 +77,36 @@
 #     )
 
 # label text
-import pygame
-
-class Main:
-    def __init__(self):
-        pygame.init()
-        pygame.mixer.init()
-        self.display = pygame.display.set_mode((800, 800))
-        self.clock = pygame.time.Clock()
-        self.clock.tick(30)
-
-        self.running = True
-        # self.surf = pygame.Surface((300, 300))
-        # self.surf.fill((255, 255, 255))
-        # self.rect = pygame.Rect(20, 20, 20, 20)
-        # self.display.blit(self.surf, self.rect)
-        pygame.draw.rect(
-            self.display, (255, 255, 255), (50, 50, 100, 100),
-        )
-
-    def show(self):
-        while self.running:
-            events = pygame.event.get()
-
-            for event in events:
-                if event.type == pygame.QUIT: self.running = False
-            pygame.display.update()
-
-if __name__ == "__main__":
-    menu = Main()
-    menu.show()
+# import pygame
+#
+# class Main:
+#     def __init__(self):
+#         pygame.init()
+#         pygame.mixer.init()
+#         self.display = pygame.display.set_mode((800, 800))
+#         self.clock = pygame.time.Clock()
+#         self.clock.tick(30)
+#
+#         self.running = True
+#         # self.surf = pygame.Surface((300, 300))
+#         # self.surf.fill((255, 255, 255))
+#         # self.rect = pygame.Rect(20, 20, 20, 20)
+#         # self.display.blit(self.surf, self.rect)
+#         pygame.draw.rect(
+#             self.display, (255, 255, 255), (50, 50, 100, 100),
+#         )
+#
+#     def show(self):
+#         while self.running:
+#             events = pygame.event.get()
+#
+#             for event in events:
+#                 if event.type == pygame.QUIT: self.running = False
+#             pygame.display.update()
+#
+# if __name__ == "__main__":
+#     menu = Main()
+#     menu.show()
 
 # import pygame
 # import sys
@@ -137,3 +137,51 @@ if __name__ == "__main__":
 #     rect.x += 1
 #
 #     pygame.time.delay(20)
+
+
+
+
+
+
+
+# Проверка нажатий
+import pygame
+
+class Main:
+    def __init__(self):
+        pygame.init()
+        pygame.mixer.init()
+        self.display = pygame.display.set_mode((800, 800))
+        self.clock = pygame.time.Clock()
+        self.clock.tick(30)
+
+        self.running = True
+        # self.surf = pygame.Surface((300, 300))
+        # self.surf.fill((255, 255, 255))
+        # self.rect = pygame.Rect(20, 20, 20, 20)
+        # self.display.blit(self.surf, self.rect)
+        pygame.draw.rect(
+            self.display, (255, 255, 255), (50, 50, 100, 100),
+        )
+        self.type_key = 0
+
+
+    def show(self):
+        while self.running:
+            events = pygame.event.get()
+
+            for event in events:
+                if event.type == pygame.QUIT: self.running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_w: self.type_key = 1
+                elif event.type == pygame.KEYUP:
+                    if event.key == pygame.K_w: self.type_key = 0
+            if self.type_key == 1:
+                print("press")
+            else:
+                print("not press")
+            pygame.display.update()
+
+if __name__ == "__main__":
+    menu = Main()
+    menu.show()
