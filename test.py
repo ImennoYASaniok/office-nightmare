@@ -145,43 +145,120 @@
 
 
 # Проверка нажатий
-import pygame
+# import pygame
+#
+# class Main:
+#     def __init__(self):
+#         pygame.init()
+#         pygame.mixer.init()
+#         self.display = pygame.display.set_mode((800, 800))
+#         self.clock = pygame.time.Clock()
+#         self.clock.tick(30)
+#
+#         self.running = True
+#         # self.surf = pygame.Surface((300, 300))
+#         # self.surf.fill((255, 255, 255))
+#         # self.rect = pygame.Rect(20, 20, 20, 20)
+#         # self.display.blit(self.surf, self.rect)
+#         pygame.draw.rect(
+#             self.display, (255, 255, 255), (50, 50, 100, 100),
+#         )
+#         self.type_key = 0
+#
+#
+#     def show(self):
+#         while self.running:
+#             events = pygame.event.get()
+#
+#             for event in events:
+#                 if event.type == pygame.QUIT: self.running = False
+#                 elif event.type == pygame.KEYDOWN:
+#                     if event.key == pygame.K_w: self.type_key = 1
+#                 elif event.type == pygame.KEYUP:
+#                     if event.key == pygame.K_w: self.type_key = 0
+#             if self.type_key == 1:
+#                 print("press")
+#             else:
+#                 print("not press")
+#             pygame.display.update()
+#
+# if __name__ == "__main__":
+#     menu = Main()
+#     menu.show()
 
-class Main:
-    def __init__(self):
-        pygame.init()
-        pygame.mixer.init()
-        self.display = pygame.display.set_mode((800, 800))
-        self.clock = pygame.time.Clock()
-        self.clock.tick(30)
-
-        self.running = True
-        # self.surf = pygame.Surface((300, 300))
-        # self.surf.fill((255, 255, 255))
-        # self.rect = pygame.Rect(20, 20, 20, 20)
-        # self.display.blit(self.surf, self.rect)
-        pygame.draw.rect(
-            self.display, (255, 255, 255), (50, 50, 100, 100),
-        )
-        self.type_key = 0
 
 
-    def show(self):
-        while self.running:
-            events = pygame.event.get()
 
-            for event in events:
-                if event.type == pygame.QUIT: self.running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_w: self.type_key = 1
-                elif event.type == pygame.KEYUP:
-                    if event.key == pygame.K_w: self.type_key = 0
-            if self.type_key == 1:
-                print("press")
-            else:
-                print("not press")
-            pygame.display.update()
 
-if __name__ == "__main__":
-    menu = Main()
-    menu.show()
+
+
+
+
+
+
+
+
+
+
+import pygame as pg
+import sys
+import random as rnd
+
+pg.init()
+win = pg.display.set_mode((500, 500))
+background = pg.image.load("background.png").convert()
+##  Рекомендую использовать .convert(), иначе будет сильно лагать
+
+class cam:
+    def __init__(self, x, y):
+        self.rect = pg.Rect(x, y, 500, 500)
+
+    def move(self, vector):
+        self.rect[0] += vector[0]
+        self.rect[1] += vector[1]
+
+class Player:
+    def __init__(self, x, y):
+        self.rect = pg.Rect(x, y, 10, 10)
+
+    def move(self, vector):
+        self.rect[0] += vector[0]
+        self.rect[1] += vector[1]
+
+    def draw(self):
+        ##  Игрок на самом окне не двигается, двигается мир вокруг него
+        pg.draw.rect(win, (0, 0, 0), (240, 240, 10, 10))
+
+player = Player(0, 0)
+camera = cam(0, 0)
+
+while 1:
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            pg.quit()
+            sys.exit()
+
+    vector = [0, 0]
+
+    kpressed = pg.key.get_pressed()
+    if kpressed[pg.K_UP]:
+        vector[1] -= 3
+    elif kpressed[pg.K_DOWN]:
+        vector[1] += 3
+
+    if kpressed[pg.K_LEFT]:
+        vector[0] -= 3
+    elif kpressed[pg.K_RIGHT]:
+        vector[0] += 3
+
+    ##  Если игрок ходил
+    if vector != [0, 0]:
+        player.move(vector)
+        camera.move(vector)
+
+    win.fill((255, 255, 255))
+    win.blit(background, (-camera.rect[0], -camera.rect[1]))
+    player.draw()
+
+    pg.display.flip() ##    = pg.display.update()
+    pg.time.wait(30)

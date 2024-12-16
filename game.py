@@ -1,6 +1,17 @@
 import pygame
 import numpy as np
 
+class Map:
+    def __init__(self):
+        self.info = {
+            "#": {
+                "w": 50, "h": 50,
+                "sprite": (0, 0, 255)
+            }
+        }
+        self.map = []
+
+
 class Character:
     def __init__(self, parent, base_color, container_flags):
         self.container_flags = container_flags
@@ -15,6 +26,7 @@ class Character:
                 (pygame.K_UP, pygame.K_w): lambda: self.set_flag("key_up", 1), # lambda: print("character - back"),
                 (pygame.K_LEFT, pygame.K_a): lambda: self.set_flag("key_left", 1), # lambda: print("character - left"),
                 (pygame.K_RIGHT, pygame.K_d): lambda: self.set_flag("key_right", 1), # lambda: print("character - right")
+                (pygame.K_RCTRL, pygame.K_LCTRL): lambda: self.set_delta_move(self.character["delta_sneak"]),
                 (pygame.K_RSHIFT, pygame.K_LSHIFT): lambda: self.set_delta_move(self.character["delta_run"])
             },
             pygame.KEYUP: {
@@ -22,17 +34,19 @@ class Character:
                 (pygame.K_UP, pygame.K_w): lambda: self.set_flag("key_up", 0),
                 (pygame.K_LEFT, pygame.K_a): lambda: self.set_flag("key_left", 0),
                 (pygame.K_RIGHT, pygame.K_d): lambda: self.set_flag("key_right", 0),
-                (pygame.K_RSHIFT, pygame.K_LSHIFT): lambda: self.set_delta_move(self.character["delta_move"])
+                (pygame.K_RCTRL, pygame.K_LCTRL, pygame.K_RSHIFT, pygame.K_LSHIFT): lambda: self.set_delta_move(self.character["delta_move"])
             }
         }
         self.commands = self.parent.format_commands(self.commands)
-        print("GAME: ", self.commands)
+        print("CHARACTER: ", self.commands)
 
     def set_flag(self, key, val):
         self.character["flags"][key] = val
 
     def set_delta_move(self, delta):
+        # print(delta)
         if  self.character["delta_run"] == delta: self.character["cond"] = "run"
+        elif self.character["delta_sneak"] == delta: self.character["cond"] = "sneak"
         else: self.character["cond"] = "move"
         self.character["delta"] = delta
 
@@ -67,16 +81,22 @@ class Character:
         self.character = {
             "type_cond": {
                 "move": {
-                    "front": (100, 0, 0),
-                    "back": (100, 100, 0),
-                    "left": (0, 100, 0),
-                    "right": (50, 100, 50)
+                    "front": (150, 0, 0),
+                    "back": (150, 150, 0),
+                    "left": (0, 150, 0),
+                    "right": (70, 150, 70)
                 },
                 "run": {
                     "front": (255, 0, 0),
                     "back": (255, 255, 0),
                     "left": (0, 255, 0),
-                    "right": (100, 255, 100)
+                    "right": (100, 255, 150)
+                },
+                "sneak": {
+                    "front": (80, 0, 0),
+                    "back": (80, 80, 0),
+                    "left": (0, 80, 0),
+                    "right": (40, 80, 40)
                 },
                 "stand": {
                     "base": (255, 255, 255)
@@ -90,9 +110,10 @@ class Character:
             },
             "dir" : "base",
             "cond": "stand",
-            "delta_move": 1,
-            "delta_run": 3,
-            "delta": 1,
+            "delta_sneak": 3,
+            "delta_move": 5,
+            "delta_run": 7,
+            "delta": 2,
             "coords": [self.parent.display_w // 2, self.parent.display_h // 2, 50, 70]
         }
         self.character["coords"][0] -= self.character["coords"][2] / 2
@@ -118,15 +139,23 @@ class Game:
         self.init_button_menu()
 
         self.character = Character(self.parent, self.base_color, self.container_flags)
-        self.commands = {}
+
+        self.commands = {
+            pygame.KEYDOWN: {
+                pygame.K_ESCAPE: lambda: self.parent.display_change("menu"),
+                pygame.K_0: lambda: self.parent.display_change("final", dop_type="victory"),
+                pygame.K_9: lambda: self.parent.display_change("final", dop_type="fail")
+            }
+        }
+        self.commands = self.parent.format_commands(self.commands)
+        print("GAME: ", self.commands)
         self.list_comands = [self.commands, self.character.commands]
-        print(*self.commands.items(), sep="\n")
 
 
     def init_label_test(self):
         # !!! Если нужно будет создавать много label -> сделай init_label_title общей для всех и возвращай label_title
         self.label_test = {
-            "coords": (20, 20),
+            "coords": [20, 20],
             "text": "здесь будет игра",
             "font": pygame.font.SysFont("Century Gothic", 40),
             "label": None
@@ -134,6 +163,8 @@ class Game:
         self.label_test["label"] = self.parent.label_text(coords=self.label_test["coords"],
                                                            text=self.label_test["text"],
                                                            font=self.label_test["font"])
+        # self.label_test["coords"][2] = self.label_test["label"].get_width()
+        # self.label_test["coords"][3] = self.label_test["label"].get_height()
 
     def init_button_menu(self):
         w, h = 80, 50
@@ -144,7 +175,7 @@ class Game:
             "func": lambda: self.parent.display_change("menu"),
             "inv_clr":1
         }
-        self.button_ToMenu["buttons"] = self.parent.button(coords=self.button_ToMenu["coords"],
+        self.button_ToMenu["button"] = self.parent.button(coords=self.button_ToMenu["coords"],
                                                               text=self.button_ToMenu["text"],
                                                               font=self.button_ToMenu["font"],
                                                               func=self.button_ToMenu["func"],
@@ -152,13 +183,14 @@ class Game:
 
     def reinstall(self, _type):
         if _type == "hide":
-            self.button_ToMenu["buttons"].hide()
+            self.button_ToMenu["button"].hide()
         elif _type == "show":
+            self.parent.display.fill(self.base_color["black"])
             self.draw()
-            self.button_ToMenu["buttons"].show()
+            self.button_ToMenu["button"].show()
 
     def draw(self):
-        self.parent.display.fill(self.base_color["dark"])
+        self.parent.display.fill(self.base_color["black"])
         self.character.udpate()
         self.parent.display.blit(self.label_test["label"], self.label_test["coords"])
 

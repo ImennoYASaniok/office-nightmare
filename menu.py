@@ -43,6 +43,7 @@ class Menu:
         if _type == "hide":
             self.buttons_general["buttons"].hide()
         elif _type == "show":
+            self.parent.display.fill(self.base_color["dark"])
             self.buttons_general["buttons"].show()
             self.parent.display.blit(self.label_title["label"], self.label_title["coords"])
 

@@ -1,9 +1,11 @@
 import pygame
 import pygame_widgets
 from pygame_widgets.button import ButtonArray, Button
+import numpy as np
 
 from menu import Menu
 from game import Game
+from final import Final
 
 # 35% моего ЦП при запуске игры сьедает виджеты библиотеки pygame_widgets, в дальнейшем это может стать проблемой оптимизации
 class Main:
@@ -12,10 +14,10 @@ class Main:
         pygame.mixer.init()
 
         self.display_w, self.display_h = pygame.display.Info().current_w-10,pygame.display.Info().current_h-50
-        self.FPS = 30
+        self.FPS = 60
         self.running = 1
-        self.type_display = "menu"
-        self.flag_type_display = 0 # 0 - menu | 1 - game
+        self.type_display, self.flag_type_display = "menu", 1 # 0 - None | 1 - menu | 2 - game | 3 - final
+        self.list_type_display = np.array([None, "menu", "game", "final"])
         self.colors = {
             "light": (187, 148, 87),
             "base1": (153, 88, 42),
@@ -28,11 +30,12 @@ class Main:
 
         self.menu = Menu(self, self.colors)
         self.game = Game(self, self.colors)
+        self.final = Final(self, self.colors)
+        self.list_displays = [self.menu, self.game, self.final]
 
         self.display.fill(self.colors["dark"])
         pygame.display.set_caption("Office Nightmare")
         self.clock = pygame.time.Clock()
-        self.clock.tick(self.FPS)
 
 
     def buttons(self, coords, layout, texts, fonts, funcs):
@@ -78,6 +81,16 @@ class Main:
         pygame.display.update()
         return res_label
 
+    def align(self, obj, key_obj, key_coord, type_align="center"):
+        print(type(obj[key_obj]))
+        # if type_align == "horizontal":
+        #     if type(obj[key_obj]) == pygame.surface.Surface:
+        #         obj[key_coord] =
+        # if type(obj[key_obj]) == pygame.surface.Surface:
+        #     self.display.blit(obj[key_obj], obj[key_coord])
+
+
+
     def format_commands(self, commands):
         res_commands = {}
         for type_key, type_val in commands.items():
@@ -88,31 +101,46 @@ class Main:
                 if type(key) in (list, tuple):
                     for mini_key in key: res_commands[type_key][mini_key] = val
                 else:
-                    res_commands[key] = val
+                    res_commands[type_key][key] = val
         return res_commands
 
     def display_quit(self):
         self.running = 0
 
-    def display_change(self, type_display):
+    def display_change(self, type_display, dop_type=None):
+        self.flag_type_display = np.where(self.list_type_display==type_display)[0][0]
+        if type_display == "final": self.final.set_final(dop_type)
         self.type_display = type_display
 
     def show(self):
         while self.running:
             events = pygame.event.get()
 
-            if self.type_display == "menu" and self.flag_type_display == 0:
-                self.display.fill(self.colors["dark"])
-                self.menu.reinstall("show")
+            if self.type_display == "menu" and self.flag_type_display == 1:
+                # for disp in self.list_displays: disp.reinstall("hide")
+                # self.menu.reinstall("show")
                 self.game.reinstall("hide")
-                print(self.type_display, self.flag_type_display)
-                self.flag_type_display = 1
-            elif self.type_display == "game" and self.flag_type_display == 1:
-                self.display.fill(self.colors["black"])
+                self.final.reinstall("hide")
+                self.menu.reinstall("show")
+                self.flag_type_display = 0
+            elif self.type_display == "game" and self.flag_type_display == 2:
+                # for disp in self.list_displays: disp.reinstall("hide")
+                # self.game.reinstall("show")
                 self.menu.reinstall("hide")
+                self.final.reinstall("hide")
                 self.game.reinstall("show")
+                self.flag_type_display = 0
+            elif self.type_display == "final" and self.flag_type_display == 3:
+                # for disp in self.list_displays: disp.reinstall("hide")
+                # self.final.reinstall("show")
+                self.menu.reinstall("hide")
+                self.game.reinstall("hide")
+                self.final.reinstall("show")
+                self.flag_type_display = 0
+            if self.flag_type_display != 0:
                 print(self.type_display, self.flag_type_display)
                 self.flag_type_display = 0
+
 
             for event in events:
                 if event.type == pygame.QUIT: self.running = False
@@ -123,6 +151,8 @@ class Main:
 
             pygame_widgets.update(events)
             pygame.display.update()
+
+            self.clock.tick(self.FPS)
 
 if __name__ == "__main__":
     menu = Main()
