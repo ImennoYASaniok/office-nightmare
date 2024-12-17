@@ -6,18 +6,20 @@ import numpy as np
 from menu import Menu
 from game import Game
 from final import Final
+from settings import Settings
+from refer import Refer
 
-# 35% моего ЦП при запуске игры сьедает виджеты библиотеки pygame_widgets, в дальнейшем это может стать проблемой оптимизации
+# 35% моего ЦП при запуске игры съедает виджеты библиотеки pygame_widgets, в дальнейшем это может стать проблемой оптимизации
 class Main:
     def __init__(self):
         pygame.init()
-        pygame.mixer.init()
+        # pygame.mixer.init()
 
         self.display_w, self.display_h = pygame.display.Info().current_w-10,pygame.display.Info().current_h-50
         self.FPS = 60
         self.running = 1
         self.type_display, self.flag_type_display = "menu", 1 # 0 - None | 1 - menu | 2 - game | 3 - final
-        self.list_type_display = np.array([None, "menu", "game", "final"])
+        self.list_type_display = np.array([None, "menu", "game", "final", "settings", "refer"])
         self.colors = {
             "light": (187, 148, 87),
             "base1": (153, 88, 42),
@@ -31,7 +33,9 @@ class Main:
         self.menu = Menu(self, self.colors)
         self.game = Game(self, self.colors)
         self.final = Final(self, self.colors)
-        self.list_displays = [self.menu, self.game, self.final]
+        self.sett = Settings(self, self.colors)
+        self.refer = Refer(self, self.colors)
+        self.list_displays = [self.menu, self.game, self.final, self.sett, self.refer]
 
         self.display.fill(self.colors["dark"])
         pygame.display.set_caption("Office Nightmare")
@@ -81,15 +85,32 @@ class Main:
         pygame.display.update()
         return res_label
 
-    def align(self, obj, key_obj, key_coord, type_align="center"):
-        print(type(obj[key_obj]))
-        # if type_align == "horizontal":
-        #     if type(obj[key_obj]) == pygame.surface.Surface:
-        #         obj[key_coord] =
-        # if type(obj[key_obj]) == pygame.surface.Surface:
-        #     self.display.blit(obj[key_obj], obj[key_coord])
-
-
+    def align(self, obj, coords, inacurr=(0, 0), type_blit=False, type_align="center"):
+        # Это будет общая функция централизации любого объекта
+        if type(coords) == tuple: coords = list(coords)
+        inacurr_w, inacurr_h = 0, 0
+        if type(inacurr) == int: inacurr_w = inacurr
+        if type(inacurr) == tuple: inacurr = list(inacurr)
+        if type(inacurr) == list:
+            if len(inacurr) == 1: inacurr_w = inacurr[0]
+            elif len(inacurr) == 2: inacurr_w, inacurr_h = inacurr
+        print(type(obj))
+        if type_align == "horizontal":
+            if type(obj) == pygame.surface.Surface:
+                coords[0] = (self.display.get_width() - obj.get_width()) // 2 + inacurr_w
+        elif type_align == "vertical":
+            if type(obj) == pygame.surface.Surface:
+                coords[1] = (self.display.get_height() - obj.get_height()) // 2 + inacurr_h
+        elif type_align == "center":
+            if type(obj) == pygame.surface.Surface:
+                coords[0] = (self.display.get_width() - obj.get_width()) // 2 + inacurr_w
+                coords[1] = (self.display.get_height() - obj.get_height()) // 2 + inacurr_h
+        else:
+            raise TypeError("Align type must be 'horizontal' or 'vertical' or 'center'")
+        if type_blit == True:
+            if type(obj) == pygame.surface.Surface:
+                self.display.blit(obj, coords)
+        return obj, coords
 
     def format_commands(self, commands):
         res_commands = {}
@@ -117,25 +138,24 @@ class Main:
             events = pygame.event.get()
 
             if self.type_display == "menu" and self.flag_type_display == 1:
-                # for disp in self.list_displays: disp.reinstall("hide")
-                # self.menu.reinstall("show")
-                self.game.reinstall("hide")
-                self.final.reinstall("hide")
+                for disp in self.list_displays: disp.reinstall("hide")
                 self.menu.reinstall("show")
                 self.flag_type_display = 0
             elif self.type_display == "game" and self.flag_type_display == 2:
-                # for disp in self.list_displays: disp.reinstall("hide")
-                # self.game.reinstall("show")
-                self.menu.reinstall("hide")
-                self.final.reinstall("hide")
+                for disp in self.list_displays: disp.reinstall("hide")
                 self.game.reinstall("show")
                 self.flag_type_display = 0
             elif self.type_display == "final" and self.flag_type_display == 3:
-                # for disp in self.list_displays: disp.reinstall("hide")
-                # self.final.reinstall("show")
-                self.menu.reinstall("hide")
-                self.game.reinstall("hide")
+                for disp in self.list_displays: disp.reinstall("hide")
                 self.final.reinstall("show")
+                self.flag_type_display = 0
+            elif self.type_display == "settings" and self.flag_type_display == 4:
+                for disp in self.list_displays: disp.reinstall("hide")
+                self.sett.reinstall("show")
+                self.flag_type_display = 0
+            elif self.type_display == "refer" and self.flag_type_display == 5:
+                for disp in self.list_displays: disp.reinstall("hide")
+                self.refer.reinstall("show")
                 self.flag_type_display = 0
             if self.flag_type_display != 0:
                 print(self.type_display, self.flag_type_display)

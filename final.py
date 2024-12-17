@@ -29,13 +29,15 @@ class Final:
 
     def set_label_title(self):
         label = {
-            "coords": (self.parent.display_w // 2, 20),
+            "coords": [self.parent.display_w // 2, 20],
             "text": self.types_final[self.types_final["type"]]["text"],
             "font": pygame.font.SysFont("Century Gothic", 40)
         }
         label["label"] = self.parent.label_text(coords=label["coords"],
                                                 text=label["text"],
                                                 font=label["font"])
+        label["label"], label["coords"] = self.parent.align(label["label"], label["coords"],
+                                                            inacurr=-20, type_blit=False, type_align="horizontal")
         return label
 
     def init_button_OK(self):

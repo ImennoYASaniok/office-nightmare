@@ -135,7 +135,6 @@ class Game:
         self.parent = parent
         self.container_flags = {}
 
-        self.init_label_test()
         self.init_button_menu()
 
         self.character = Character(self.parent, self.base_color, self.container_flags)
@@ -150,21 +149,6 @@ class Game:
         self.commands = self.parent.format_commands(self.commands)
         print("GAME: ", self.commands)
         self.list_comands = [self.commands, self.character.commands]
-
-
-    def init_label_test(self):
-        # !!! Если нужно будет создавать много label -> сделай init_label_title общей для всех и возвращай label_title
-        self.label_test = {
-            "coords": [20, 20],
-            "text": "здесь будет игра",
-            "font": pygame.font.SysFont("Century Gothic", 40),
-            "label": None
-        }
-        self.label_test["label"] = self.parent.label_text(coords=self.label_test["coords"],
-                                                           text=self.label_test["text"],
-                                                           font=self.label_test["font"])
-        # self.label_test["coords"][2] = self.label_test["label"].get_width()
-        # self.label_test["coords"][3] = self.label_test["label"].get_height()
 
     def init_button_menu(self):
         w, h = 80, 50
@@ -192,7 +176,6 @@ class Game:
     def draw(self):
         self.parent.display.fill(self.base_color["black"])
         self.character.udpate()
-        self.parent.display.blit(self.label_test["label"], self.label_test["coords"])
 
     def check_event(self, event):
         for commands in self.list_comands:

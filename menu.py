@@ -11,22 +11,23 @@ class Menu:
         self.buttons_general = {
             "font": pygame.font.SysFont("Century Gothic", 40),
                 "coords": (200, 200, 250, 100),
-            "layout": (1, 3),
+            "layout": [1, 4],
         }
         param_button_start = {"text": "играть", "func":lambda: self.parent.display_change("game")}
-        param_button_sett = {"text": "настройки", "func":lambda: print("settings")}
+        param_button_sett = {"text": "настройки", "func":lambda: self.parent.display_change("settings")}
+        param_button_refer = {"text": "справка", "func":lambda: self.parent.display_change("refer")}
         param_button_quit = {"text": "выход", "func":self.parent.display_quit}
-        array_buttons = [param_button_start, param_button_sett, param_button_quit]
+        array_buttons = [param_button_start, param_button_sett, param_button_refer, param_button_quit]
+        self.buttons_general["layout"][1] = len(array_buttons)
         for key in array_buttons[0].keys(): self.buttons_general[key+"s"] = list(map(lambda b: b[key], array_buttons))
-        # print("\nINIT MENU GENERAL BUTTONS" + "-"*200)
-        # print(*list(map(lambda x: f"{x[0]}: {x[1]}", self.buttons_general.items())), sep="\n") # ({len(x[1]) if type(x[1]) not in (int, pygame.font.Font, None) else None})
-        # print("-"*200 + "\n")
+        print("\nINIT MENU GENERAL BUTTONS" + "-"*200)
+        print(*list(map(lambda x: f"{x[0]}: {x[1]}", self.buttons_general.items())), sep="\n") # ({len(x[1]) if type(x[1]) not in (int, pygame.font.Font, None) else None})
+        print("-"*200 + "\n")
         self.buttons_general["buttons"] = self.parent.buttons(coords=self.buttons_general["coords"],
                                                           layout=self.buttons_general["layout"],
                                                           fonts=[self.buttons_general["font"]] * len(array_buttons),
                                                           texts=self.buttons_general["texts"],
                                                           funcs=self.buttons_general["funcs"])
-
 
     def init_label_title(self):
         # !!! Если нужно будет создавать много label -> сделай init_label_title общей для всех и возвращай label_title
@@ -38,6 +39,7 @@ class Menu:
         self.label_title["label"] = self.parent.label_text(coords=self.label_title["coords"],
                                                            text=self.label_title["text"],
                                                            font=self.label_title["font"])
+
 
     def reinstall(self, _type):
         if _type == "hide":

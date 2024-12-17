@@ -1,0 +1,39 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/25.0.2 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="25.0.2" pages="2">
+  <diagram name="Страница — 1" id="qw-DSLeI6GunQIgZfYl5">
+    <mxGraphModel dx="1420" dy="1075" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="100" pageHeight="100" background="none" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="q3pWi0gGCf8ojm1Dorff-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="q3pWi0gGCf8ojm1Dorff-4" target="q3pWi0gGCf8ojm1Dorff-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="q3pWi0gGCf8ojm1Dorff-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="q3pWi0gGCf8ojm1Dorff-4" target="q3pWi0gGCf8ojm1Dorff-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="q3pWi0gGCf8ojm1Dorff-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="q3pWi0gGCf8ojm1Dorff-4" target="q3pWi0gGCf8ojm1Dorff-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="q3pWi0gGCf8ojm1Dorff-4" value="&lt;h2&gt;Меню&lt;/h2&gt;" style="whiteSpace=wrap;html=1;fillOpacity=100;imageHeight=24;" vertex="1" parent="1">
+          <mxGeometry x="-60" y="-120" width="85" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="q3pWi0gGCf8ojm1Dorff-5" value="&lt;h2&gt;Настройки&lt;/h2&gt;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="232.5" y="20" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="q3pWi0gGCf8ojm1Dorff-6" value="&lt;h2&gt;Выход&lt;/h2&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="20" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="q3pWi0gGCf8ojm1Dorff-7" value="&lt;h2&gt;Играть&lt;/h2&gt;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-60" y="20" width="100" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="hTQicx2PiQnAjLSxpXUh" name="Страница — 2">
+    <mxGraphModel grid="1" page="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="100" pageHeight="100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
