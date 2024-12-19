@@ -75,8 +75,8 @@ def sprite_crop(path, type_sprites, sprite, grid, inacurr=[0, 0, 0, 0], sep=(), 
             count += 1
         count = 0
 
-sprite_crop(r"C:\Users\maxim\Desktop\SASHA\PROJECTS\Office_Nightmare_versions\PyGame\sprites\character\base_choice\walk\_down_walk.png",
-            type_sprites=["", "1"], name="walk",
+sprite_crop(r"C:\Users\maxim\Desktop\SASHA\PROJECTS\Office_Nightmare_versions\PyGame\sprites\character\base_choice\idle\_side idle.png",
+            type_sprites=["side", "side1"], name="idle",
             sprite=(20, 35), grid=(2, 4),
-            inacurr=[0], sep=())
+            inacurr=[1], sep=())
 # del_border("character/choice1/death/death.png", type_save="save", new_name="crop_death.png")
