@@ -34,10 +34,13 @@ def del_border(path, type_save="save", new_name=""):
 
 
 def sprite_crop(path, type_sprites, sprite, grid, inacurr=[0, 0, 0, 0], sep=(), single_inacurr={}, name=""):
+    path = path.replace("\\", "/")
     sheet = Image.open(path)
     if name == "":
         name = path.split("/")[-1].split(".")[0]
         if name[0] == "_": name = name[1:]
+    print(path)
+    print(name)
 
     if len(inacurr) == 0: inacurr = [0, 0, 0, 0]
     elif len(inacurr) == 1: inacurr += [0, inacurr[0], 0]
@@ -49,7 +52,8 @@ def sprite_crop(path, type_sprites, sprite, grid, inacurr=[0, 0, 0, 0], sep=(), 
         elif len(v) == 2: single_inacurr[k] += [v[0], v[1]]
         elif len(v) == 3: single_inacurr[k] += [v[1]]
 
-    if sep == None or sep == (): sep = (sheet.size[0]//grid[0], sheet.size[1]//grid[1])
+    if sep == None or sep == (): sep = (sheet.size[0]//grid[1], sheet.size[1]//grid[0])
+    print("sep:", sep)
     count = 0
     for y in range(1, grid[0] + 1):
         for x in range(1, grid[1] + 1):
@@ -61,18 +65,18 @@ def sprite_crop(path, type_sprites, sprite, grid, inacurr=[0, 0, 0, 0], sep=(), 
             res_y2 = res_y-(sep[1]-sprite[1])/2 + inacurr[3]
             for k, v in single_inacurr.items():
                 if k[1]+1 == x and k[0]+1 == y:
-                    print("/".join(path.split("/")[:-1]+[name+f"_{type_sprites[y-1]}_{count}.png"]))
                     res_x1 += v[0]
                     res_y1 += v[1]
                     res_x2 += v[2]
                     res_y2 += v[3]
             icon = sheet.crop((res_x1, res_y1, res_x2, res_y2))
+            print("/".join(path.split("/")[:-1] + [name + f"_{type_sprites[y - 1]}_{count}.png"]))
             icon.save("/".join(path.split("/")[:-1]+[name+f"_{type_sprites[y-1]}_{count}.png"]))
             count += 1
         count = 0
 
-sprite_crop("sprites/character/bace_choice/walk/_down walk.png",
+sprite_crop(r"C:\Users\maxim\Desktop\SASHA\PROJECTS\Office_Nightmare_versions\PyGame\sprites\character\base_choice\walk\_down_walk.png",
             type_sprites=["", "1"], name="walk",
-            sprite=(20, 20), grid=(3, 6),
-            inacurr=[0], sep=(80, 80), single_inacurr={(0, 3): [0, 0, 5], (0, 4): [0, 0, 5], (0, 5): [0, 0, 5]})
+            sprite=(20, 35), grid=(2, 4),
+            inacurr=[0], sep=())
 # del_border("character/choice1/death/death.png", type_save="save", new_name="crop_death.png")
