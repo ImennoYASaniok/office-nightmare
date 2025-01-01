@@ -16,30 +16,26 @@ class Main:
         pygame.init()
         pygame.mixer.init()
 
-        self.display_w, self.display_h = pygame.display.Info().current_w-10,pygame.display.Info().current_h-50
+        self.display_w, self.display_h = 1000, 800
         self.FPS = 60
-
-        self.user = None
 
 
         self.running = 1
         #self.type_display, self.flag_type_display = "menu", 1 # 0 - None | 1 - menu | 2 - game | 3 - final
         self.type_display = "menu"
+        self.list_type_display = np.array([None, "menu", "game", "final", "settings", "refer",])
         self.style = {
             "colors": {
-                "light": (187, 148, 87),
-                "base1": (153, 88, 42),
-                "base2": (111, 29, 27),
-                "dark": (67, 40, 24),
+                "light": (200, 208, 200),
+                "base1": (0, 32, 214),
+                "base2": (0, 119, 0),
+                "dark": (10, 10, 10),
                 "black": (0, 0, 0)
             },
-            "font_path": "fonts/pixel/EpilepsySans.ttf",
-            # норм шрифта:
-            # fonts/pixel/EpilepsySansBold.ttf - немного слипаются буквы, но норм
-            #
-            # так себе:
-            # fonts/pixel/DotGothic16-Regular.ttf - для латиницы слишком растянутый шрифт
-            # fonts/pixel/EpilepsySans.ttf - слишком сжатый текст, особенно при большом масштабе
+            "font_path": "fonts/pixel/EpilepsySansBold.ttf",
+            "dop_font": pygame.font.SysFont('Arial', 40, bold=True)
+            # "fonts111/pixel/DotGothic16-Regular.ttf" - для латиницы слишком растянутый шрифт
+            # fonts111/pixel/EpilepsySans.ttf - слишком сжатый текст, особенно при большом масштабе
         }
 
         self.display = pygame.display.set_mode((self.display_w, self.display_h))
@@ -84,6 +80,7 @@ class Main:
         for k, v in check_keys.items():
             if k not in color.keys():
                 color[k] = v
+        # print(*color.items())
         return Button(
             layer,  # Surface to place button array on
             coords[0], coords[1], coords[2], coords[3],
@@ -94,7 +91,7 @@ class Main:
             inactiveColour=color["inactive"],
             hoverColour=color["hover"],  # Colour of button when being hovered over
             pressedColour=color["pressed"],  # Colour of button when being clicked
-            textColour=color["hover"],
+            textColour=color["text"],
             onClick=func
         )
 
@@ -120,7 +117,7 @@ class Main:
         borderThickness=bd)
         return textbox
 
-    def align(self, coords, obj, inacurr=(0, 0), type_blit=False, type_align="center"):
+    def align(self, obj, coords, inacurr=(0, 0), type_blit=False, type_align="center"):
         if type(coords) == tuple: coords = list(coords)
         inacurr_w, inacurr_h = 0, 0
         if type(inacurr) == int: inacurr_w = inacurr
@@ -130,7 +127,7 @@ class Main:
             elif len(inacurr) == 2: inacurr_w, inacurr_h = inacurr
         # print(type(obj))
         # if type(obj) == pygame.surface.Surface:
-        print(obj)
+        #print(obj)
         if type_align == "horizontal":
             coords[0] = (self.display.get_width() - obj.get_width()) // 2 + inacurr_w
         elif type_align == "vertical":
@@ -143,7 +140,7 @@ class Main:
         if type_blit == True:
             if type(obj) == pygame.surface.Surface:
                 self.display.blit(obj, coords)
-        return coords, obj
+        return obj, coords
 
     def format_commands(self, commands):
         res_commands = {}
@@ -169,35 +166,63 @@ class Main:
         pygame_widgets.update(self.events)
 
     def view_logo(self):
-        pass
-        # logo = pygame.image.load(None)
-        # self.display.fill((255, 255, 255))
-        # self.display.blit(logo, (0, 0))
-        # pygame.display.flip()
-        # pygame.time.wait(1000)
+        logo = pygame.image.load('sprites/logo.png')
+        self.display.fill((255, 255, 255))
+        self.display.blit(logo, (0, 0))
+        pygame.display.flip()
+        pygame.time.wait(1000)
 
     def show(self):
-        self.view_logo()
+        # self.view_logo()
         self.list_active_surface = {'menu': Menu,
                                     'game': Game,
-                                    'sett': Settings,
                                     'refer': Refer}
         self.holst = self.list_active_surface[self.type_display](self, self.style)
         self.changes_holst = 0
+        musics = {'menu': 'music/menu.mp3',
+                      'game': 'music/game.mp3'}
+        type_music = 0
+        self.music_play = True
+        pygame.mixer.music.load(musics['menu'])
+        pygame.mixer.music.play(-1)
         while self.running:
-            self.events = pygame.event.get()
             if self.changes_holst:
+                if self.type_display == 'game':
+                    if self.music_play:
+                        pygame.mixer.music.load(musics['game'])
+                        pygame.mixer.music.play(-1)
+                    type_music = 1
+                elif type_music:
+                    if self.music_play:
+                        pygame.mixer.music.load(musics['menu'])
+                        pygame.mixer.music.play(-1)
+                    type_music = 0
                 self.holst.delete_all()
                 self.holst = self.list_active_surface[self.type_display](self, self.style)
                 self.changes_holst = 0
+
+            self.events = pygame.event.get()
+
+            if not self.music_play:
+                pygame.mixer.music.pause()
+            else:
+                pygame.mixer.music.unpause()
             self.holst.draw()
+
             for event in self.events:
                 if event.type == pygame.QUIT: self.running = False
                 if self.type_display == "game":
                     self.holst.check_event(event)
+
+            if self.type_display == "refer":
+                self.holst.draw_donut()
             self.clock.tick(self.FPS)
             self.update_widgets()
             pygame.display.update()
+
+    def music_off_or_on(self):
+        self.music_play = not self.music_play
+        print(self.music_play)
 
 if __name__ == "__main__":
     menu = Main()
