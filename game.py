@@ -2,6 +2,8 @@
 # import numpy as np
 
 import pygame
+import pygame_widgets
+from pygame.locals import Rect
 
 TYPE_BUTTONS = {
     "color": {
@@ -15,58 +17,61 @@ TYPE_BUTTONS = {
 
 
 class Object:
-    def __init__(self, parent, game, base_style, coords, size, image, size_rect=(0, 20), coords_rect=(0, 0)):
+    def __init__(self, parent, game, base_style, coords, size, image=None, size_rect=(0, 20), type_collide="rect"): #absolute_coords_rect=(0, 0)
         self.base_style = base_style
         self.parent = parent
         self.game = game
-        self.img = image
-        self.size = size
+        self.image = image
 
-        self.coords = coords
-        self.size_rect = list(size_rect)
-        self.coords_rect = coords_rect
-        self.init_data()
+        size_rect = list(size_rect)
 
-    def init_data(self):
         self.data = {
             "color": self.base_style["colors"]["light"],
-            "coords": [self.coords[0], self.coords[1], self.size[0], self.size[1]],  # 50, 70
-            "size_rect": self.size_rect,
-            "coords_rect": self.coords_rect,
-            "type_render": 1
+            "coords": [coords[0], coords[1], size[0], size[1]],  # 50, 70
+            "size_rect": size_rect,
+            # "absolute_coords_rect": absolute_coords_rect,
+            "type_render": 1, # тип слоя, на котором будет отрисовка
+            # "type_collide": type_collide
+            # "mask" - коллизия по маске
+            # "rect" - коллизия по прямоугольнику
         }
-        self.data["sprite"] = pygame.image.load(self.img).convert_alpha()
-        self.data["rect"] = self.data["sprite"].get_rect()
-        for i in range(len(self.size_rect)):
+        if self.image == None:
+            self.data["rect"] = Rect(coords[0], coords[1], size[0], size[1])
+        else:
+            self.data["sprite"] = pygame.image.load(self.image).convert_alpha()
+            self.data["sprite"] = pygame.transform.scale(self.data["sprite"],
+                                                         (self.data["coords"][2], self.data["coords"][3]))
+            self.data["mask"] = pygame.mask.from_surface(self.data["sprite"])
+            self.data["rect"] = self.data["sprite"].get_rect()
+        for i in range(len(size_rect)):
             if self.data["size_rect"][i] == 0:
-                self.data["size_rect"][i] = self.size[i]
+                self.data["size_rect"][i] = size[i]
             elif self.data["size_rect"][i] < 0:
-                self.data["size_rect"][i] = self.size[i] - abs(self.size_rect[i])
+                self.data["size_rect"][i] = size[i] - abs(size_rect[i])
             else:
-                self.data["size_rect"][i] = self.size_rect[i]
-        # if self.data["coords_rect"][0] <= 0:
-        #     self.data["coords_rect"][0] = self.data["coords"][0] + self.size[0]
+                self.data["size_rect"][i] = size_rect[i]
+        # if self.data["absolute_coords_rect"][0] <= 0:
+        #     self.data["absolute_coords_rect"][0] = self.data["coords"][0] + self.size[0]
         # else:
-        #     self.data["coords_rect"][0] = self.data["coords_rect"][0]
+        #     self.data["absolute_coords_rect"][0] = self.data["absolute_coords_rect"][0]
         self.set_sprite()
 
     def set_sprite(self):
-        self.data["sprite"] = pygame.transform.scale(self.data["sprite"],
-                                                     (self.data["coords"][2], self.data["coords"][3]))
-        self.data["rect"].x = self.data["coords"][0] + self.data["coords_rect"][0]
-        self.data["rect"].y = self.data["coords"][1] + self.data["coords"][3] - self.data["size_rect"][1] - \
-                              self.data["coords_rect"][1]
-        self.data["rect"].w = self.data["size_rect"][0]  # self.data["coords"][2]
-        self.data["rect"].h = self.data["size_rect"][1]  # self.character["coords"][3]
+        self.data["rect"].x = self.data["coords"][0] # + self.data["absolute_coords_rect"][0]
+        self.data["rect"].y = self.data["coords"][1] + self.data["coords"][3] - self.data["size_rect"][1] # - self.data["absolute_coords_rect"][1]
+        self.data["rect"].w = self.data["size_rect"][0] # self.data["coords"][2]
+        self.data["rect"].h = self.data["size_rect"][1] # self.character["coords"][3]
 
-    def update_sprite(self, img):
-        self.img = img
-        self.data["sprite"] = pygame.image.load(self.img).convert_alpha()
-        self.set_sprite()
+    def update_sprite(self, image):
+        if self.image != None:
+            self.image = image
+            self.data["sprite"] = pygame.image.load(self.image).convert_alpha()
+            self.data["sprite"] = pygame.transform.scale(self.data["sprite"],(self.data["coords"][2], self.data["coords"][3]))
+            self.set_sprite()
 
     def draw(self):
-        self.parent.display.blit(self.data["sprite"], self.data["coords"])
-
+        if self.image != None:
+            self.parent.display.blit(self.data["sprite"], self.data["coords"])
 
 
 
@@ -80,16 +85,13 @@ class Hitbox_Button:
         self.size = size
         self.coords = coords
         self.colors = colors
-        if "hover" not in self.colors.keys():
-            self.colors["hover"] = self.colors["inactive"]
-        elif "pressed" not in self.colors.keys():
-            self.colors["pressed"] = self.colors["inactive"]
+        if "hover" not in self.colors.keys(): self.colors["hover"] = self.colors["inactive"]
+        elif "pressed" not in self.colors.keys(): self.colors["pressed"] = self.colors["inactive"]
         self.data = {
-            "coords": (self.object.data["coords"][0] + self.coords[0], self.object.data["coords"][1] + self.coords[1],
-                       self.size[0], self.size[1]),
+            "coords": (self.object.data["coords"][0]+self.coords[0], self.object.data["coords"][1]+self.coords[1], self.size[0], self.size[1]),
             "color": {
                 "inactive": self.colors["inactive"],
-                "hover": self.colors["hover"],
+                "hover":  self.colors["hover"],
                 "pressed": self.colors["pressed"],
                 "text": self.colors["inactive"]
             },
@@ -101,13 +103,12 @@ class Hitbox_Button:
     def create(self, layer):
         self.layer = layer
         self.data["button"] = self.parent.button(coords=self.data["coords"],
-                                                 text="",
-                                                 color=self.data["color"],
-                                                 font=pygame.font.SysFont(None, 30),
-                                                 func=self.data["func"],
-                                                 layer=layer
-                                                 )
-
+                                             text="",
+                                             color=self.data["color"],
+                                             font=pygame.font.SysFont(None, 30),
+                                             func=self.data["func"],
+                                            layer=layer
+                                            )
     def delete(self):
         del self.data["button"]
 
@@ -121,22 +122,8 @@ class Level1:
 
         plant_1 = Object(self.parent, self.game, self.base_style, [200, 100],
                          (100, 100), 'sprites/plants/plant_1.png')
-        button_computer_1 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["computer_1"],
-                                          layer=self.parent.display,
-                                          # self.game.layer_buttons_1
-                                          func=lambda: self.game.change_game('dash_hex'),
-                                          coords=TYPE_BUTTONS["comp_cord"],
-                                          size=(0, 0),
-                                          colors=TYPE_BUTTONS["color"])
         plant_2 = Object(self.parent, self.game, self.base_style, [200, 300],
                          (100, 100), 'sprites/plants/plant_1.png')
-        button_computer_1 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["computer_1"],
-                                          layer=self.parent.display,
-                                          # self.game.layer_buttons_1
-                                          func=lambda: self.game.change_game('dash_hex'),
-                                          coords=TYPE_BUTTONS["comp_cord"],
-                                          size=TYPE_BUTTONS["comp_size"],
-                                          colors=TYPE_BUTTONS["color"])
 
         self.buttons = []
         # ------------------
@@ -146,7 +133,20 @@ class Level1:
         self.dop_objects = {}
         self.list_dop_objects = list(self.dop_objects.values())
 
-
+        button_plant_1 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_1"],
+                                          layer=self.parent.display,
+                                          # self.game.layer_buttons_1
+                                          func=lambda: self.game.change_game('dash_hex'),
+                                          coords=TYPE_BUTTONS["comp_cord"],
+                                          size=(0, 0),
+                                          colors=TYPE_BUTTONS["color"])
+        button_plant_2 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_2"],
+                                          layer=self.parent.display,
+                                          # self.game.layer_buttons_1
+                                          func=lambda: self.game.change_game('dash_hex'),
+                                          coords=TYPE_BUTTONS["comp_cord"],
+                                          size=TYPE_BUTTONS["comp_size"],
+                                          colors=TYPE_BUTTONS["color"])
 
 
 class Map:
@@ -191,7 +191,7 @@ class Character:
             }
         }
         self.commands = self.parent.format_commands(self.commands)
-        print("CHARACTER: ", self.commands)
+        #print("CHARACTER: ", self.commands)
 
     def set_flag(self, key, val):
         self.character["flags"][key] = val
@@ -217,8 +217,10 @@ class Character:
         self.character["rect"].y = self.character["coords"][1] + self.character["coords"][3] - self.character["coords_rect"][3] - self.character["coords_rect"][1]
         self.character["rect"].w = self.character["coords_rect"][2]
         self.character["rect"].h = self.character["coords_rect"][3] # self.character["coords"][3]
+        self.character["absolute_coords_rect"] = (self.character["rect"].x + self.character["rect"].w // 2, self.character["rect"].y + self.character["rect"].h // 2)
+        # self.character["center_coords"] = (self.character["coords"][0] + self.character["coords"][2]//2, self.character["coords"][1] + self.character["coords"][3]//2)
 
-    def udpate(self, objects, draw_rects):
+    def update(self, objects, draw_rects):
         # !!! Если нужно будет, перепишем алгос коллизии в отдельный метод
 
         # print(set(dir_collides))
@@ -238,7 +240,7 @@ class Character:
 
     def init_shell(self):
         part_file_path = r"sprites/character/base_choice" + '/'
-        print(part_file_path)
+       # print(part_file_path)
         self.character = {
             "type_cond": {
                 # !!! Написать позже отдельную функцию загрузку спрайтов под нужны направления (dir) и cond
@@ -281,10 +283,11 @@ class Character:
             "counter_sprite": 0,
             "speed": {"idle": 0, "sneak": 2, "walk": 4, "run": 6},
             "speed_TO_freq": {"idle": 20, "sneak": 8, "walk": 7, "run": 4},
-            # "key_press_TO_": {[0, 0, 0, 0]: "", "key_up": 0, "key_left": 0, "key_right": 0},
             "val_speed": 4,
             "coords": [self.parent.display_w // 2, self.parent.display_h // 2+100, 100, 140], # 50, 70
-            "coords_rect": [7, 0, 82, 20]
+            # "center_coords": [0, 0],
+            "coords_rect": [7, 0, 82, 20],
+            "absolute_center_coords_rect": [0, 0]
         }
         self.character["sprite"] = self.character["type_cond"][self.character["cond"]][self.character["dir"]][self.character["number_sprite"]]
         self.character["rect"] = self.character["sprite"].get_rect()
@@ -294,11 +297,23 @@ class Character:
             elif self.character["coords_rect"][i] < 0:
                 self.character["coords_rect"][i] = self.character["coords"][i] - abs(self.character["coords_rect"][i])
         self.set_sprite()
-        print(self.character)
+        #print(self.character)
         self.character["coords"][0] -= self.character["coords"][2] / 2
         self.character["coords"][1] -= self.character["coords"][3] / 2
 
     def draw(self):
+        # print(self.character["coords"])
+        # self.character["rect"] = pygame.Rect(self.character["coords"])
+        # Максимально плохая проверка на то что спрайт на вышел за границы
+        # if self.character["coords"][0] + self.character["coords"][2] > 1000:
+        #     self.character["coords"][0] = 1000 - self.character["coords"][2]
+        # if self.character["coords"][1] + self.character["coords"][3] > 800:
+        #     self.character["coords"][1] = 800 - self.character["coords"][3]
+        # if self.character["coords"][0] < 0:
+        #     self.character["coords"][0] = 0
+        #     self.character["coords"][0] = 0
+        # if self.character["coords"][1] < 0:
+        #     self.character["coords"][1] = 0
 
         # self.floor.blit(self.default_floor, (0, 0))
         self.parent.display.blit(self.character["sprite"], self.character["coords"])
@@ -312,13 +327,16 @@ class Game:
         self.base_style = base_style
         self.parent = parent
 
+        self.donats_many = 80
+        self.character_energy = 30
         self.labels = []
         self.set_labels()
 
-        self.floor = pygame.Surface((self.parent.display_w, self.parent.display_h))
+        self.floor = pygame.Surface((1000, 800))
+        self.type_room = "reception"
+        self.flag_change_room = 0
 
         self.character = Character(self.parent, self, self.base_style)
-        self.level1 = Level1(self.parent, self, self.base_style)
 
         self.commands = {
             pygame.KEYDOWN: {
@@ -328,18 +346,19 @@ class Game:
             }
         }
         self.commands = self.parent.format_commands(self.commands)
-        print("GAME: ", self.commands)
+        #print("GAME: ", self.commands)
         self.list_comands = [self.commands, self.character.commands]
 
         self.buttons = []
         self.init_button_menu()
 
-        self.layer_buttons_1 = pygame.Surface((self.parent.display_w, self.parent.display_h), pygame.SRCALPHA, 32)
+        self.layer_buttons_1 = pygame.Surface((1000, 800), pygame.SRCALPHA, 32)
         self.layer_buttons_1 = self.layer_buttons_1.convert_alpha()
-        self.layer_buttons_2 = pygame.Surface((self.parent.display_w, self.parent.display_h), pygame.SRCALPHA, 32)
+        self.layer_buttons_2 = pygame.Surface((1000, 800), pygame.SRCALPHA, 32)
         self.layer_buttons_2 = self.layer_buttons_2.convert_alpha()
         self.old_data_layers = []
         self.data_layers = []
+        self.flag_mini_games = False
 
     def init_button_menu(self):
         w, h = 80, 50
@@ -364,33 +383,104 @@ class Game:
 
     def draw(self):
         self.parent.display.blit(self.floor, (0, 0))
-        # self.character.udpate([], 1)
-        self.render_objects(objects=self.level1.list_objects, buttons=self.level1.buttons, dop_objects=self.level1.list_dop_objects, draw_rects=True)
+        # if self.flag_message_energy == 1: self.set_message()
         for i in self.labels: self.parent.display.blit(i["label"], i["coords"])
 
     def set_labels(self):
         self.labels = []
         label_title = {
             "coords": (30, 0),
-            "text": f"FPS:",
+            "text": f"Монет: {self.donats_many}",
             "font": pygame.font.Font(self.base_style["font_path"], 30)
         }
         label_title["label"] = self.parent.label_text(coords=label_title["coords"],
                                                       text=label_title["text"],
                                                       font=label_title["font"],
-                                                      color=(255, 0, 0))
+                                                      color=self.base_style["colors"]["light"])
+        #print(label_title["text"])
         self.labels.append(label_title)
 
         label_title = {
             "coords": (30, 30),
-            "text": f"HP:",
+            "text": f"Энергии: {self.character_energy}",
             "font": pygame.font.Font(self.base_style["font_path"], 30)
         }
         label_title["label"] = self.parent.label_text(coords=label_title["coords"],
                                                       text=label_title["text"],
                                                       font=label_title["font"],
-                                                      color=(255, 0, 0))
+                                                      color=self.base_style["colors"]["light"])
+        #print(label_title["text"])
         self.labels.append(label_title)
+
+    def set_message(self, text, delay=1500):
+        label = {
+            "coords": (100, 100),
+            "text": text,
+            "font": pygame.font.Font(self.base_style["font_path"], 50)  # self.base_style["dop_font"]
+        }
+        label["label"] = self.parent.label_text(coords=label["coords"],
+                                                text=label["text"],
+                                                font=label["font"],
+                                                color=self.base_style["colors"]["light"], type_blit=False)
+        label["label"], label["coords"] = self.parent.align(label["label"], label["coords"],
+                                            inacurr=-20, type_blit=False, type_align="center")
+        bortic = 20
+        coords_rect = (label["coords"][0]-bortic,
+                       label["coords"][1]-bortic,
+                       label["label"].get_width()+bortic,
+                       label["label"].get_height()+bortic)
+        pygame.draw.rect(self.parent.display, (0, 0, 0), coords_rect)
+        self.parent.display.blit(label["label"], label["coords"])
+        pygame.display.flip()
+        pygame.time.wait(delay)
+
+    def set_message_exit(self, text):
+        label = {
+            "coords": (100, 100),
+            "text": text,
+            "font": self.parent.style["dop_font"]
+        }
+        label["label"] = self.parent.label_text(coords=label["coords"],
+                                                text=label["text"],
+                                                font=label["font"],
+                                                color=(255, 0, 0), type_blit=False)
+        label["label"], label["coords"] = self.parent.align(label["label"], label["coords"],
+                                            inacurr=-20, type_blit=False, type_align="center")
+        type_exit = None
+        def set_type_exit(val): type_exit = val
+        w, h = 80, 50
+        button_YES = {
+            "font": pygame.font.Font(self.base_style["font_path"], 30),
+            "coords": (self.parent.display_w//2, self.parent.display_h//2, w, h),
+            "text": "Да",
+            "color": {
+                "inactive": self.base_style["colors"]["base2"],
+                "hover": self.base_style["colors"]["base1"],
+                "pressed": self.base_style["colors"]["light"],
+                "text": self.base_style["colors"]["light"]
+            },
+            "func": lambda: set_type_exit("yes")
+        }
+        button_YES["button"] = self.parent.button(coords=button_YES["coords"],
+                                                     text=button_YES["text"],
+                                                     color=button_YES["color"],
+                                                     font=button_YES["font"],
+                                                     func=button_YES["func"])
+        bortic = 20
+        coords_rect = (label["coords"][0]-bortic,
+                       label["coords"][1]-bortic,
+                       label["label"].get_width()+bortic,
+                       label["label"].get_height()+bortic)
+        pygame.draw.rect(self.parent.display, (0, 0, 0), coords_rect)
+        while True:
+            self.parent.display.blit(label["label"], label["coords"])
+            if type_exit != None: break
+            pygame_widgets.update(pygame.event.get())
+            self.parent.clock.tick(self.parent.FPS)
+            pygame.display.update()
+        if type_exit == "yes": print("YESSS") # self.parent.display_change('menu')
+        elif type_exit == "no": self.parent.display_change('menu')
+        del button_YES
 
     def render_objects(self, objects, buttons=None, dop_objects=None, draw_rects=False):
         if dop_objects is not None: all_objects = objects + dop_objects
@@ -418,7 +508,7 @@ class Game:
             self.parent.display.blit(self.layer_buttons_1, (0, 0))
         for obj in sorted(list(filter(lambda obj: obj.data["type_render"] == 1, objects)), key=lambda obj: (obj.data["rect"].y, obj.data["rect"].h)):
             obj.draw()
-        self.character.udpate(all_objects, draw_rects)
+        self.character.update(all_objects, draw_rects)
         if buttons is not None:
             self.parent.display.blit(self.layer_buttons_2, (0, 0))
         for obj in sorted(list(filter(lambda obj: obj.data["type_render"] == 0, objects)), key=lambda obj: (obj.data["rect"].y, obj.data["rect"].h)):
@@ -431,11 +521,18 @@ class Game:
                 self.layer_buttons_2.fill(pygame.Color(0, 0, 0, 0))
         self.old_data_layers = self.data_layers.copy()
 
-    def draw_walls(self, color_left, color_up, color_right, thinkess, height, width_door):
+    def draw_walls(self, color_left, color_up, color_right, thinkess, height, width_door, down="wall"):
+        # down="wall" - только стена
+        # down="pass" - только проход
+        # down="wall, pass" - и стена, и проход
+        # down="wall and pass" - и стена, и проход
+        # down="wall РАЗДЕЛИТЕЛЬ pass" - и стена, и проход
+        # down="passwall" - и стена, и проход
+        # ----------------
         # print(color_left, color_up, color_right)
+        coords_passage = {}
         walls = {}
-        def append(key, obj):
-            walls[key] = obj
+        def append(key, obj): walls[key] = obj
         if len(color_up) == 1: # передняя - нет двери
             append("wall_up", Object(self.parent, self, self.base_style, [0, 0],
                       (self.parent.display_w, height), f'sprites/walls/front_{color_up[0]}_wall.png', size_rect=(0, 0)))
@@ -444,6 +541,7 @@ class Game:
                       ((self.parent.display_w-width_door)//2, height), f'sprites/walls/front_{color_up[0]}_wall.png', size_rect=(0, 0)))
             append("wall_up_2", Object(self.parent, self, self.base_style, [(self.parent.display_w+width_door)//2, 0],
                       ((self.parent.display_w+width_door)//2, height), f'sprites/walls/front_{color_up[1]}_wall.png', size_rect=(0, 0)))
+            coords_passage["up"] = [[(self.parent.display_w-width_door)//2, (self.parent.display_w+width_door)//2], 0]
 
         if len(color_left) == 1: # левая - нет двери
             append("wall_left", Object(self.parent, self, self.base_style, [0, 0],
@@ -453,6 +551,7 @@ class Game:
                                 (thinkess, (self.parent.display_h + width_door) // 2), f'sprites/walls/side_{color_left[0]}_wall.png', size_rect=(0, 0)))
             append("wall_left_2", Object(self.parent, self, self.base_style, [0, 0],
                                 (thinkess, (self.parent.display_h-width_door)//2), f'sprites/walls/side_{color_left[1]}_wall.png', size_rect=(0, 0)))
+            coords_passage["left"] = [0, [(self.parent.display_h-width_door)//2, (self.parent.display_h+width_door) // 2]]
 
         if len(color_right) == 1: # правая - нет двери
             append("wall_right", Object(self.parent, self, self.base_style, [self.parent.display_w-thinkess, 0],
@@ -462,14 +561,27 @@ class Game:
                                 (thinkess, (self.parent.display_h-width_door)//2), f'sprites/walls/side_{color_right[0]}_wall.png', size_rect=(0, 0)))
             append("wall_right_2", Object(self.parent, self, self.base_style, [self.parent.display_w - thinkess, (self.parent.display_h+width_door)//2],
                                 (thinkess, (self.parent.display_h+width_door)//2), f'sprites/walls/side_{color_right[1]}_wall.png', size_rect=(0, 0)))
-        return walls
+            coords_passage["right"] = [self.parent.display_w, [(self.parent.display_h - width_door) // 2, (self.parent.display_h + width_door) // 2]]
+
+        # print(down, "wall" in down, "pass" in down)
+        if "wall" in down:
+            append("wall_down", Object(self.parent, self, self.base_style, [0, self.parent.display_h],
+                                        (self.parent.display_w, thinkess),
+                                        image=None, size_rect=(0, 0)))
+        if "pass" in down:
+            coords_passage["down"] = [[(self.parent.display_w-width_door)//2, (self.parent.display_w+width_door)//2], self.parent.display_h-20]
+        if len(coords_passage) == 0:
+            return walls
+        else:
+            return walls, coords_passage
 
     def func_collide_other_obj(self, objects, draw_rects):
         if draw_rects: pygame.draw.rect(self.parent.display, (255, 0, 0), self.character.character["rect"])
         dir_collides = []
-        for obj_rect in list(map(lambda x: x.data["rect"], objects)):
-            if draw_rects: pygame.draw.rect(self.parent.display, (255, 255, 255), obj_rect)
-            if self.character.character["rect"].colliderect(obj_rect):
+        for obj in objects:
+            if draw_rects: pygame.draw.rect(self.parent.display, (255, 255, 255), obj.data["rect"])
+            if self.character.character["rect"].colliderect(obj.data["rect"]):
+                obj_rect = obj.data["rect"]
                 collision_area = self.character.character["rect"].clip(obj_rect)
                 if collision_area.width > collision_area.height:
                     if self.character.character["rect"].centery < obj_rect.centery:
@@ -481,6 +593,7 @@ class Game:
                         dir_collides.append("right")
                     else:
                         dir_collides.append("left")
+
         if dir_collides == []: dir_collides = [None]
         dir_collides = list(set(dir_collides))
         flag_change = 0
@@ -522,9 +635,18 @@ class Game:
                 for_data[0] = 0
         return for_data
 
+    def energy_character_up(self, price, val):
+        if self.donats_many - price >= 0:
+            self.donats_many -= price
+            self.character_energy += val
+        else:
+            self.set_message(f"Не хватает денег, нужно монет: {price} ")
+        self.set_labels()
+
     def check_event(self, event):
         for commands in self.list_comands:
             if event.type in commands.keys() and event.key in commands[event.type].keys():
+                print(event.type, event.key)
                 commands[event.type][event.key]()
 
     def delete_all(self):
