@@ -171,9 +171,8 @@ class Game:
         self.base_style = base_style
         self.parent = parent
 
-        self.total_fps = 80
-        self.character_hp = 80
-        self.character_energy = 30
+        self.character_hp = [100, 0, 100]
+        self.character_energy = [70, 0, 100]
         self.labels = []
         self.set_labels()
 
@@ -245,29 +244,41 @@ class Game:
 
     def set_labels(self):
         self.labels = []
-        label_title = {
-            "coords": (30, 0),
-            "text": f"FPS: {self.total_fps}",
+        label_fps = {
+            "coords": (5, 0),
+            "text": f"fps: {self.parent.clock.get_fps():2.0f} / {self.parent.FPS}",
             "font": pygame.font.Font(self.base_style["font_path"], 30)
         }
-        label_title["label"] = self.parent.label_text(coords=label_title["coords"],
-                                                      text=label_title["text"],
-                                                      font=label_title["font"],
+        label_fps["label"] = self.parent.label_text(coords=label_fps["coords"],
+                                                      text=label_fps["text"],
+                                                      font=label_fps["font"],
                                                       color=self.base_style["colors"]["light"])
         #print(label_title["text"])
-        self.labels.append(label_title)
+        self.labels.append(label_fps)
 
-        label_title = {
-            "coords": (30, 30),
-            "text": f"FPS: {self.character_energy}",
+        label_hp = {
+            "coords": (5, 30),
+            "text": f"hp: {self.character_hp[0]} / {self.character_hp[2]}",
             "font": pygame.font.Font(self.base_style["font_path"], 30)
         }
-        label_title["label"] = self.parent.label_text(coords=label_title["coords"],
-                                                      text=label_title["text"],
-                                                      font=label_title["font"],
+        label_hp["label"] = self.parent.label_text(coords=label_hp["coords"],
+                                                      text=label_hp["text"],
+                                                      font=label_hp["font"],
                                                       color=self.base_style["colors"]["light"])
         #print(label_title["text"])
-        self.labels.append(label_title)
+        self.labels.append(label_hp)
+
+        label_energy = {
+            "coords": (5, 60),
+            "text": f"энергия: {self.character_energy[0]} / {self.character_energy[2]}",
+            "font": pygame.font.Font(self.base_style["font_path"], 30)
+        }
+        label_energy["label"] = self.parent.label_text(coords=label_energy["coords"],
+                                                   text=label_energy["text"],
+                                                   font=label_energy["font"],
+                                                   color=self.base_style["colors"]["light"])
+        # print(label_title["text"])
+        self.labels.append(label_energy)
 
     def set_message(self, text, delay=1500):
         label = {
