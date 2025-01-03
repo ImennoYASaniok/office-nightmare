@@ -1,17 +1,19 @@
 import pygame
 
 class Final:
-    def __init__(self, parent, base_color):
-        self.base_color = base_color
+    def __init__(self, parent, base_style, type_final):
+        self.base_style = base_style
         self.parent = parent
+        self.labels = []
+        self.buttons = []
+
         self.commands = {
             pygame.KEYDOWN: {
                 (pygame.K_ESCAPE, pygame.K_RETURN): lambda: self.parent.display_change("menu")
             }
         }
-        self.init_button_OK()
         self.types_final = {
-            "type": "victory",
+            "type": type_final,
             "victory": {
                 "text": "Молодец, ты победил!"
             },
@@ -19,48 +21,51 @@ class Final:
                 "text": "Ты проиграл... Попробуй ещё раз!"
             }
         }
-        self.label_title = self.set_label_title()
 
+        self.init_labels()
+        self.init_buttons()
 
-    def set_final(self, final):
-        self.types_final["type"] = final
-        self.label_title = self.set_label_title()
-        # self.parent.align(self.label_title["label"])
-
-    def set_label_title(self):
-        label = {
+    def init_labels(self):
+        label_title = {
             "coords": [self.parent.display_w // 2, 20],
             "text": self.types_final[self.types_final["type"]]["text"],
-            "font": pygame.font.SysFont("Century Gothic", 40)
+            "font": pygame.font.Font(self.base_style["font_path"], 50)
         }
-        label["label"] = self.parent.label_text(coords=label["coords"],
-                                                text=label["text"],
-                                                font=label["font"])
-        label["label"], label["coords"] = self.parent.align(label["label"], label["coords"],
-                                                            inacurr=-20, type_blit=False, type_align="horizontal")
-        return label
+        label_title["label"] = self.parent.label_text(coords=label_title["coords"],
+                                                      text=label_title["text"],
+                                                      font=label_title["font"])
+        label_title["label"], label_title["coords"] = self.parent.align(label_title["label"], label_title["coords"],
+                                                                        inacurr=-20, type_blit=False,
+                                                                        type_align="horizontal")
+        self.labels.append(label_title)
 
-    def init_button_OK(self):
+    def init_buttons(self):
         w, h = 100, 90
-        self.button_OK = {
-            "font": pygame.font.SysFont("Century Gothic", 50),
+        button_OK = {
+            "font": pygame.font.Font(self.base_style["font_path"], 40),
             "coords": (self.parent.display_w // 2 - w, self.parent.display_h - h - 30, w, h),
+            "color": {
+                "inactive": self.base_style["colors"]["base2"],
+                "hover": self.base_style["colors"]["base1"],
+                "pressed": self.base_style["colors"]["light"],
+                "text": self.base_style["colors"]["light"]
+            },
             "text": "ОК",
             "func": lambda: self.parent.display_change("menu"),
-            "inv_clr": 1
         }
-        self.button_OK["button"] = self.parent.button(coords=self.button_OK["coords"],
-                                                           text=self.button_OK["text"],
-                                                           font=self.button_OK["font"],
-                                                           func=self.button_OK["func"],
-                                                           inv_clr=self.button_OK["inv_clr"])
+        button_OK["button"] = self.parent.button(coords=button_OK["coords"],
+                                                     text=button_OK["text"],
+                                                     color=button_OK["color"],
+                                                     font=button_OK["font"],
+                                                     func=button_OK["func"])
+        self.buttons.append(button_OK)
 
-    def reinstall(self, _type):
-        if _type == "hide":
-            print("hide final")
-            self.button_OK["button"].hide()
-        elif _type == "show":
-            print("show final")
-            self.parent.display.fill(self.base_color["dark"])
-            self.button_OK["button"].show()
-            self.parent.display.blit(self.label_title["label"], self.label_title["coords"])
+    def delete_all(self):
+        # print("SETT", *list(map(lambda x: x["text"] if "text" in x.keys() else x["texts"], self.buttons)), sep=" ")
+        for _ in range(len(self.buttons)):
+            del self.buttons[0]
+        del self.buttons
+
+    def draw(self):
+        self.parent.display.fill(self.base_style["colors"]["dark"])
+        for i in self.labels: self.parent.display.blit(i["label"], i["coords"])
