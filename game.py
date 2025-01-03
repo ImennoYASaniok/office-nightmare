@@ -3,164 +3,8 @@
 
 import pygame
 import pygame_widgets
-from pygame.locals import Rect
 
-TYPE_BUTTONS = {
-    "color": {
-            "inactive": (0, 0, 0, 0), # (0, 0, 0)
-            "hover": (200, 208, 200, 200), # (0, 32, 214)
-            "pressed": (200, 208, 200),
-            "text": (200, 208, 200)
-    }
-}
-
-
-
-class Object:
-    def __init__(self, parent, game, base_style, coords, size, image=None, size_rect=(0, 20), type_collide="rect"): #absolute_coords_rect=(0, 0)
-        self.base_style = base_style
-        self.parent = parent
-        self.game = game
-        self.image = image
-
-        size_rect = list(size_rect)
-
-        self.data = {
-            "color": self.base_style["colors"]["light"],
-            "coords": [coords[0], coords[1], size[0], size[1]],  # 50, 70
-            "size_rect": size_rect,
-            # "absolute_coords_rect": absolute_coords_rect,
-            "type_render": 1, # тип слоя, на котором будет отрисовка
-            # "type_collide": type_collide
-            # "mask" - коллизия по маске
-            # "rect" - коллизия по прямоугольнику
-        }
-        if self.image == None:
-            self.data["rect"] = Rect(coords[0], coords[1], size[0], size[1])
-        else:
-            self.data["sprite"] = pygame.image.load(self.image).convert_alpha()
-            self.data["sprite"] = pygame.transform.scale(self.data["sprite"],
-                                                         (self.data["coords"][2], self.data["coords"][3]))
-            self.data["mask"] = pygame.mask.from_surface(self.data["sprite"])
-            self.data["rect"] = self.data["sprite"].get_rect()
-        for i in range(len(size_rect)):
-            if self.data["size_rect"][i] == 0:
-                self.data["size_rect"][i] = size[i]
-            elif self.data["size_rect"][i] < 0:
-                self.data["size_rect"][i] = size[i] - abs(size_rect[i])
-            else:
-                self.data["size_rect"][i] = size_rect[i]
-        # if self.data["absolute_coords_rect"][0] <= 0:
-        #     self.data["absolute_coords_rect"][0] = self.data["coords"][0] + self.size[0]
-        # else:
-        #     self.data["absolute_coords_rect"][0] = self.data["absolute_coords_rect"][0]
-        self.set_sprite()
-
-    def set_sprite(self):
-        self.data["rect"].x = self.data["coords"][0] # + self.data["absolute_coords_rect"][0]
-        self.data["rect"].y = self.data["coords"][1] + self.data["coords"][3] - self.data["size_rect"][1] # - self.data["absolute_coords_rect"][1]
-        self.data["rect"].w = self.data["size_rect"][0] # self.data["coords"][2]
-        self.data["rect"].h = self.data["size_rect"][1] # self.character["coords"][3]
-
-    def update_sprite(self, image):
-        if self.image != None:
-            self.image = image
-            self.data["sprite"] = pygame.image.load(self.image).convert_alpha()
-            self.data["sprite"] = pygame.transform.scale(self.data["sprite"],(self.data["coords"][2], self.data["coords"][3]))
-            self.set_sprite()
-
-    def draw(self):
-        if self.image != None:
-            self.parent.display.blit(self.data["sprite"], self.data["coords"])
-
-
-
-class Hitbox_Button:
-    def __init__(self, parent, game, object, layer, func, coords, size, colors):
-        self.parent = parent
-        self.game = game
-        self.object = object
-        self.layer = layer
-        self.func = func
-        self.size = size
-        self.coords = coords
-        self.colors = colors
-        if "hover" not in self.colors.keys(): self.colors["hover"] = self.colors["inactive"]
-        elif "pressed" not in self.colors.keys(): self.colors["pressed"] = self.colors["inactive"]
-        self.data = {
-            "coords": (self.object.data["coords"][0]+self.coords[0], self.object.data["coords"][1]+self.coords[1], self.size[0], self.size[1]),
-            "color": {
-                "inactive": self.colors["inactive"],
-                "hover":  self.colors["hover"],
-                "pressed": self.colors["pressed"],
-                "text": self.colors["inactive"]
-            },
-            "func": self.func,
-            # "type_render": 1
-        }
-        self.create(layer)
-
-    def create(self, layer):
-        self.layer = layer
-        self.data["button"] = self.parent.button(coords=self.data["coords"],
-                                             text="",
-                                             color=self.data["color"],
-                                             font=pygame.font.SysFont(None, 30),
-                                             func=self.data["func"],
-                                            layer=layer
-                                            )
-    def delete(self):
-        del self.data["button"]
-
-
-
-class Level1:
-    def __init__(self, parent, game, base_style):
-        self.parent = parent
-        self.game = game
-        self.base_style = base_style
-
-        plant_1 = Object(self.parent, self.game, self.base_style, [200, 100],
-                         (100, 100), 'sprites/plants/plant_1.png')
-        plant_2 = Object(self.parent, self.game, self.base_style, [200, 300],
-                         (100, 100), 'sprites/plants/plant_1.png')
-
-        self.buttons = []
-        # ------------------
-        self.objects = {"plant_1": plant_1, "plant_2": plant_2}
-        self.list_objects = list(self.objects.values())
-        # ------------------
-        self.dop_objects = {}
-        self.list_dop_objects = list(self.dop_objects.values())
-
-        button_plant_1 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_1"],
-                                          layer=self.parent.display,
-                                          # self.game.layer_buttons_1
-                                          func=lambda: self.game.change_game('dash_hex'),
-                                          coords=TYPE_BUTTONS["comp_cord"],
-                                          size=(0, 0),
-                                          colors=TYPE_BUTTONS["color"])
-        button_plant_2 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_2"],
-                                          layer=self.parent.display,
-                                          # self.game.layer_buttons_1
-                                          func=lambda: self.game.change_game('dash_hex'),
-                                          coords=TYPE_BUTTONS["comp_cord"],
-                                          size=TYPE_BUTTONS["comp_size"],
-                                          colors=TYPE_BUTTONS["color"])
-
-
-class Map:
-    def __init__(self, parent, game, base_style):
-        self.parent = parent
-        self.game = game
-        self.base_style = base_style
-        self.info = {
-            "#": {
-                "w": 50, "h": 50,
-                "sprite": (0, 0, 255)
-            }
-        }
-        self.map = []
+from levels import Level1, Object, Hitbox_Button
 
 
 
@@ -327,14 +171,13 @@ class Game:
         self.base_style = base_style
         self.parent = parent
 
-        self.donats_many = 80
+        self.total_fps = 80
+        self.character_hp = 80
         self.character_energy = 30
         self.labels = []
         self.set_labels()
 
-        self.floor = pygame.Surface((1000, 800))
-        self.type_room = "reception"
-        self.flag_change_room = 0
+        self.floor = pygame.Surface((self.parent.display_w, self.parent.display_h))
 
         self.character = Character(self.parent, self, self.base_style)
 
@@ -352,13 +195,21 @@ class Game:
         self.buttons = []
         self.init_button_menu()
 
-        self.layer_buttons_1 = pygame.Surface((1000, 800), pygame.SRCALPHA, 32)
+        self.layer_buttons_1 = pygame.Surface((self.parent.display_w, self.parent.display_h), pygame.SRCALPHA, 32)
         self.layer_buttons_1 = self.layer_buttons_1.convert_alpha()
-        self.layer_buttons_2 = pygame.Surface((1000, 800), pygame.SRCALPHA, 32)
+        self.layer_buttons_2 = pygame.Surface((self.parent.display_w, self.parent.display_h), pygame.SRCALPHA, 32)
         self.layer_buttons_2 = self.layer_buttons_2.convert_alpha()
         self.old_data_layers = []
         self.data_layers = []
-        self.flag_mini_games = False
+
+        self.level1 = Level1(self.parent, self, self.base_style)
+
+        self.list_rooms = self.level1.list_rooms
+        self.type_room = list(self.list_rooms.keys())[0]
+        self.flag_change_room = 0
+        self.room_now = self.list_rooms[self.type_room](self.parent, self, self.base_style)
+        self.room_now.enter_rooms()
+        self.room_now.draw()
 
     def init_button_menu(self):
         w, h = 80, 50
@@ -382,7 +233,13 @@ class Game:
         self.buttons.append(button_ToMenu)
 
     def draw(self):
+        if self.flag_change_room:
+            self.flag_change_room = 0
+            self.room_now.delete_all()
+            self.room_now = self.list_rooms[self.type_room](self.parent, self, self.base_style)
+            self.room_now.enter_rooms()
         self.parent.display.blit(self.floor, (0, 0))
+        self.room_now.draw()
         # if self.flag_message_energy == 1: self.set_message()
         for i in self.labels: self.parent.display.blit(i["label"], i["coords"])
 
@@ -390,7 +247,7 @@ class Game:
         self.labels = []
         label_title = {
             "coords": (30, 0),
-            "text": f"Монет: {self.donats_many}",
+            "text": f"FPS: {self.total_fps}",
             "font": pygame.font.Font(self.base_style["font_path"], 30)
         }
         label_title["label"] = self.parent.label_text(coords=label_title["coords"],
@@ -402,7 +259,7 @@ class Game:
 
         label_title = {
             "coords": (30, 30),
-            "text": f"Энергии: {self.character_energy}",
+            "text": f"FPS: {self.character_energy}",
             "font": pygame.font.Font(self.base_style["font_path"], 30)
         }
         label_title["label"] = self.parent.label_text(coords=label_title["coords"],
@@ -433,54 +290,6 @@ class Game:
         self.parent.display.blit(label["label"], label["coords"])
         pygame.display.flip()
         pygame.time.wait(delay)
-
-    def set_message_exit(self, text):
-        label = {
-            "coords": (100, 100),
-            "text": text,
-            "font": self.parent.style["dop_font"]
-        }
-        label["label"] = self.parent.label_text(coords=label["coords"],
-                                                text=label["text"],
-                                                font=label["font"],
-                                                color=(255, 0, 0), type_blit=False)
-        label["label"], label["coords"] = self.parent.align(label["label"], label["coords"],
-                                            inacurr=-20, type_blit=False, type_align="center")
-        type_exit = None
-        def set_type_exit(val): type_exit = val
-        w, h = 80, 50
-        button_YES = {
-            "font": pygame.font.Font(self.base_style["font_path"], 30),
-            "coords": (self.parent.display_w//2, self.parent.display_h//2, w, h),
-            "text": "Да",
-            "color": {
-                "inactive": self.base_style["colors"]["base2"],
-                "hover": self.base_style["colors"]["base1"],
-                "pressed": self.base_style["colors"]["light"],
-                "text": self.base_style["colors"]["light"]
-            },
-            "func": lambda: set_type_exit("yes")
-        }
-        button_YES["button"] = self.parent.button(coords=button_YES["coords"],
-                                                     text=button_YES["text"],
-                                                     color=button_YES["color"],
-                                                     font=button_YES["font"],
-                                                     func=button_YES["func"])
-        bortic = 20
-        coords_rect = (label["coords"][0]-bortic,
-                       label["coords"][1]-bortic,
-                       label["label"].get_width()+bortic,
-                       label["label"].get_height()+bortic)
-        pygame.draw.rect(self.parent.display, (0, 0, 0), coords_rect)
-        while True:
-            self.parent.display.blit(label["label"], label["coords"])
-            if type_exit != None: break
-            pygame_widgets.update(pygame.event.get())
-            self.parent.clock.tick(self.parent.FPS)
-            pygame.display.update()
-        if type_exit == "yes": print("YESSS") # self.parent.display_change('menu')
-        elif type_exit == "no": self.parent.display_change('menu')
-        del button_YES
 
     def render_objects(self, objects, buttons=None, dop_objects=None, draw_rects=False):
         if dop_objects is not None: all_objects = objects + dop_objects
@@ -650,4 +459,5 @@ class Game:
                 commands[event.type][event.key]()
 
     def delete_all(self):
+        # print("GAME ", *list(map(lambda x: x["text"] if "text" in x.keys() else x["texts"], self.buttons)), sep=" ")
         for j in range(len(self.buttons)): del self.buttons[j]

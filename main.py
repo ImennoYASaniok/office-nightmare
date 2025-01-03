@@ -16,20 +16,22 @@ class Main:
         pygame.init()
         pygame.mixer.init()
 
-        self.display_w, self.display_h = 1000, 800
+        ########### ДИСПЛЕЙ
         self.FPS = 60
-
-
         self.running = 1
-        #self.type_display, self.flag_type_display = "menu", 1 # 0 - None | 1 - menu | 2 - game | 3 - final
+        self.display_w, self.display_h = self.display_w, self.display_h = pygame.display.Info().current_w - 10, pygame.display.Info().current_h - 50
+        self.list_active_surface = {'menu': Menu,
+                                    'game': Game,
+                                    'settings': Settings,
+                                    'refer': Refer,
+                                    'final': Final}
         self.type_display = "menu"
-        self.list_type_display = np.array([None, "menu", "game", "final", "settings", "refer",])
         self.style = {
-            "colors": {
-                "light": (200, 208, 200),
-                "base1": (0, 32, 214),
-                "base2": (0, 119, 0),
-                "dark": (10, 10, 10),
+                "colors": {
+                "light": (187, 148, 87),
+                "base1": (153, 88, 42),
+                "base2": (111, 29, 27),
+                "dark": (67, 40, 24),
                 "black": (0, 0, 0)
             },
             "font_path": "fonts/pixel/EpilepsySansBold.ttf",
@@ -37,10 +39,23 @@ class Main:
             # "fonts111/pixel/DotGothic16-Regular.ttf" - для латиницы слишком растянутый шрифт
             # fonts111/pixel/EpilepsySans.ttf - слишком сжатый текст, особенно при большом масштабе
         }
-
         self.display = pygame.display.set_mode((self.display_w, self.display_h))
-
         self.display.fill(self.style["colors"]["dark"])
+
+        ########### АКТИВНОЕ ОКНО
+        self.holst = self.list_active_surface[self.type_display](self, self.style)
+        self.changes_holst = 0
+
+        ########### ДИСПЛЕЙ
+        self.type_final = "victory"
+
+        ########### МУЗЫКА
+        self.musics = {'menu': 'music/menu.mp3',
+                       'game': 'music/game.mp3'}
+        self.type_music = 0
+        self.music_play = True
+
+        ########### ОСТАЛЬНОЕ
         pygame.display.set_caption("Ultimate")
         self.clock = pygame.time.Clock()
 
@@ -61,7 +76,7 @@ class Main:
             # border=100,  # Distance between buttons and edge of array
             texts=texts,
             fonts=fonts,
-            # colour=color["colour"],
+            colour=color["text"],
             inactiveColours=[color["inactive"]]*len(texts),  # Colour of button when not being interacted with
             hoverColours=[color["hover"]]*len(texts),  # Colour of button when being hovered over
             pressedColours=[color["pressed"]]*len(texts),  # Colour of button when being clicked
@@ -158,7 +173,10 @@ class Main:
 
     def display_change(self, type_display, dop_type=None):
         self.changes_holst = 1
-        #if type_display == "final": self.final.set_final(dop_type)
+        if dop_type != None: 
+            if type_display == "final":
+                self.type_final = dop_type
+                print("CHANGE FINAL", self.type_final)
         self.type_display = type_display
 
     def update_widgets(self):
@@ -174,31 +192,25 @@ class Main:
 
     def show(self):
         # self.view_logo()
-        self.list_active_surface = {'menu': Menu,
-                                    'game': Game,
-                                    'refer': Refer}
-        self.holst = self.list_active_surface[self.type_display](self, self.style)
-        self.changes_holst = 0
-        musics = {'menu': 'music/menu.mp3',
-                      'game': 'music/game.mp3'}
-        type_music = 0
-        self.music_play = True
-        pygame.mixer.music.load(musics['menu'])
+        pygame.mixer.music.load(self.musics['menu'])
         pygame.mixer.music.play(-1)
         while self.running:
             if self.changes_holst:
                 if self.type_display == 'game':
                     if self.music_play:
-                        pygame.mixer.music.load(musics['game'])
+                        pygame.mixer.music.load(self.musics['game'])
                         pygame.mixer.music.play(-1)
-                    type_music = 1
-                elif type_music:
+                    self.type_music = 1
+                elif self.type_music:
                     if self.music_play:
-                        pygame.mixer.music.load(musics['menu'])
+                        pygame.mixer.music.load(self.musics['menu'])
                         pygame.mixer.music.play(-1)
-                    type_music = 0
+                    self.type_music = 0
                 self.holst.delete_all()
-                self.holst = self.list_active_surface[self.type_display](self, self.style)
+                if self.type_display == "final":
+                    self.holst = self.list_active_surface[self.type_display](self, self.style, self.type_final)
+                else:
+                    self.holst = self.list_active_surface[self.type_display](self, self.style)
                 self.changes_holst = 0
 
             self.events = pygame.event.get()
@@ -213,16 +225,14 @@ class Main:
                 if event.type == pygame.QUIT: self.running = False
                 if self.type_display == "game":
                     self.holst.check_event(event)
-
-            if self.type_display == "refer":
-                self.holst.draw_donut()
             self.clock.tick(self.FPS)
             self.update_widgets()
             pygame.display.update()
 
     def music_off_or_on(self):
         self.music_play = not self.music_play
-        print(self.music_play)
+        self.holst.button_music["button"].setText(["выкл", "вкл"][self.music_play])
+        # print(self.holst.button_music["button"].string)
 
 if __name__ == "__main__":
     menu = Main()
