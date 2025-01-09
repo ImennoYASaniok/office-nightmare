@@ -42,18 +42,18 @@ class Main:
         self.display = pygame.display.set_mode((self.display_w, self.display_h))
         self.display.fill(self.style["colors"]["dark"])
 
-        ########### АКТИВНОЕ ОКНО
-        self.holst = self.list_active_surface[self.type_display](self, self.style)
-        self.changes_holst = 0
-
-        ########### ДИСПЛЕЙ
-        self.type_final = "victory"
-
         ########### МУЗЫКА
         self.musics = {'menu': 'music/menu.mp3',
                        'game': 'music/game.mp3'}
         self.type_music = 0
         self.music_play = True
+
+        ########### АКТИВНОЕ ОКНО
+        self.holst = self.list_active_surface[self.type_display](self, self.style)
+        self.changes_holst = 0
+
+        ########### РЕЗУЛЬТАТ ИГРЫ
+        self.type_final = "victory"
 
         ########### ОСТАЛЬНОЕ
         pygame.display.set_caption("Ultimate")

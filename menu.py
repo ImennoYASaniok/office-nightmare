@@ -43,7 +43,7 @@ class Menu:
         self.button_music = {
             "font": pygame.font.Font(self.base_style["font_path"], 30),
             "coords": (1400, 200, 80, 50),
-            "text": "вкл",
+            "text": "выкл",
             "color": {
                 "inactive": self.base_style["colors"]["base1"],
                 "hover": self.base_style["colors"]["base2"],
@@ -52,6 +52,10 @@ class Menu:
             },
             "func": lambda: self.parent.music_off_or_on()
         }
+        if self.button_music["text"] == "выкл":
+            self.parent.music_play = False
+        elif self.button_music["text"] == "вкл":
+            self.parent.music_play = True
         self.button_music["button"] = self.parent.button(coords=self.button_music["coords"],
                                                      text=self.button_music["text"],
                                                      color=self.button_music["color"],

@@ -5,7 +5,7 @@ from pygame.locals import Rect
 
 TYPE_BUTTONS = {
     "color": {
-            "inactive": (0, 0, 0, 0), # (0, 0, 0)
+            "inactive": (0, 200, 0, 100), # (0, 0, 0, 0)
             "hover": (200, 208, 200, 200), # (0, 32, 214)
             "pressed": (200, 208, 200),
             "text": (200, 208, 200)
@@ -82,39 +82,38 @@ class Object:
             self.data["sprite"] = pygame.transform.scale(self.data["sprite"],(self.data["coords"][2], self.data["coords"][3]))
             self.set_sprite()
 
-    def draw(self):
+    def draw(self): # layer
         if self.image != None:
-            self.parent.display.blit(self.data["sprite"], self.data["coords"])
+            self.game.game_layer.blit(self.data["sprite"], self.data["coords"]) # self.parent.display
 
 
 
 class Hitbox_Button:
-    def __init__(self, parent, game, object, layer, func, coords, size, colors):
+    def __init__(self, parent, game, object, func, coords, size, colors, layer=None, name=None):
         self.parent = parent
-        self.game = game
-        self.object = object
-        self.layer = layer
-        self.func = func
-        self.size = size
-        self.coords = coords
-        self.colors = colors
-        if "hover" not in self.colors.keys(): self.colors["hover"] = self.colors["inactive"]
-        elif "pressed" not in self.colors.keys(): self.colors["pressed"] = self.colors["inactive"]
+        # self.game = game
+        self.name = name
+        if "hover" not in colors.keys(): colors["hover"] = colors["inactive"]
+        elif "pressed" not in colors.keys(): colors["pressed"] = colors["inactive"]
+        coords = list(coords)
+        if object != None:
+            coords[0] += object.data["coords"][0]
+            coords[1] += object.data["coords"][1]
         self.data = {
-            "coords": (self.object.data["coords"][0]+self.coords[0], self.object.data["coords"][1]+self.coords[1], self.size[0], self.size[1]),
+            "coords": (coords[0], coords[1], size[0], size[1]),
             "color": {
-                "inactive": self.colors["inactive"],
-                "hover":  self.colors["hover"],
-                "pressed": self.colors["pressed"],
-                "text": self.colors["inactive"]
+                "inactive": colors["inactive"],
+                "hover":  colors["hover"],
+                "pressed": colors["pressed"],
+                "text": colors["inactive"]
             },
-            "func": self.func,
+            "func": func,
             # "type_render": 1
         }
-        self.create(layer)
+        if layer is not None:
+            self.create(layer)
 
     def create(self, layer):
-        self.layer = layer
         self.data["button"] = self.parent.button(coords=self.data["coords"],
                                              text="",
                                              color=self.data["color"],
@@ -122,6 +121,10 @@ class Hitbox_Button:
                                              func=self.data["func"],
                                             layer=layer
                                             )
+
+    def listen(self, events):
+        self.data["button"].listen(events)
+
     def delete(self):
         del self.data["button"]
 
@@ -143,30 +146,54 @@ class Start_room:
         self.game = game
         self.base_style = base_style
 
-        plant_1 = Object(self.parent, self.game, self.base_style, [200, 100],
-                         (100, 100), 'sprites/plants/plant_1.png')
-        plant_2 = Object(self.parent, self.game, self.base_style, [200, 150],
-                         (100, 100), 'sprites/plants/plant_1.png')
+        self.size_room_layer = [1300, 1300] # [3000, 3000]
+        self.room_layer = pygame.Surface(self.size_room_layer)
 
-        self.objects = {"plant_1": plant_1, "plant_2": plant_2}
+        plant_path = 'sprites/other/plant_1.png'
+        plant_1 = Object(self.parent, self.game, self.base_style, [200, 100],
+                         (100, 100), plant_path)
+        plant_2 = Object(self.parent, self.game, self.base_style, [200, 180],
+                         (100, 100), plant_path)
+        plant_3 = Object(self.parent, self.game, self.base_style, [200, 260],
+                         (100, 100), plant_path)
+        plant_4 = Object(self.parent, self.game, self.base_style, [200, 340],
+                         (100, 100), plant_path)
+
+        self.objects = {"plant_1": plant_1, "plant_2": plant_2, "plant_3": plant_3, "plant_4": plant_4}
         self.list_objects = list(self.objects.values())
         # ------------------
         self.dop_objects = {}
         self.list_dop_objects = list(self.dop_objects.values())
         # ------------------
         button_plant_1 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_1"],
-                                       layer=self.parent.display,
+                                       layer=None, # self.parent.display
                                        func=lambda: print("plant 1"),
                                        coords=(0, 0),
                                        size=(100, 100),
-                                       colors=TYPE_BUTTONS["color"])
+                                       colors=TYPE_BUTTONS["color"],
+                                       name="button_plant_1")
         button_plant_2 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_2"],
-                                       layer=self.parent.display,
+                                       layer=None, # self.parent.display
                                        func=lambda: print("plant 2"),
                                        coords=(0, 0),
                                        size=(100, 100),
-                                       colors=TYPE_BUTTONS["color"])
-        self.buttons = [button_plant_1, button_plant_2]
+                                       colors=TYPE_BUTTONS["color"],
+                                       name="button_plant_2")
+        button_plant_3 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_3"],
+                                       layer=None, # self.parent.display
+                                       func=lambda: print("plant 3"),
+                                       coords=(0, 0),
+                                       size=(100, 100),
+                                       colors=TYPE_BUTTONS["color"],
+                                       name="button_plant_3")
+        button_plant_4 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_4"],
+                                       layer=None, # self.parent.display
+                                       func=lambda: print("plant 4"),
+                                       coords=(0, 0),
+                                       size=(100, 100),
+                                       colors=TYPE_BUTTONS["color"],
+                                       name="button_plant_4")
+        self.buttons = [button_plant_1, button_plant_2, button_plant_3, button_plant_4]
 
     def enter_rooms(self):
         # self.game.floor.blit(self.texture_floor, (0, 0))
