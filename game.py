@@ -389,15 +389,31 @@ class Game:
         self.game_layer.fill(self.base_style["colors"]["base1"])  # Далее здесь вместо цвета, пол
 
         # ------ Перемещение карты (динамическая камеры)
-        self.set_dinamic_zone(output=True)
+        # self.set_dinamic_zone(type_output=2)
         if self.type_dinamic == 0:
-            if self.character.character["coords_display"][1] < self.coords_dinamic_zone[1] and self.flags_dinamic["down"] == 0: self.flags_dinamic["up"] = 1
+            if self.character.character["coords_display"][1] < self.coords_dinamic_zone[1]:
+                self.flags_dinamic["up"] = 1
+                self.flags_dinamic["down"] = 0
+                self.flags_dinamic["left"] = 0
+                self.flags_dinamic["right"] = 0
             else: self.flags_dinamic["up"] = 0
-            if self.character.character["coords_display"][1] > self.coords_dinamic_zone[3] and self.flags_dinamic["up"] == 0: self.flags_dinamic["down"] = 1
+            if self.character.character["coords_display"][1] > self.coords_dinamic_zone[3]:
+                self.flags_dinamic["up"] = 0
+                self.flags_dinamic["down"] = 1
+                self.flags_dinamic["left"] = 0
+                self.flags_dinamic["right"] = 0
             else: self.flags_dinamic["down"] = 0
-            if self.character.character["coords_display"][0] < self.coords_dinamic_zone[0] and self.flags_dinamic["right"] == 0: self.flags_dinamic["left"] = 1
+            if self.character.character["coords_display"][0] < self.coords_dinamic_zone[0]:
+                self.flags_dinamic["up"] = 0
+                self.flags_dinamic["down"] = 0
+                self.flags_dinamic["left"] = 1
+                self.flags_dinamic["right"] = 0
             else: self.flags_dinamic["left"] = 0
-            if self.character.character["coords_display"][0] > self.coords_dinamic_zone[2] and self.flags_dinamic["left"] == 0: self.flags_dinamic["right"] = 1
+            if self.character.character["coords_display"][0] > self.coords_dinamic_zone[2]:
+                self.flags_dinamic["up"] = 0
+                self.flags_dinamic["down"] = 0
+                self.flags_dinamic["left"] = 0
+                self.flags_dinamic["right"] = 1
             else: self.flags_dinamic["right"] = 0
         elif self.type_dinamic == 1:
             self.flags_dinamic["up"] = 1
@@ -443,14 +459,18 @@ class Game:
         rect_layer.fill(color[:3])
         layer.blit(rect_layer, (coords[0], coords[1]))
 
-    def set_dinamic_zone(self, output=False):
-        if output:
+    def set_dinamic_zone(self, type_output=0):
+        if type_output == 1:
             output_flags = list(self.flags_dinamic.values())
             print(f"{output_flags[0]} {int(self.character.character["coords_display"][1] < self.coords_dinamic_zone[1])} {self.character.character["coords_display"][1]}<{self.coords_dinamic_zone[1]}", end=" | ")
             print(f"{output_flags[1]} {int(self.character.character["coords_display"][1] > self.coords_dinamic_zone[3])} {self.character.character["coords_display"][1]}>{self.coords_dinamic_zone[3]}", end=" | ")
             print(f"{output_flags[2]} {int(self.character.character["coords_display"][0] < self.coords_dinamic_zone[0])} {self.character.character["coords_display"][0]}<{self.coords_dinamic_zone[0]}", end=" | ")
             print(f"{output_flags[3]} {int(self.character.character["coords_display"][0] > self.coords_dinamic_zone[2])} {self.character.character["coords_display"][0]}>{self.coords_dinamic_zone[2]}", end=" | ")
             print()
+        elif type_output == 2:
+            if list(self.flags_dinamic.values())[0] == 0: # up
+                print(f"up {self.character.character["coords_display"][1]}<{self.coords_dinamic_zone[1]}")
+
         self.set_rect(coords=(self.start_coords_dinamic_zone[0],
                               self.start_coords_dinamic_zone[1],
                               self.start_coords_dinamic_zone[2] - self.start_coords_dinamic_zone[0],
