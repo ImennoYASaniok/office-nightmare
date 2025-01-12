@@ -287,14 +287,14 @@ class Game:
             "left": 0,
             "right": 0,
         }
-        self.type_dinamic = 0
+        self.type_dinamic = self.parent.settings_var["type_dinamic"]
         # значения self.type_dinamic:
         # 0 - динамическая камера с прямоугольной зоной
         # 1 - постоянная динамическая зона
         # ------ Стартовая отрисовка комнаты
         self.room_now.enter_rooms()
 
-        # ------ Мышка
+        # ------------ Мышка
         self.coords_cursor = pygame.mouse.get_pos()
         self.old_coords_cursor = self.coords_cursor
 
@@ -386,7 +386,8 @@ class Game:
         # ------ Иницилизация карты, пола
         self.parent.display.fill(self.base_style["colors"]["black"])
         self.parent.display.blit(self.game_layer, (self.coords_game_layer[0], self.coords_game_layer[1]))
-        self.game_layer.fill(self.base_style["colors"]["base1"])  # Далее здесь вместо цвета, пол
+        self.game_layer.fill(self.base_style["colors"]["base1"])
+        self.game_layer.blit(self.room_now.floor, (0, 0))
 
         # ------ Перемещение карты (динамическая камеры)
         # self.set_dinamic_zone(type_output=2)

@@ -1,7 +1,20 @@
 import pygame
 from pygame.locals import Rect
 
-
+THICKNESS_WALL = 30
+HEIGHT_WALL = 200
+DELTA_SIZE_NEAR_OBJECTS = 3
+WIDTH_DOOR = 250
+# (Пока что двери нет, а имеется ввиду просто проход)
+# Размеры двери смотрятся вот так: (------- <- это типо дверь)
+#
+# Спереди:                                              Cбоку:
+#
+# WIDTH_DOOR                                   |
+#    |                                         | <- WIDTH_DOOR
+# ------- <-HEIGHT_DOOR (=THICKNESS_WALL)      |
+#                                             /
+#                                          HEIGHT_DOOR (=THICKNESS_WALL)
 
 TYPE_BUTTONS = {
     "color": {
@@ -146,54 +159,83 @@ class Start_room:
         self.game = game
         self.base_style = base_style
 
-        self.size_room_layer = [1300, 1300] # [3000, 3000]
+        self.size_room_layer = [1500, 1500] # [3000, 3000]
         self.room_layer = pygame.Surface(self.size_room_layer)
 
-        plant_path = 'sprites/other/plant_1.png'
-        plant_1 = Object(self.parent, self.game, self.base_style, [200, 100],
-                         (100, 100), plant_path)
-        plant_2 = Object(self.parent, self.game, self.base_style, [200, 180],
-                         (100, 100), plant_path)
-        plant_3 = Object(self.parent, self.game, self.base_style, [200, 260],
-                         (100, 100), plant_path)
-        plant_4 = Object(self.parent, self.game, self.base_style, [200, 340],
-                         (100, 100), plant_path)
-
-        self.objects = {"plant_1": plant_1, "plant_2": plant_2, "plant_3": plant_3, "plant_4": plant_4}
+        size_hall = [400, 400]
+        delta_hall = [0, 0]
+        # ------ Пол
+        self.floor = pygame.image.load('sprites/floor/floor_start_room.png')
+        self.room_layer.blit(self.floor, (0, 0))
+        self.floor_empty_zone = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                       coords=[self.size_room_layer[0] - size_hall[0] + THICKNESS_WALL, size_hall[1] + HEIGHT_WALL],
+                                       size=(size_hall[0] - THICKNESS_WALL, self.size_room_layer[1] - size_hall[1] - HEIGHT_WALL),
+                                       image=f'sprites/floor_empty_zone.png',
+                                       size_rect=(0, 0))
+        # ------ Остальные объекты
+        wall_up = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=[0, 0],
+                           size=(self.size_room_layer[0], HEIGHT_WALL),
+                           image=f'sprites/walls/wall_red_front.png',
+                           size_rect=(0, 0))
+        wall_down_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=[0, self.size_room_layer[1]],
+                           size=(self.size_room_layer[0], THICKNESS_WALL),
+                           image=None, size_rect=(0, 0))
+        wall_down_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=[self.size_room_layer[0] - size_hall[0] + THICKNESS_WALL, size_hall[1]],
+                           size=(size_hall[0] - THICKNESS_WALL, HEIGHT_WALL),
+                           image=f'sprites/walls/wall_red_frontdop.png',
+                           size_rect=(0, -HEIGHT_WALL + 30))
+        wall_left = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=[0, 0],
+                           size=(THICKNESS_WALL, self.size_room_layer[1] - HEIGHT_WALL),
+                           image=f'sprites/walls/wall_red_top.png',
+                           size_rect=(0, 0))
+        wall_left_front = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                 coords=[0, self.size_room_layer[1]-HEIGHT_WALL],
+                                 size=(THICKNESS_WALL, HEIGHT_WALL),
+                                 image=f'sprites/walls/wall_red_front.png',
+                                 size_rect=(0, 0))
+        wall_right_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                              coords=[self.size_room_layer[0]-size_hall[0], size_hall[1]],
+                              size=(THICKNESS_WALL, self.size_room_layer[1] - size_hall[1] - HEIGHT_WALL),
+                              image=f'sprites/walls/wall_red_top.png',
+                              size_rect=(0, -HEIGHT_WALL+30-DELTA_SIZE_NEAR_OBJECTS))
+        wall_right_front_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                    coords=[self.size_room_layer[0]-size_hall[0], self.size_room_layer[1] - HEIGHT_WALL],
+                                    size=(THICKNESS_WALL, HEIGHT_WALL),
+                                    image=f'sprites/walls/wall_red_front.png',
+                                    size_rect=(0, 0))
+        wall_right_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                              coords=[self.size_room_layer[1] - THICKNESS_WALL, THICKNESS_WALL - DELTA_SIZE_NEAR_OBJECTS],
+                              size=(THICKNESS_WALL,  (size_hall[1]-WIDTH_DOOR)//2+delta_hall[1]), #  + THICKNESS_WALL
+                              image=f'sprites/walls/wall_red_top.png',
+                              size_rect=(0, -HEIGHT_WALL + 30 - DELTA_SIZE_NEAR_OBJECTS))
+        wall_right_front_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                    coords=[self.size_room_layer[1] - THICKNESS_WALL, THICKNESS_WALL+wall_right_2.data["coords"][3] - DELTA_SIZE_NEAR_OBJECTS],
+                                    size=(THICKNESS_WALL, HEIGHT_WALL),
+                                    image=f'sprites/walls/wall_red_front.png',
+                                    size_rect=(0, 0))
+        delta_wall_right_3_x = 30
+        wall_right_3 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                              coords=[self.size_room_layer[1] - THICKNESS_WALL, THICKNESS_WALL+wall_right_2.data["coords"][3]+WIDTH_DOOR - DELTA_SIZE_NEAR_OBJECTS - delta_wall_right_3_x],
+                              size=(THICKNESS_WALL, (size_hall[1]-WIDTH_DOOR)//2+delta_hall[1]+HEIGHT_WALL), # +100+delta_wall_right_3_x
+                              image=f'sprites/walls/wall_red_top.png',
+                              size_rect=(0, -HEIGHT_WALL+30))
+        # ------ Добавление всех объектов
+        self.objects = {
+            "floor_empty_zone": self.floor_empty_zone,
+            "wall_up": wall_up, "wall_down_1": wall_down_1, "wall_down_2":wall_down_2,
+            "wall_left":wall_left, "wall_left_front":wall_left_front,
+            "wall_right":wall_right_1, "wall_right_front":wall_right_front_1,
+            "wall_right_2": wall_right_2,  "wall_right_front_2": wall_right_front_2, "wall_right_3": wall_right_3
+        }
         self.list_objects = list(self.objects.values())
         # ------------------
         self.dop_objects = {}
         self.list_dop_objects = list(self.dop_objects.values())
-        # ------------------
-        button_plant_1 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_1"],
-                                       layer=None, # self.parent.display
-                                       func=lambda: print("plant 1"),
-                                       coords=(0, 0),
-                                       size=(100, 100),
-                                       colors=TYPE_BUTTONS["color"],
-                                       name="button_plant_1")
-        button_plant_2 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_2"],
-                                       layer=None, # self.parent.display
-                                       func=lambda: print("plant 2"),
-                                       coords=(0, 0),
-                                       size=(100, 100),
-                                       colors=TYPE_BUTTONS["color"],
-                                       name="button_plant_2")
-        button_plant_3 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_3"],
-                                       layer=None, # self.parent.display
-                                       func=lambda: print("plant 3"),
-                                       coords=(0, 0),
-                                       size=(100, 100),
-                                       colors=TYPE_BUTTONS["color"],
-                                       name="button_plant_3")
-        button_plant_4 = Hitbox_Button(parent=self.parent, game=self.game, object=self.objects["plant_4"],
-                                       layer=None, # self.parent.display
-                                       func=lambda: print("plant 4"),
-                                       coords=(0, 0),
-                                       size=(100, 100),
-                                       colors=TYPE_BUTTONS["color"],
-                                       name="button_plant_4")
-        self.buttons = [button_plant_1, button_plant_2, button_plant_3, button_plant_4]
+        self.buttons = []
 
     def enter_rooms(self):
         # self.game.floor.blit(self.texture_floor, (0, 0))
@@ -201,4 +243,4 @@ class Start_room:
         self.game.old_data_layers = [0] * len(self.buttons)
 
     def draw(self):
-        self.game.render_objects(self.list_objects, buttons=self.buttons, dop_objects=self.list_dop_objects)
+        self.game.render_objects(self.list_objects, dop_objects=self.list_dop_objects) # buttons=self.buttons

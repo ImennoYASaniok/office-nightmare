@@ -40,29 +40,6 @@ class Menu:
                                                               funcs=buttons["funcs"])
         self.buttons.append(buttons)
 
-        self.button_music = {
-            "font": pygame.font.Font(self.base_style["font_path"], 30),
-            "coords": (1400, 200, 80, 50),
-            "text": "выкл",
-            "color": {
-                "inactive": self.base_style["colors"]["base1"],
-                "hover": self.base_style["colors"]["base2"],
-                "pressed": self.base_style["colors"]["light"],
-                "text": self.base_style["colors"]["light"]
-            },
-            "func": lambda: self.parent.music_off_or_on()
-        }
-        if self.button_music["text"] == "выкл":
-            self.parent.music_play = False
-        elif self.button_music["text"] == "вкл":
-            self.parent.music_play = True
-        self.button_music["button"] = self.parent.button(coords=self.button_music["coords"],
-                                                     text=self.button_music["text"],
-                                                     color=self.button_music["color"],
-                                                     font=self.button_music["font"],
-                                                     func=self.button_music["func"])
-        self.buttons.append(self.button_music)
-
     def init_labels(self):
         label_title = {
             "coords": (0, 50),
@@ -76,22 +53,11 @@ class Menu:
                                                             type_blit=False, type_align="horizontal")
         self.labels.append(label_title)
 
-        label_music = {
-            "coords": (1250, 200+5),
-            "text": "музыка",
-            "font": pygame.font.Font(self.base_style["font_path"], 40)
-        }
-        label_music["label"] = self.parent.label_text(coords=label_music["coords"],
-                                                      text=label_music["text"],
-                                                      font=label_music["font"])
-        self.labels.append(label_music)
-
 
     def delete_all(self):
         # print("MENU ", *list(map(lambda x: x["text"] if "text" in x.keys() else x["texts"], self.buttons)), sep=" ")
         for _ in range(len(self.buttons)):
             del self.buttons[0]
-        del self.button_music
         del self.buttons
 
 
