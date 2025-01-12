@@ -1,4 +1,5 @@
 from PIL import Image
+import random
 
 def del_border(path, type_save="save", new_name=""):
     if "." not in new_name: new_name = new_name + ".png"
@@ -77,22 +78,87 @@ def sprite_crop(path, type_sprites, sprite, grid, inacurr=[0, 0, 0, 0], sep=(), 
 
 
 
-def set_image_expansion(image_paths, k, quality=95): # изменение расширение картинки
-    for path in image_paths:
-        image = Image.open(path)
-        image.reduce(k).save(path, quality=quality)
+def set_image_expansion(input_path, output_path, k=None, size=None, type_side="width", quality=95): # изменение расширение картинки
+    if k == None and size == None:
+        raise ValueError("параметр k или side должен присутствовать")
+    image = Image.open(input_path)
+    if (k != None and size == None) or (k != None and size != None):
+        image = image.reduce(k)
+    elif k == None and size != None:
+        if type(size) == int:
+            if type_side == "width":
+                image = image.resize((size, image.size[1] // (image.size[0] // size)))
+            elif type_side == "height":
+                image = image.resize((image.size[0] // (image.size[1] // size), size))
+            else:
+                raise ValueError("type_side должен быть равен или width, или height")
+        elif type(size) in (tuple, list):
+            if len(size) >= 2:
+                size = list(size)
+                image = image.resize((size[0], size[1]))
+            else:
+                raise ValueError("Если size имеет списочный тип данных, то у него должно быть как минимум 2 элемента")
+        else:
+            raise ValueError("Неправильный тип у size, должен быть int, tuple, list")
+    image.save(output_path, quality=quality)
 
+
+
+def make_floor(input_path, output_path, size, random_flip=("horizontal", "vertical")):
+    # random_dir:
+    # "horizontal" - Image.Transpose.FLIP_LEFT_RIGHT - зеркаливание по горизонтали
+    # "vertical" - Image.Transpose.FLIP_TOP_BOTTOM - зеркаливание по вертикале
+    input_img = Image.open(input_path)
+    ramdom_data = [1]
+    if "horizontal" in random_flip: ramdom_data.append(2)
+    if "vertical" in random_flip: ramdom_data.append(3)
+    res_img = Image.new("RGB", size, "white")
+    for k_x in range(0, int(size[0]/input_img.size[0])+1):
+        for k_y in range(0, int(size[1] / input_img.size[1])+1):
+            res_input_img = input_img
+            random_val = random.choice(ramdom_data)
+            print(random_val)
+            if random_val == 1:
+                res_input_img = input_img
+            elif random_val == 2:
+                res_input_img = input_img.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+            elif random_val == 3:
+                res_input_img = input_img.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+            res_img.paste(res_input_img, (k_x*input_img.size[0], k_y*input_img.size[1]))
+    res_img.save(output_path)
 
 
 ############################## ПРОСТРАНСТВО РЕДАКТОРА ##############################
+# --------------
 # del_border("character/choice1/death/death.png", type_save="save", new_name="crop_death.png")
 
+# --------------
 # sprite_crop(r"C:\Users\maxim\Desktop\SASHA\PROJECTS\Office_Nightmare_versions\PyGame\sprites\character\base_choice\walk\_up walk.png",
 #             type_sprites=["back", "back_4"], name="walk",
 #             sprite=(20, 35), grid=(2, 4),
 #             inacurr=[1], sep=())
 
-set_image_expansion(image_paths=list(map(lambda i: f"comp/gaming_comp_{i}.png", range(1, 10))),
-                    k=3,
-                    quality=35)
+# --------------
+# set_image_expansion(image_paths=list(map(lambda i: f"comp/gaming_comp_{i}.png", range(1, 10))),
+#                     k=3,
+#                     quality=35)
 
+# --------------
+# set_image_expansion(input_path="floor/start_floor_wood_1.png",
+#                     output_path="floor/floor_wood_1.png",
+#                     k=None,
+#                     size=140,
+#                     type_side="height",
+#                     quality=95)
+
+# make_floor(input_path="floor/floor_wood_1.png",
+#            output_path="floor/floor_start_room.png",
+#            size=[1500, 1500],
+#            random_flip=["horizontal"])
+
+# --------------
+set_image_expansion(input_path="floor_empty_zone.png",
+                    output_path="floor_empty_zone.png",
+                    size=(10, 10),
+                    type_side="height",
+                    quality=95)

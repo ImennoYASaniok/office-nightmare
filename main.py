@@ -19,7 +19,7 @@ class Main:
         ########### ДИСПЛЕЙ
         self.FPS = 60
         self.running = 1
-        self.display_w, self.display_h = self.display_w, self.display_h = pygame.display.Info().current_w - 10, pygame.display.Info().current_h - 50
+        self.display_w, self.display_h = pygame.display.Info().current_w - 10, pygame.display.Info().current_h - 50
         self.list_active_surface = {'menu': Menu,
                                     'game': Game,
                                     'settings': Settings,
@@ -27,7 +27,7 @@ class Main:
                                     'final': Final}
         self.type_display = "menu"
         self.style = {
-                "colors": {
+            "colors": {
                 "light": (187, 148, 87),
                 "base1": (153, 88, 42),
                 "base2": (111, 29, 27),
@@ -46,11 +46,20 @@ class Main:
         self.musics = {'menu': 'music/menu.mp3',
                        'game': 'music/game.mp3'}
         self.type_music = 0
-        self.music_play = True
 
         ########### АКТИВНОЕ ОКНО
         self.holst = self.list_active_surface[self.type_display](self, self.style)
         self.changes_holst = 0
+
+        ########### НАСТРОЙКИ
+        self.settings_var = {
+            "music_play": 0,
+            # 0 - музыка играет
+            # 1 - музыка не играет
+            "type_dinamic": 0
+            # 0 - динамическая камера с прямоугольной зоной
+            # 1 - постоянная динамическая зона
+        }
 
         ########### РЕЗУЛЬТАТ ИГРЫ
         self.type_final = "victory"
@@ -58,6 +67,7 @@ class Main:
         ########### ОСТАЛЬНОЕ
         pygame.display.set_caption("Ultimate")
         self.clock = pygame.time.Clock()
+
 
     def buttons(self, coords, layout, texts, color, fonts, funcs):
         check_keys = {
@@ -185,24 +195,25 @@ class Main:
 
     def view_logo(self):
         logo = pygame.image.load('sprites/logo.png')
-        self.display.fill((255, 255, 255))
-        self.display.blit(logo, (0, 0))
+        logo = pygame.transform.scale(logo, (logo.get_width() // (logo.get_height()/self.display_h), self.display_h))
+        self.display.fill((0, 0, 0))
+        self.display.blit(logo, ((self.display_w-logo.get_width()) // 2, 0))
         pygame.display.flip()
         pygame.time.wait(1000)
 
     def show(self):
-        # self.view_logo()
+        self.view_logo()
         pygame.mixer.music.load(self.musics['menu'])
         pygame.mixer.music.play(-1)
         while self.running:
             if self.changes_holst:
                 if self.type_display == 'game':
-                    if self.music_play:
+                    if self.settings_var["music_play"]:
                         pygame.mixer.music.load(self.musics['game'])
                         pygame.mixer.music.play(-1)
                     self.type_music = 1
                 elif self.type_music:
-                    if self.music_play:
+                    if self.settings_var["music_play"]:
                         pygame.mixer.music.load(self.musics['menu'])
                         pygame.mixer.music.play(-1)
                     self.type_music = 0
@@ -215,7 +226,7 @@ class Main:
 
             self.events = pygame.event.get()
 
-            if not self.music_play:
+            if not self.settings_var["music_play"]:
                 pygame.mixer.music.pause()
             else:
                 pygame.mixer.music.unpause()
@@ -230,9 +241,13 @@ class Main:
             pygame.display.update()
 
     def music_off_or_on(self):
-        self.music_play = not self.music_play
-        self.holst.button_music["button"].setText(["выкл", "вкл"][self.music_play])
+        self.settings_var["music_play"] = not self.settings_var["music_play"]
+        self.holst.button_music["button"].setText(["выкл", "вкл"][self.settings_var["music_play"]])
         # print(self.holst.button_music["button"].string)
+
+    def change_type_dinamic(self):
+        self.settings_var["type_dinamic"] = not self.settings_var["type_dinamic"]
+        self.holst.button_type_dinamic_camera["button"].setText(["с зоной", "без зоны"][self.settings_var["type_dinamic"]])
 
 if __name__ == "__main__":
     menu = Main()
