@@ -56,9 +56,12 @@ class Main:
             "music_play": 0,
             # 0 - музыка играет
             # 1 - музыка не играет
-            "type_dinamic": 0
+            "type_dinamic": 0,
             # 0 - динамическая камера с прямоугольной зоной
             # 1 - постоянная динамическая зона
+            "do_draw_dinamic_zone": 0
+            # 0 - отрисовать
+            # 1 - не отрисовывать
         }
 
         ########### РЕЗУЛЬТАТ ИГРЫ
@@ -240,14 +243,17 @@ class Main:
             self.update_widgets()
             pygame.display.update()
 
-    def music_off_or_on(self):
+    def change_music(self):
         self.settings_var["music_play"] = not self.settings_var["music_play"]
         self.holst.button_music["button"].setText(["выкл", "вкл"][self.settings_var["music_play"]])
-        # print(self.holst.button_music["button"].string)
 
     def change_type_dinamic(self):
         self.settings_var["type_dinamic"] = not self.settings_var["type_dinamic"]
         self.holst.button_type_dinamic_camera["button"].setText(["с зоной", "без зоны"][self.settings_var["type_dinamic"]])
+
+    def change_draw_dinamic(self):
+        self.settings_var["do_draw_dinamic_zone"] = not self.settings_var["do_draw_dinamic_zone"]
+        self.holst.button_draw_dinamic_camera["button"].setText(["выкл", "вкл"][self.settings_var["do_draw_dinamic_zone"]])
 
 if __name__ == "__main__":
     menu = Main()
