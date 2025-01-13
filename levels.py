@@ -141,6 +141,8 @@ class Hitbox_Button:
     def delete(self):
         del self.data["button"]
 
+class Enemy(Object):
+    pass
 
 
 class Level1:
@@ -223,6 +225,11 @@ class Start_room:
                               size=(THICKNESS_WALL, (size_hall[1]-WIDTH_DOOR)//2+delta_hall[1]+HEIGHT_WALL), # +100+delta_wall_right_3_x
                               image=f'sprites/walls/wall_red_top.png',
                               size_rect=(0, -HEIGHT_WALL+30))
+        # enemy = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+        #                       coords=[self.size_room_layer[1] - THICKNESS_WALL, THICKNESS_WALL+wall_right_2.data["coords"][3]+WIDTH_DOOR - DELTA_SIZE_NEAR_OBJECTS - delta_wall_right_3_x],
+        #                       size=(THICKNESS_WALL, (size_hall[1]-WIDTH_DOOR)//2+delta_hall[1]+HEIGHT_WALL), # +100+delta_wall_right_3_x
+        #                       image=f'sprites/walls/wall_red_top.png',
+        #                       size_rect=(0, -HEIGHT_WALL+30))
         # ------ Добавление всех объектов
         self.objects = {
             "floor_empty_zone": self.floor_empty_zone,

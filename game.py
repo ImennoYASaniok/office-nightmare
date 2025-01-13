@@ -288,6 +288,7 @@ class Game:
             "right": 0,
         }
         self.type_dinamic = self.parent.settings_var["type_dinamic"]
+        self.do_draw_dinamic_zone = self.parent.settings_var["do_draw_dinamic_zone"]
         # значения self.type_dinamic:
         # 0 - динамическая камера с прямоугольной зоной
         # 1 - постоянная динамическая зона
@@ -390,7 +391,7 @@ class Game:
         self.game_layer.blit(self.room_now.floor, (0, 0))
 
         # ------ Перемещение карты (динамическая камеры)
-        # self.set_dinamic_zone(type_output=2)
+        if self.do_draw_dinamic_zone == 1: self.set_dinamic_zone(type_output=2)
         if self.type_dinamic == 0:
             if self.character.character["coords_display"][1] < self.coords_dinamic_zone[1]:
                 self.flags_dinamic["up"] = 1
@@ -472,16 +473,16 @@ class Game:
             if list(self.flags_dinamic.values())[0] == 0: # up
                 print(f"up {self.character.character["coords_display"][1]}<{self.coords_dinamic_zone[1]}")
 
-        self.set_rect(coords=(self.start_coords_dinamic_zone[0],
-                              self.start_coords_dinamic_zone[1],
-                              self.start_coords_dinamic_zone[2] - self.start_coords_dinamic_zone[0],
-                              self.start_coords_dinamic_zone[3] - self.start_coords_dinamic_zone[1]),
-                      color=(50, 50, 50, 100), layer=self.parent.display)
-        self.set_rect(coords=(self.start2_coords_dinamic_zone[0],
-                              self.start2_coords_dinamic_zone[1],
-                              self.start2_coords_dinamic_zone[2] - self.start2_coords_dinamic_zone[0],
-                              self.start2_coords_dinamic_zone[3] - self.start2_coords_dinamic_zone[1]),
-                      color=(50, 50, 50, 100), layer=self.game_layer)
+        # self.set_rect(coords=(self.start_coords_dinamic_zone[0],
+        #                       self.start_coords_dinamic_zone[1],
+        #                       self.start_coords_dinamic_zone[2] - self.start_coords_dinamic_zone[0],
+        #                       self.start_coords_dinamic_zone[3] - self.start_coords_dinamic_zone[1]),
+        #               color=(50, 50, 50, 100), layer=self.parent.display)
+        # self.set_rect(coords=(self.start2_coords_dinamic_zone[0],
+        #                       self.start2_coords_dinamic_zone[1],
+        #                       self.start2_coords_dinamic_zone[2] - self.start2_coords_dinamic_zone[0],
+        #                       self.start2_coords_dinamic_zone[3] - self.start2_coords_dinamic_zone[1]),
+        #               color=(50, 50, 50, 100), layer=self.game_layer)
         self.set_rect(coords=(self.coords_dinamic_zone[0],
                               self.coords_dinamic_zone[1],
                               self.coords_dinamic_zone[2] - self.coords_dinamic_zone[0],

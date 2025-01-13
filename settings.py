@@ -14,7 +14,7 @@ class Settings:
     def init_frontend(self):
         # !!! Если нужно будет создавать много label -> сделай init_label_title общей для всех и возвращай label_title
         # ------ Переменные
-        SPACES = {"title":10, "point":5, "line":30} # Вертикальные пробелы между объектами
+        SPACES = {"title":10, "point":30, "line":30} # Вертикальные пробелы между объектами
         INDENTS = [10, 10] # Отступ | [начало, конец]
         WIDTH_LINE = 4
         height_base = 0
@@ -105,7 +105,7 @@ class Settings:
                 "pressed": self.base_style["colors"]["light"],
                 "text": self.base_style["colors"]["light"]
             },
-            "func": lambda: self.parent.music_off_or_on()
+            "func": lambda: self.parent.change_music()
         }
         if self.parent.settings_var["music_play"] == 0:
             self.button_music["text"] = "выкл"
@@ -185,6 +185,44 @@ class Settings:
         self.buttons.append(self.button_type_dinamic_camera)
         height_base += label_type_dinamic_camera["label"].get_height()
         # =-=-=-
+        # =-=-=- Строка
+        # ------ Надпись
+        height_base += SPACES["point"]
+        label_draw_dinamic_camera = {
+            "coords": [INDENTS[0], height_base],
+            "text": "отрисовка динамической зоны",
+            "font": pygame.font.Font(self.base_style["font_path"], SIZE_LABEL)
+        }
+        label_draw_dinamic_camera["label"] = self.parent.label_text(coords=label_draw_dinamic_camera["coords"],
+                                                                    text=label_draw_dinamic_camera["text"],
+                                                                    font=label_draw_dinamic_camera["font"])
+        self.labels.append(label_draw_dinamic_camera)
+        # ------ Кнопка
+        delta_width = 50
+        self.button_draw_dinamic_camera = {
+            "font": pygame.font.Font(self.base_style["font_path"], 30),
+            "coords": [self.parent.display_w - INDENTS[1] - button_w - delta_width, height_base, button_w + delta_width, button_h],
+            "text": "выкл",
+            "color": {
+                "inactive": self.base_style["colors"]["base1"],
+                "hover": self.base_style["colors"]["base2"],
+                "pressed": self.base_style["colors"]["light"],
+                "text": self.base_style["colors"]["light"]
+            },
+            "func": lambda: self.parent.change_draw_dinamic()
+        }
+        if self.parent.settings_var["do_draw_dinamic_zone"] == 0:
+            self.button_draw_dinamic_camera["text"] = "выкл"
+        elif self.parent.settings_var["do_draw_dinamic_zone"] == 1:
+            self.button_draw_dinamic_camera["text"] = "вкл"
+        self.button_draw_dinamic_camera["button"] = self.parent.button(coords=self.button_draw_dinamic_camera["coords"],
+                                                                       text=self.button_draw_dinamic_camera["text"],
+                                                                       color=self.button_draw_dinamic_camera["color"],
+                                                                       font=self.button_draw_dinamic_camera["font"],
+                                                                       func=self.button_draw_dinamic_camera["func"])
+        self.buttons.append(self.button_draw_dinamic_camera)
+        height_base += label_draw_dinamic_camera["label"].get_height()
+        # =-=-=-
 
 
     def delete_all(self):
@@ -193,6 +231,7 @@ class Settings:
             del self.buttons[0]
         del self.button_music
         del self.button_type_dinamic_camera
+        del self.button_draw_dinamic_camera
         del self.buttons
 
     def draw(self):

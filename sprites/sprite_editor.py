@@ -87,9 +87,10 @@ def set_image_expansion(input_path, output_path, k=None, size=None, type_side="w
     elif k == None and size != None:
         if type(size) == int:
             if type_side == "width":
-                image = image.resize((size, image.size[1] // (image.size[0] // size)))
+                image = image.resize((size, int(image.size[0] // (image.size[1] / size))))
             elif type_side == "height":
-                image = image.resize((image.size[0] // (image.size[1] // size), size))
+                print()
+                image = image.resize((int(image.size[0] // (image.size[1] / size)), size))
             else:
                 raise ValueError("type_side должен быть равен или width, или height")
         elif type(size) in (tuple, list):
@@ -157,8 +158,8 @@ def make_floor(input_path, output_path, size, random_flip=("horizontal", "vertic
 #            random_flip=["horizontal"])
 
 # --------------
-set_image_expansion(input_path="floor_empty_zone.png",
-                    output_path="floor_empty_zone.png",
-                    size=(10, 10),
+set_image_expansion(input_path="buttons.png",
+                    output_path="buttons_1.png",
+                    size=70,
                     type_side="height",
                     quality=95)
