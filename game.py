@@ -50,12 +50,14 @@ class Character:
             # print(self.character["cond"])
             self.character["freq_sprite"] = self.character["speed_TO_freq"][cond]
 
+
     def respawn(self, coords):
         if coords[0] != None: self.character["coords"][0] = coords[0] - self.character["coords"][2] // 2
         if coords[1] != None: self.character["coords"][1] = coords[1] - self.character["coords"][3] // 2
         self.game.coords_game_layer[0] = -coords[0] + self.parent.display_w // 2
         self.game.coords_game_layer[1] = -coords[1] + self.parent.display_h // 2
-        width, height = self.parent.display_w - self.game.coords_dinamic_zone[0]*2, self.parent.display_h - self.game.coords_dinamic_zone[1]*2
+        # width, height = self.parent.display_w - self.game.coords_dinamic_zone[0]*2, self.parent.display_h - self.game.coords_dinamic_zone[1]*2
+        width, height = abs(self.game.coords_dinamic_zone[0]-self.game.coords_dinamic_zone[2]), abs(self.game.coords_dinamic_zone[1]-self.game.coords_dinamic_zone[3])
         self.game.coords_dinamic_zone[0] = coords[0] - width//2
         self.game.coords_dinamic_zone[1] = coords[1] - height//2
         self.game.coords_dinamic_zone[2] = coords[0] + width//2
@@ -141,6 +143,7 @@ class Character:
             self.flag_walk = 1
             # print(self.character["flags"], self.character["cond"])
         # print(flag_changes)
+
         if self.character["counter_sprite"] >= self.character["freq_sprite"]:
             if self.character["number_sprite"] >= len(self.character["type_cond"][self.character["cond"]][self.character["dir"]])-1:
                 self.character["number_sprite"] = 0
@@ -149,9 +152,29 @@ class Character:
             self.character["counter_sprite"] = 0
         self.character["counter_sprite"] += 1
         self.character["number_sprite"] = min(self.character["number_sprite"], len(self.character["type_cond"][self.character["cond"]][self.character["dir"]]) - 1)
-        self.set_sprite()
-        self.draw() # !!! Для оптиммизации можно добавить основной флаг, который будет отслеживать изменился ли персонаж
         # print(flag_change, self.character["cond"], self.character["freq_sprite"])
+
+        if self.parent.settings_var["character_energy"] == 1:
+            # "energy": [70, 20, 100, 1], # текущие, мин, макс, шаг
+            # "energy_counter": [0, 10, 20] # текущие, макс для уменьшения, макс для увеличения
+            self.character["energy_counter"][0] += 1
+            if self.character["cond"] == "run":
+                if self.character["energy_counter"][0] >= self.character["energy_counter"][1]:
+                    if self.character["energy"][0] > self.character["energy"][1]:
+                        self.character["energy"][0] -= self.character["energy"][3]
+                    self.character["energy_counter"][0] = 0
+            else:
+                if self.character["energy_counter"][0] >= self.character["energy_counter"][2]:
+                    if self.character["energy"][0] < self.character["energy"][2]:
+                        self.character["energy"][0] += self.character["energy"][3]
+                    self.character["energy_counter"][0] = 0
+            if self.character["energy"][0] == self.character["energy"][1] and self.character["cond"] == "run":
+                self.set_move("walk")
+            # print(self.character["energy"][0],  self.character["energy_counter"][0])
+
+        self.set_sprite()
+        self.draw()  # !!! Для оптиммизации можно добавить основной флаг, который будет отслеживать изменился ли персонаж
+
 
     def init_shell(self):
         part_file_path = r"sprites/character/base_choice" + '/'
@@ -201,9 +224,10 @@ class Character:
             "val_speed": 4,
             "coords": [self.parent.display_w // 2, self.parent.display_h // 2+100, 100, 140], # 50, 70
             # "center_coords": [0, 0],
-            "coords_rect": [7, 0, 82, 20],
-            "absolute_coords_rect": [0, 0],
-            "coords_display": [0, 0],
+            "coords_rect": [7, 0, 82, 20], "absolute_coords_rect": [0, 0], "coords_display": [0, 0],
+            "energy": [70, 20, 100, 1], # текущие, мин, макс, шаг
+            "energy_counter": [0, 8, 22], # текущие, макс для уменьшения, макс для увеличения
+            "hp": [100, 0, 100, 1],  # текущие, мин, макс, шаг
         }
         self.character["sprite"] = self.character["type_cond"][self.character["cond"]][self.character["dir"]][self.character["number_sprite"]]
         self.character["rect"] = self.character["sprite"].get_rect()
@@ -244,15 +268,6 @@ class Game:
         self.base_style = base_style
         self.parent = parent
 
-        # ------ Надписи и данные о игре, находящиеся сверху слева
-        self.character_hp = [100, 0, 100]
-        self.character_energy = [70, 0, 100]
-        self.labels = {}
-        self.init_labels()
-        # ------ Кнопки на экране
-        self.buttons = []
-        self.init_button_menu()
-
         # ------ Слои для Hitbox_Button
         self.layer_buttons_1 = pygame.Surface((self.parent.display_w, self.parent.display_h), pygame.SRCALPHA, 32)
         self.layer_buttons_1 = self.layer_buttons_1.convert_alpha()
@@ -265,12 +280,12 @@ class Game:
         self.level1 = Level1(self.parent, self, self.base_style)
         # ------ Комната
         self.list_rooms = self.level1.list_rooms
-        self.type_room = list(self.list_rooms.keys())[0]  # Здесь указывается первая комната ("start_room")
+        self.type_room = "start_room" # list(self.list_rooms.keys())[0]  # Здесь указывается первая комната ("start_room")
         self.flag_change_room = 0
         self.room_now = self.list_rooms[self.type_room](self.parent, self, self.base_style)
         # ------ Слой комнаты
         self.game_layer = self.room_now.room_layer
-        self.start_spawn = [self.room_now.size_room_layer[0] // 4, self.room_now.size_room_layer[1] - 100]
+        self.start_spawn = [self.room_now.size_room_layer[0] // 4 + 200, self.room_now.size_room_layer[1] - 100]
         self.coords_game_layer = [0, 0, self.room_now.size_room_layer[0], self.room_now.size_room_layer[1]]
         # ------ Динамическая камера
         self.border_dinamic_zone = [500, 300]
@@ -316,6 +331,13 @@ class Game:
         # print("GAME: ", self.commands)
         self.list_comands = [self.commands, self.character.commands]
 
+        # ------ Надписи и данные о игре, находящиеся сверху слева
+        self.labels = {}
+        self.init_labels()
+        # ------ Кнопки на экране
+        self.buttons = []
+        self.init_button_menu()
+
     def init_labels(self):
         self.labels = {}
 
@@ -328,32 +350,37 @@ class Game:
                                                     text=label_fps["text"],
                                                     font=label_fps["font"],
                                                     color=self.base_style["colors"]["light"])
-        # print(label_title["text"])
-        self.labels["label_fps"] = label_fps
+        self.labels["fps"] = label_fps
 
         label_hp = {
             "coords": (5, 30),
-            "text": f"hp: {self.character_hp[0]} / {self.character_hp[2]}",
+            "text": f"hp: {self.character.character["hp"][0]} / {self.character.character["hp"][2]}",
             "font": pygame.font.Font(self.base_style["font_path"], 30)
         }
         label_hp["label"] = self.parent.label_text(coords=label_hp["coords"],
                                                       text=label_hp["text"],
                                                       font=label_hp["font"],
                                                       color=self.base_style["colors"]["light"])
-        #print(label_title["text"])
-        self.labels["label_hp"] = label_hp
+        self.labels["hp"] = label_hp
 
-        label_energy = {
-            "coords": (5, 60),
-            "text": f"энергия: {self.character_energy[0]} / {self.character_energy[2]}",
-            "font": pygame.font.Font(self.base_style["font_path"], 30)
-        }
-        label_energy["label"] = self.parent.label_text(coords=label_energy["coords"],
-                                                   text=label_energy["text"],
-                                                   font=label_energy["font"],
-                                                   color=self.base_style["colors"]["light"])
-        # print(label_title["text"])
-        self.labels["label_energy"] = label_energy
+        if self.parent.settings_var["character_energy"] == 1:
+            label_energy = {
+                "coords": (5, 60),
+                "text": f"энергия: {self.character.character["energy"][0]} / {self.character.character["energy"][2]}",
+                "font": pygame.font.Font(self.base_style["font_path"], 30)
+            }
+            label_energy["label"] = self.parent.label_text(coords=label_energy["coords"],
+                                                       text=label_energy["text"],
+                                                       font=label_energy["font"],
+                                                       color=self.base_style["colors"]["light"])
+            self.labels["energy"] = label_energy
+
+    def set_label(self, key, text):
+        self.labels[key]["text"] = text
+        self.labels[key]["label"] = self.parent.label_text(coords=self.labels[key]["coords"],
+                                                    text=self.labels[key]["text"],
+                                                    font=self.labels[key]["font"],
+                                                    color=self.base_style["colors"]["light"])
 
     def init_button_menu(self):
         w, h = 80, 50
@@ -376,22 +403,19 @@ class Game:
                                                               func=button_ToMenu["func"])
         self.buttons.append(button_ToMenu)
 
-    def set_label_fps(self):
-        self.labels["label_fps"]["text"] = f"fps: {self.parent.clock.get_fps():2.0f} / {self.parent.FPS}"
-        self.labels["label_fps"]["label"] = self.parent.label_text(coords=self.labels["label_fps"]["coords"],
-                                                    text=self.labels["label_fps"]["text"],
-                                                    font=self.labels["label_fps"]["font"],
-                                                    color=self.base_style["colors"]["light"])
+    def room_change(self, type_room):
+        self.type_room = type_room
+        self.flag_change_room = 1
 
     def draw(self):
         # ------ Иницилизация карты, пола
         self.parent.display.fill(self.base_style["colors"]["black"])
         self.parent.display.blit(self.game_layer, (self.coords_game_layer[0], self.coords_game_layer[1]))
-        self.game_layer.fill(self.base_style["colors"]["base1"])
+        self.game_layer.fill((255, 0, 0))
         self.game_layer.blit(self.room_now.floor, (0, 0))
 
         # ------ Перемещение карты (динамическая камеры)
-        if self.do_draw_dinamic_zone == 1: self.set_dinamic_zone(type_output=2)
+        if self.do_draw_dinamic_zone == 1: self.set_dinamic_zone(type_output=1)
         if self.type_dinamic == 0:
             if self.character.character["coords_display"][1] < self.coords_dinamic_zone[1]:
                 self.flags_dinamic["up"] = 1
@@ -434,7 +458,10 @@ class Game:
         # ------ Вывод значений и данных о игре
         # if self.flag_message_energy == 1: self.set_message()
         for i in self.labels.values(): self.parent.display.blit(i["label"], i["coords"])
-        self.set_label_fps()
+        self.set_label("fps", f"fps: {self.parent.clock.get_fps():2.0f} / {self.parent.FPS}")
+        # self.set_label("hp", f"hp: {self.character.character["hp"][0]} / {self.character.character["hp"][2]}")
+        if self.parent.settings_var["character_energy"] == 1:
+            self.set_label("energy", f"энергия: {self.character.character["energy"][0]} / {self.character.character["energy"][2]}")
 
         # ------ (попробовал - не работает) Обновление кнопок и курсора (нужно было для динмаической камеры)
         # for button in self.room_now.buttons:
@@ -473,21 +500,25 @@ class Game:
             if list(self.flags_dinamic.values())[0] == 0: # up
                 print(f"up {self.character.character["coords_display"][1]}<{self.coords_dinamic_zone[1]}")
 
-        # self.set_rect(coords=(self.start_coords_dinamic_zone[0],
-        #                       self.start_coords_dinamic_zone[1],
-        #                       self.start_coords_dinamic_zone[2] - self.start_coords_dinamic_zone[0],
-        #                       self.start_coords_dinamic_zone[3] - self.start_coords_dinamic_zone[1]),
-        #               color=(50, 50, 50, 100), layer=self.parent.display)
+        self.set_rect(coords=(self.start_coords_dinamic_zone[0],
+                              self.start_coords_dinamic_zone[1],
+                              self.start_coords_dinamic_zone[2] - self.start_coords_dinamic_zone[0],
+                              self.start_coords_dinamic_zone[3] - self.start_coords_dinamic_zone[1]),
+                      color=(50, 50, 50, 100), layer=self.parent.display)
         # self.set_rect(coords=(self.start2_coords_dinamic_zone[0],
         #                       self.start2_coords_dinamic_zone[1],
         #                       self.start2_coords_dinamic_zone[2] - self.start2_coords_dinamic_zone[0],
         #                       self.start2_coords_dinamic_zone[3] - self.start2_coords_dinamic_zone[1]),
         #               color=(50, 50, 50, 100), layer=self.game_layer)
-        self.set_rect(coords=(self.coords_dinamic_zone[0],
-                              self.coords_dinamic_zone[1],
-                              self.coords_dinamic_zone[2] - self.coords_dinamic_zone[0],
-                              self.coords_dinamic_zone[3] - self.coords_dinamic_zone[1]),
-                      color=(50, 50, 50, 100), layer=self.game_layer)
+        # print((self.coords_dinamic_zone[0],
+        #        self.coords_dinamic_zone[1],
+        #        self.coords_dinamic_zone[2],
+        #        self.coords_dinamic_zone[3]))
+        # self.set_rect(coords=(self.coords_dinamic_zone[0],
+        #                       self.coords_dinamic_zone[1],
+        #                       self.coords_dinamic_zone[2] - self.coords_dinamic_zone[0],
+        #                       self.coords_dinamic_zone[3] - self.coords_dinamic_zone[1]),
+        #               color=(50, 50, 50, 100), layer=self.game_layer)
 
     def set_message(self, text, delay=1500):
         label = {
@@ -566,6 +597,9 @@ class Game:
         for obj in sorted(list(filter(lambda obj: obj.data["type_render"] == 2, objects)), key=lambda obj: (obj.data["rect"].y, obj.data["rect"].h)):
             obj.draw()
         # print(self.data_layers, self.old_data_layers)
+        if draw_rects:
+            for obj in objects + dop_objects:
+                pygame.draw.rect(self.game_layer, (255, 255, 255), obj.data["rect"])
 
         # self.layer_buttons_1.fill(pygame.Color(0, 0, 0, 0))
         # self.layer_buttons_2.fill(pygame.Color(0, 0, 0, 0))
@@ -634,7 +668,6 @@ class Game:
         if draw_rects: pygame.draw.rect(self.game_layer, (255, 0, 0), base_object["rect"])
         dir_collides = []
         for obj in objects:
-            if draw_rects: pygame.draw.rect(self.game_layer, (255, 255, 255), obj.data["rect"])
             if base_object["rect"].colliderect(obj.data["rect"]):
                 obj_rect = obj.data["rect"]
                 collision_area = base_object["rect"].clip(obj_rect)
