@@ -20,6 +20,7 @@ class Main:
         self.FPS = 60
         self.running = 1
         self.display_w, self.display_h = pygame.display.Info().current_w - 10, pygame.display.Info().current_h - 50
+        print(self.display_w, self.display_h)
         self.list_active_surface = {'menu': Menu,
                                     'game': Game,
                                     'settings': Settings,
@@ -28,10 +29,10 @@ class Main:
         self.type_display = "menu"
         self.style = {
             "colors": {
-                "light": (187, 148, 87),
-                "base1": (153, 88, 42),
-                "base2": (111, 29, 27),
-                "dark": (67, 40, 24),
+                "light": (255,217,106), # (187, 148, 87),
+                "base1": (249,125,61), # (153, 88, 42),
+                "base2": (73,181,132), # (111, 29, 27),
+                "dark":  (75,39,41), # (67, 40, 24),
                 "black": (0, 0, 0)
             },
             "font_path": "fonts/pixel/EpilepsySansBold.ttf",
@@ -59,9 +60,12 @@ class Main:
             "type_dinamic": 0,
             # 0 - динамическая камера с прямоугольной зоной
             # 1 - постоянная динамическая зона
-            "do_draw_dinamic_zone": 0
+            "do_draw_dinamic_zone": 0,
             # 0 - отрисовать
             # 1 - не отрисовывать
+            "character_energy": 1
+            # 0 - нет энергии у персонажа, может бесконечно бегать по полю
+            # 1 - есть энергия у персонажа
         }
 
         ########### РЕЗУЛЬТАТ ИГРЫ
@@ -70,6 +74,12 @@ class Main:
         ########### ОСТАЛЬНОЕ
         pygame.display.set_caption("Ultimate")
         self.clock = pygame.time.Clock()
+
+        ########### КОНСТАНТЫ
+        self.LAYERS = {
+            "start_room": [1500, 1500], # [3000, 3000]
+            "meeting_room": [self.display_w, self.display_h]
+        }
 
 
     def buttons(self, coords, layout, texts, color, fonts, funcs):
@@ -94,6 +104,9 @@ class Main:
             hoverColours=[color["hover"]]*len(texts),  # Colour of button when being hovered over
             pressedColours=[color["pressed"]]*len(texts),  # Colour of button when being clicked
             textColours=[color["text"]]*len(texts),
+            # images=len(texts)*[pygame.transform.scale(pygame.image.load("sprites/button/button_big.png").convert_alpha(), (coords[2], coords[3]))],
+            # imageZooms=len(texts)*[pygame.transform.scale(pygame.image.load("sprites/button/button_big_hover.png").convert_alpha(), (coords[2], coords[3]))],
+            # imageFills=len(texts)*[pygame.transform.scale(pygame.image.load("sprites/button/button_big_hover.png").convert_alpha(), (coords[2], coords[3]))],
             onClicks=funcs
         )
 
@@ -120,6 +133,8 @@ class Main:
             hoverColour=color["hover"],  # Colour of button when being hovered over
             pressedColour=color["pressed"],  # Colour of button when being clicked
             textColour=color["text"],
+            # image=pygame.transform.scale(pygame.image.load("sprites/button/button_big.png").convert_alpha(), (coords[2], coords[3])),
+            # imageZoom=pygame.transform.scale(pygame.image.load("sprites/button/button_big_hover.png").convert_alpha(), (coords[2], coords[3])),
             onClick=func
         )
 
@@ -254,6 +269,10 @@ class Main:
     def change_draw_dinamic(self):
         self.settings_var["do_draw_dinamic_zone"] = not self.settings_var["do_draw_dinamic_zone"]
         self.holst.button_draw_dinamic_camera["button"].setText(["выкл", "вкл"][self.settings_var["do_draw_dinamic_zone"]])
+
+    def change_character_energy(self):
+        self.settings_var["character_energy"] = not self.settings_var["character_energy"]
+        self.holst.button_character_energy["button"].setText(["выкл", "вкл"][self.settings_var["character_energy"]])
 
 if __name__ == "__main__":
     menu = Main()

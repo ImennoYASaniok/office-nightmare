@@ -3,8 +3,32 @@ from pygame.locals import Rect
 
 THICKNESS_WALL = 30
 HEIGHT_WALL = 200
+THICKNESS_PARTITION = 10
+HEIGHT_PARTITION = 120
 DELTA_SIZE_NEAR_OBJECTS = 3
 WIDTH_DOOR = 250
+SPRITES = {
+    "comp_size": (200, 125),
+    "sofa_size": (200, 100),
+    "avtomat_size": (120, 200), # (100, 150)
+    "avtomat_y_up": 50,
+    'chair': (80, 132),
+    'clock': (40, 40)
+}
+BUTTONS = {
+    "comp_cord": (77, -5), "comp_size": (83, 47), # (63, 28)
+    "avtomat_cord": (10, 23), "avtomat_size": (96, 182),
+    "avtomat_green_cord": (15, 33), "avtomat_green_size": (93, 162),
+    "tv_ps_cord": (-5, -5), "tv_ps_size": (310, 135),
+    "tv_vr_cord": (-5, -5), "tv_vr_size": (110, 60),
+    "reception_table_cord": (2, -5), "reception_table_size": (190, 150),
+    "color": {
+            "inactive": (0, 0, 0, 0), # (0, 0, 0)
+            "hover": (200, 208, 200, 200), # (0, 32, 214)
+            "pressed": (200, 208, 200),
+            "text": (200, 208, 200)
+    }
+}
 # (Пока что двери нет, а имеется ввиду просто проход)
 # Размеры двери смотрятся вот так: (------- <- это типо дверь)
 #
@@ -151,7 +175,8 @@ class Level1:
         self.game = game
         self.base_style = base_style
 
-        self.list_rooms = {'start_room': Start_room}
+        self.list_rooms = {'start_room': Start_room,
+                           "meeting_room": Meeting_room}
 
 
 
@@ -161,20 +186,19 @@ class Start_room:
         self.game = game
         self.base_style = base_style
 
-        self.size_room_layer = [1500, 1500] # [3000, 3000]
+        self.size_room_layer = self.parent.LAYERS["start_room"]
         self.room_layer = pygame.Surface(self.size_room_layer)
 
         size_hall = [400, 400]
         delta_hall = [0, 0]
         # ------ Пол
         self.floor = pygame.image.load('sprites/floor/floor_start_room.png')
-        self.room_layer.blit(self.floor, (0, 0))
         self.floor_empty_zone = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                                        coords=[self.size_room_layer[0] - size_hall[0] + THICKNESS_WALL, size_hall[1] + HEIGHT_WALL],
                                        size=(size_hall[0] - THICKNESS_WALL, self.size_room_layer[1] - size_hall[1] - HEIGHT_WALL),
                                        image=f'sprites/floor_empty_zone.png',
                                        size_rect=(0, 0))
-        # ------ Остальные объекты
+        # ------ Стены
         wall_up = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                            coords=[0, 0],
                            size=(self.size_room_layer[0], HEIGHT_WALL),
@@ -221,33 +245,289 @@ class Start_room:
                                     size_rect=(0, 0))
         delta_wall_right_3_x = 30
         wall_right_3 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-                              coords=[self.size_room_layer[1] - THICKNESS_WALL, THICKNESS_WALL+wall_right_2.data["coords"][3]+WIDTH_DOOR - DELTA_SIZE_NEAR_OBJECTS - delta_wall_right_3_x],
-                              size=(THICKNESS_WALL, (size_hall[1]-WIDTH_DOOR)//2+delta_hall[1]+HEIGHT_WALL), # +100+delta_wall_right_3_x
+                              coords=[self.size_room_layer[1] - THICKNESS_WALL, THICKNESS_WALL + wall_right_2.data["coords"][ 3] + WIDTH_DOOR - DELTA_SIZE_NEAR_OBJECTS - delta_wall_right_3_x],
+                              size=(THICKNESS_WALL, (size_hall[1] - WIDTH_DOOR) // 2 + delta_hall[1] + HEIGHT_WALL),
+                              # +100+delta_wall_right_3_x
                               image=f'sprites/walls/wall_red_top.png',
-                              size_rect=(0, -HEIGHT_WALL+30))
+                              size_rect=(0, -HEIGHT_WALL + 30))
+        # ------ Перегородки
+        coords_partition_side_1 = [400, 0]
+        partition_side_front_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                        coords=[THICKNESS_WALL + coords_partition_side_1[0], self.size_room_layer[1] - HEIGHT_PARTITION - coords_partition_side_1[1]],
+                                        size=(THICKNESS_PARTITION, HEIGHT_PARTITION),
+                                        image='sprites/walls/partition_front.png',
+                                        size_rect=(0, 0))
+        partition_side_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                  coords=[THICKNESS_WALL + coords_partition_side_1[0], self.size_room_layer[1] - HEIGHT_PARTITION - coords_partition_side_1[1] -partition_side_front_1.data["coords"][3]],
+                                  size=(THICKNESS_PARTITION, 150),
+                                  image='sprites/walls/partition_top.png',
+                                  size_rect=(0, -HEIGHT_PARTITION + 30))
+        partition_front_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                   coords=[THICKNESS_WALL, self.size_room_layer[1] - HEIGHT_PARTITION - partition_side_front_1.data["coords"][3] - 200],
+                                   size=(coords_partition_side_1[0] + THICKNESS_PARTITION, HEIGHT_PARTITION),
+                                   image='sprites/walls/partition_front.png',
+                                   size_rect=(0, -HEIGHT_PARTITION + 30))
+        w_partition_front_2 = 350
+        y_partition_front_2 = 550
+        partition_front_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                   coords=[self.size_room_layer[0] - size_hall[0] - w_partition_front_2, self.size_room_layer[1] - y_partition_front_2],
+                                   size=(w_partition_front_2, HEIGHT_PARTITION),
+                                   image='sprites/walls/partition_front.png',
+                                   size_rect=(0, -HEIGHT_PARTITION + 30))
+        partition_side_front_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                  coords=[partition_front_2.data["coords"][0], self.size_room_layer[1] - 100 - HEIGHT_PARTITION],
+                                  size=(THICKNESS_PARTITION, HEIGHT_PARTITION),
+                                  image='sprites/walls/partition_front.png',
+                                  size_rect=(0, 0))
+        partition_side_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                  coords=[partition_front_2.data["coords"][0], partition_front_2.data["coords"][1] + THICKNESS_PARTITION - DELTA_SIZE_NEAR_OBJECTS],
+                                  size=(THICKNESS_PARTITION, partition_side_front_2.data["coords"][1] - partition_front_2.data["coords"][1]),
+                                  image='sprites/walls/partition_top.png',
+                                  size_rect=(0, -HEIGHT_PARTITION + 30))
+        # ------ Другие объекты
+        self.computer_sprites = ['sprites/comp/gaming_comp_1.png', 'sprites/comp/gaming_comp_2.png',
+                                 'sprites/comp/gaming_comp_3.png', 'sprites/comp/gaming_comp_4.png',
+                                 'sprites/comp/gaming_comp_5.png', 'sprites/comp/gaming_comp_6.png',
+                                 'sprites/comp/gaming_comp_7.png', 'sprites/comp/gaming_comp_8.png',
+                                 'sprites/comp/gaming_comp_9.png']
+        # ------ Комп 1
+        coords_computer_1 = [100, 300]
+        coords_computer_1 = [THICKNESS_WALL+coords_computer_1[0], self.size_room_layer[1]-SPRITES["comp_size"][1]-coords_computer_1[1]]
+        computer_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                              coords=coords_computer_1,
+                              size=SPRITES["comp_size"],
+                              # +100+delta_wall_right_3_x
+                              image=self.computer_sprites[0],
+                              size_rect=(0, -100))
+        self.sprite_computer_for_1 = [0, 0.1, 8]
+        self.sprite_computer_isprite_1 = self.sprite_computer_for_1[0]
+        self.sprite_computer_isprite_1_OLD = self.sprite_computer_isprite_1
+        # ------ Стул 1
+        coords_chair_1 = [80, 20]
+        chair_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                            coords=[coords_computer_1[0]+coords_chair_1[0], coords_computer_1[1]+coords_chair_1[1]],
+                            size=SPRITES["chair"],
+                            # +100+delta_wall_right_3_x
+                            image="sprites/chair/chair_1.png",
+                            size_rect=(0, -100))
+        # ------ Комп 2
+        coords_computer_2 = [100, 400]
+        coords_computer_2 = [self.size_room_layer[0] - size_hall[0] - SPRITES["comp_size"][0] - coords_computer_2[0], self.size_room_layer[1] - SPRITES["comp_size"][1] - coords_computer_2[1]]
+        computer_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                            coords=coords_computer_2,
+                            size=SPRITES["comp_size"],
+                            # +100+delta_wall_right_3_x
+                            image=self.computer_sprites[0],
+                            size_rect=(0, -100))
+        self.sprite_computer_for_2 = [5, 0.1, 8]
+        self.sprite_computer_isprite_2 = self.sprite_computer_for_2[0]
+        self.sprite_computer_isprite_2_OLD = self.sprite_computer_isprite_2
+        # ------ Стул 2
+        coords_chair_2 = [40, 20]
+        chair_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                         coords=[coords_computer_2[0] + coords_chair_2[0], coords_computer_2[1] + coords_chair_2[1]],
+                         size=SPRITES["chair"],
+                         # +100+delta_wall_right_3_x
+                         image="sprites/chair/chair_1.png",
+                         size_rect=(0, -100))
+        # ------ Комп 3
+        coords_computer_3 = [0, 500]
+        coords_computer_3 = [THICKNESS_WALL + coords_computer_3[0], THICKNESS_WALL + coords_computer_3[1]]
+        computer_3 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                            coords=coords_computer_3,
+                            size=SPRITES["comp_size"],
+                            # +100+delta_wall_right_3_x
+                            image=self.computer_sprites[0],
+                            size_rect=(0, -100))
+        self.sprite_computer_for_3 = [2, 0.1, 8]
+        self.sprite_computer_isprite_3 = self.sprite_computer_for_3[0]
+        self.sprite_computer_isprite_3_OLD = self.sprite_computer_isprite_3
+        # ------ Стул 3
+        coords_chair_3 = [40, 20]
+        chair_3 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                         coords=[coords_computer_3[0] + coords_chair_3[0], coords_computer_3[1] + coords_chair_3[1]],
+                         size=SPRITES["chair"],
+                         # +100+delta_wall_right_3_x
+                         image="sprites/chair/chair_1.png",
+                         size_rect=(0, -100))
+        # ------ Живые объекты
         # enemy = Object(parent=self.parent, game=self.game, base_style=self.base_style,
         #                       coords=[self.size_room_layer[1] - THICKNESS_WALL, THICKNESS_WALL+wall_right_2.data["coords"][3]+WIDTH_DOOR - DELTA_SIZE_NEAR_OBJECTS - delta_wall_right_3_x],
         #                       size=(THICKNESS_WALL, (size_hall[1]-WIDTH_DOOR)//2+delta_hall[1]+HEIGHT_WALL), # +100+delta_wall_right_3_x
         #                       image=f'sprites/walls/wall_red_top.png',
         #                       size_rect=(0, -HEIGHT_WALL+30))
-        # ------ Добавление всех объектов
         self.objects = {
             "floor_empty_zone": self.floor_empty_zone,
+            # Стены:
             "wall_up": wall_up, "wall_down_1": wall_down_1, "wall_down_2":wall_down_2,
             "wall_left":wall_left, "wall_left_front":wall_left_front,
             "wall_right":wall_right_1, "wall_right_front":wall_right_front_1,
-            "wall_right_2": wall_right_2,  "wall_right_front_2": wall_right_front_2, "wall_right_3": wall_right_3
+            "wall_right_2": wall_right_2,  "wall_right_front_2": wall_right_front_2, "wall_right_3": wall_right_3,
+            # Перегородки:
+            "partition_side_1": partition_side_1, "partition_side_front_1": partition_side_front_1, "partition_front_1": partition_front_1,
+            "partition_front_2": partition_front_2, "partition_side_front_2": partition_side_front_2, "partition_side_2": partition_side_2,
+            # Другие предметы:
+            "computer_1": computer_1, "computer_2": computer_2, "computer_3": computer_3,
+            "chair_1": chair_1, "chair_2": chair_2, "chair_3": chair_3,
         }
         self.list_objects = list(self.objects.values())
         # ------------------
         self.dop_objects = {}
         self.list_dop_objects = list(self.dop_objects.values())
+        # ------------------
+        doors_right_x = THICKNESS_WALL + self.objects["wall_left_front"].data["coords"][2] + HEIGHT_WALL
+        self.doors = {"right": (self.size_room_layer[0], [doors_right_x, doors_right_x + WIDTH_DOOR])}
+        # ------ Кнопки
+        self.buttons = []
+
+    def enter_rooms(self):
+        self.game.game_layer = self.room_layer
+        self.game.coords_game_layer[2] = self.size_room_layer[0]
+        self.game.coords_game_layer[3] = self.size_room_layer[1]
+        self.game.data_layers = [0] * len(self.buttons)
+        self.game.old_data_layers = [0] * len(self.buttons)
+
+    def delete_all(self):
+        pass
+
+    def draw(self):
+        self.animate_sprite()
+        self.game.render_objects(self.list_objects, dop_objects=self.list_dop_objects) # , draw_rects=True
+        # print(self.doors["right"][1][0], self.game.character.character["absolute_coords_rect"][1], self.doors["right"][1][1])
+        if self.game.character.character["absolute_coords_rect"][0] >= self.doors["right"][0] and self.doors["right"][1][0] < self.game.character.character["absolute_coords_rect"][1] < self.doors["right"][1][1]:
+            print("start_room -> meeting_room")
+            self.game.character.respawn([self.game.character.character["coords"][2], self.parent.display_h // 2])
+            self.game.room_change("meeting_room")
+
+    def animate_sprite(self):
+        self.sprite_computer_for_1 = self.game.animate_sprite(self.sprite_computer_for_1, reverse=True)
+        self.sprite_computer_isprite_1 = int(self.sprite_computer_for_1[0])
+        if self.sprite_computer_isprite_1 != self.sprite_computer_isprite_1_OLD:
+            self.objects["computer_1"].update_sprite(self.computer_sprites[self.sprite_computer_isprite_1])
+        self.sprite_computer_isprite_1_OLD = self.sprite_computer_isprite_1
+
+        self.sprite_computer_for_2 = self.game.animate_sprite(self.sprite_computer_for_2, reverse=True)
+        self.sprite_computer_isprite_2 = int(self.sprite_computer_for_2[0])
+        if self.sprite_computer_isprite_2 != self.sprite_computer_isprite_2_OLD:
+            self.objects["computer_2"].update_sprite(self.computer_sprites[self.sprite_computer_isprite_2])
+        self.sprite_computer_isprite_2_OLD = self.sprite_computer_isprite_2
+
+        self.sprite_computer_for_3 = self.game.animate_sprite(self.sprite_computer_for_3, reverse=True)
+        self.sprite_computer_isprite_3 = int(self.sprite_computer_for_3[0])
+        if self.sprite_computer_isprite_3 != self.sprite_computer_isprite_3_OLD:
+            self.objects["computer_3"].update_sprite(self.computer_sprites[self.sprite_computer_isprite_3])
+        self.sprite_computer_isprite_3_OLD = self.sprite_computer_isprite_3
+
+
+
+
+class Meeting_room:
+    def __init__(self, parent, game, base_style):
+        self.parent = parent
+        self.game = game
+        self.base_style = base_style
+
+        self.size_room_layer = self.parent.LAYERS["meeting_room"]  # [3000, 3000]
+        self.room_layer = pygame.Surface(self.size_room_layer)
+        self.floor = pygame.image.load('sprites/floor/floor_meeting_room.png')
+        self.room_layer.blit(self.floor, (0, 0))
+        # ------ Стены
+        wall_up = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=[0, 0],
+                           size=(self.size_room_layer[0], HEIGHT_WALL),
+                           image=f'sprites/walls/wall_red_front.png',
+                           size_rect=(0, 0))
+        wall_down = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=[0, self.size_room_layer[1]],
+                           size=(self.size_room_layer[0], THICKNESS_WALL),
+                           image=None, size_rect=(0, 0))
+        wall_left_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                              coords=[0, THICKNESS_WALL - DELTA_SIZE_NEAR_OBJECTS],
+                              size=(THICKNESS_WALL, (self.parent.display_h - WIDTH_DOOR - HEIGHT_WALL) // 2),
+                              image=f'sprites/walls/wall_red_top.png',
+                              size_rect=(0, 0))
+        wall_left_front_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                    coords=[0, THICKNESS_WALL + wall_left_1.data["coords"][3] - DELTA_SIZE_NEAR_OBJECTS],
+                                    size=(THICKNESS_WALL, HEIGHT_WALL),
+                                    image=f'sprites/walls/wall_red_front.png',
+                                    size_rect=(0, 0))
+        delta_wall_left_2_x = 30
+        wall_left_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                              coords=[0, THICKNESS_WALL + wall_left_1.data["coords"][3] + WIDTH_DOOR - DELTA_SIZE_NEAR_OBJECTS - delta_wall_left_2_x],
+                              size=(THICKNESS_WALL, (self.parent.display_h - WIDTH_DOOR) // 2),
+                              # +100+delta_wall_right_3_x
+                              image=f'sprites/walls/wall_red_top.png',
+                              size_rect=(0, -HEIGHT_WALL + 30))
+        wall_left_front_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                             coords=[0, self.size_room_layer[1] - HEIGHT_WALL],
+                             size=(THICKNESS_WALL, HEIGHT_WALL),
+                             # +100+delta_wall_right_3_x
+                             image=f'sprites/walls/wall_red_front.png',
+                             size_rect=(0, 0))
+        wall_right_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                             coords=[self.size_room_layer[0]-THICKNESS_WALL, THICKNESS_WALL - DELTA_SIZE_NEAR_OBJECTS],
+                             size=(THICKNESS_WALL, (self.parent.display_h - WIDTH_DOOR - HEIGHT_WALL) // 2),
+                             image=f'sprites/walls/wall_red_top.png',
+                             size_rect=(0, 0))
+        wall_right_front_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                   coords=[self.size_room_layer[0]-THICKNESS_WALL, THICKNESS_WALL + wall_left_1.data["coords"][3] - DELTA_SIZE_NEAR_OBJECTS],
+                                   size=(THICKNESS_WALL, HEIGHT_WALL),
+                                   image=f'sprites/walls/wall_red_front.png',
+                                   size_rect=(0, 0))
+        delta_wall_right_2_x = 30
+        wall_right_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                             coords=[self.size_room_layer[0]-THICKNESS_WALL, THICKNESS_WALL + wall_right_1.data["coords"][3] + WIDTH_DOOR - DELTA_SIZE_NEAR_OBJECTS - delta_wall_right_2_x],
+                             size=(THICKNESS_WALL, (self.parent.display_h - WIDTH_DOOR) // 2),
+                             # +100+delta_wall_right_3_x
+                             image=f'sprites/walls/wall_red_top.png',
+                             size_rect=(0, -HEIGHT_WALL + 30))
+        wall_right_front_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                   coords=[self.size_room_layer[0]-THICKNESS_WALL, self.size_room_layer[1] - HEIGHT_WALL],
+                                   size=(THICKNESS_WALL, HEIGHT_WALL),
+                                   # +100+delta_wall_right_3_x
+                                   image=f'sprites/walls/wall_red_front.png',
+                                   size_rect=(0, 0))
+        # coords_partition_1 = [400, 0]
+        # partition_side_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+        #                            coords=[THICKNESS_WALL + coords_partition_1[0],
+        #                                    self.size_room_layer[1] - HEIGHT_PARTITION - coords_partition_1[1]],
+        #                            size=(THICKNESS_PARTITION, HEIGHT_PARTITION),
+        #                            image='sprites/walls/partition_front.png',
+        #                            size_rect=(0, 0))
+        self.objects = {
+            "wall_up": wall_up, "wall_down": wall_down,
+            "wall_left_1":wall_left_1, "wall_left_front_1": wall_left_front_1, "wall_left_2": wall_left_2, "wall_left_front_2": wall_left_front_2,
+            "wall_right_1":wall_right_1, "wall_right_front_1": wall_right_front_1, "wall_right_2": wall_right_2, "wall_right_front_2": wall_right_front_2,
+        }
+        self.list_objects = list(self.objects.values())
+        # ------------------
+        self.dop_objects = {}
+        self.list_dop_objects = list(self.dop_objects.values())
+        # ------------------
+        self.doors = {"left": (0, [(self.size_room_layer[1]-WIDTH_DOOR) // 2, (self.size_room_layer[1]+WIDTH_DOOR) // 2 + HEIGHT_WALL])}
+
+        # ------ Кнопки
         self.buttons = []
 
     def enter_rooms(self):
         # self.game.floor.blit(self.texture_floor, (0, 0))
+        self.game.game_layer = self.room_layer
+        self.game.coords_game_layer[2] = self.size_room_layer[0]
+        self.game.coords_game_layer[3] = self.size_room_layer[1]
         self.game.data_layers = [0] * len(self.buttons)
         self.game.old_data_layers = [0] * len(self.buttons)
 
+    def delete_all(self):
+        pass
+
     def draw(self):
+        self.animate_sprite()
         self.game.render_objects(self.list_objects, dop_objects=self.list_dop_objects) # buttons=self.buttons
+        # print(self.doors["left"][1][0], self.game.character.character["absolute_coords_rect"][1], self.doors["left"][1][1])
+        if self.game.character.character["absolute_coords_rect"][0] <= self.doors["left"][0] and self.doors["left"][1][0] < self.game.character.character["absolute_coords_rect"][1] < self.doors["left"][1][1]:
+            print("meeting_room -> start_room")
+            self.game.character.respawn([self.parent.LAYERS["start_room"][0]-self.game.character.character["coords"][2], self.doors["left"][1][0]])
+            self.game.room_change("start_room")
+
+    def animate_sprite(self):
+        pass

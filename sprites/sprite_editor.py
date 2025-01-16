@@ -145,21 +145,34 @@ def make_floor(input_path, output_path, size, random_flip=("horizontal", "vertic
 #                     quality=35)
 
 # --------------
+set_image_expansion(input_path="floor/start_floor_wood_1.png",
+                    output_path="floor/floor_wood_1.png",
+                    k=None,
+                    size=140,
+                    type_side="height",
+                    quality=95)
+
+make_floor(input_path="floor/floor_wood_1.png",
+           output_path="floor/floor_start_room.png",
+           size=[1500, 1500],
+           random_flip=["horizontal"])
+
+# --------------
+# set_image_expansion(input_path="buttons.png",
+#                     output_path="buttons_1.png",
+#                     size=70,
+#                     type_side="height",
+#                     quality=95)
+
+# --------------
 # set_image_expansion(input_path="floor/start_floor_wood_1.png",
 #                     output_path="floor/floor_wood_1.png",
 #                     k=None,
 #                     size=140,
 #                     type_side="height",
 #                     quality=95)
-
+#
 # make_floor(input_path="floor/floor_wood_1.png",
-#            output_path="floor/floor_start_room.png",
-#            size=[1500, 1500],
+#            output_path="floor/floor_meeting_room.png",
+#            size=[1526, 814],
 #            random_flip=["horizontal"])
-
-# --------------
-set_image_expansion(input_path="buttons.png",
-                    output_path="buttons_1.png",
-                    size=70,
-                    type_side="height",
-                    quality=95)

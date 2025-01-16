@@ -1,7 +1,7 @@
 import pygame
 
-main_text = ('Добро пожаловать в игру Office NightMare',
-             'здесь скоро будет справка')
+with open("files/refer.txt", "r", encoding="utf-8") as file_data:
+    main_text = list(file_data.readlines())
 
 class Refer:
     def __init__(self, parent, base_style):

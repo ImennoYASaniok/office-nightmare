@@ -4,6 +4,9 @@ class Menu:
     def __init__(self, parent, base_style):
         self.base_style = base_style
         self.parent = parent
+
+        self.background_image = pygame.image.load("sprites/background.png").convert()
+
         self.labels = []
         self.buttons = []
         self.init_buttons()
@@ -63,4 +66,6 @@ class Menu:
 
     def draw(self):
         self.parent.display.fill(self.base_style["colors"]["dark"])
+        self.parent.display.blit(self.background_image, (0, 0))
+        # self.parent.display.fill(self.base_style["colors"]["dark"])
         for i in self.labels: self.parent.display.blit(i["label"], i["coords"])
