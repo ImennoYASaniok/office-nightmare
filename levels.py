@@ -51,27 +51,13 @@ TYPE_BUTTONS = {
 
 
 
-class Map:
-    def __init__(self, parent, game, base_style):
-        self.parent = parent
-        self.game = game
-        self.base_style = base_style
-        self.info = {
-            "#": {
-                "w": 50, "h": 50,
-                "sprite": (0, 0, 255)
-            }
-        }
-        self.map = []
-
-
-
 class Object:
-    def __init__(self, parent, game, base_style, coords, size, image=None, size_rect=(0, 20), type_collide="rect"): #absolute_coords_rect=(0, 0)
+    def __init__(self, parent, game, base_style, coords, size, func=None, image=None, size_rect=(0, 20), type_collide="rect"): #absolute_coords_rect=(0, 0)
         self.base_style = base_style
         self.parent = parent
         self.game = game
         self.image = image
+        self.func = func
 
         size_rect = list(size_rect)
 
@@ -84,13 +70,15 @@ class Object:
             # "type_collide": type_collide
             # "mask" - коллизия по маске
             # "rect" - коллизия по прямоугольнику
+            "flag_func": 0
+            # 0 - не нужно выполнять
+            # 1 - нужно выполнять
         }
         if self.image == None:
             self.data["rect"] = Rect(coords[0], coords[1], size[0], size[1])
         else:
             self.data["sprite"] = pygame.image.load(self.image).convert_alpha()
-            self.data["sprite"] = pygame.transform.scale(self.data["sprite"],
-                                                         (self.data["coords"][2], self.data["coords"][3]))
+            self.data["sprite"] = pygame.transform.scale(self.data["sprite"], (self.data["coords"][2], self.data["coords"][3]))
             self.data["mask"] = pygame.mask.from_surface(self.data["sprite"])
             self.data["rect"] = self.data["sprite"].get_rect()
         for i in range(len(size_rect)):
@@ -111,6 +99,7 @@ class Object:
         self.data["rect"].y = self.data["coords"][1] + self.data["coords"][3] - self.data["size_rect"][1] # - self.data["absolute_coords_rect"][1]
         self.data["rect"].w = self.data["size_rect"][0] # self.data["coords"][2]
         self.data["rect"].h = self.data["size_rect"][1] # self.character["coords"][3]
+        # self.data["mask"] = pygame.mask.from_surface(self.data["sprite"])
 
     def update_sprite(self, image):
         if self.image != None:
@@ -123,50 +112,68 @@ class Object:
         if self.image != None:
             self.game.game_layer.blit(self.data["sprite"], self.data["coords"]) # self.parent.display
 
+    def check_click(self):
+        if self.func != None:
+            mouse_pos = pygame.mouse.get_pos()
+            rect = Rect(self.game.coords_game_layer[0]+self.data["coords"][0], self.game.coords_game_layer[1]+self.data["coords"][1], self.data["coords"][2], self.data["coords"][3])
+            # print(rect.x, rect.y, mouse_pos)
+            if rect.collidepoint(mouse_pos):
+                # Наведение
+                self.game.set_rect(layer=self.parent.display, coords=[rect.x, rect.y, rect.w, rect.h], color_base=BUTTONS["color"]["hover"])
+            if rect.collidepoint(mouse_pos) and self.game.val_mouse_state == pygame.MOUSEBUTTONDOWN and self.data["flag_func"] == 1:
+                # Нажатие
+                self.game.set_rect(layer=self.parent.display, coords=[rect.x, rect.y, rect.w, rect.h], color_base=BUTTONS["color"]["pressed"])
+                self.func()
+                self.data["flag_func"] = 0
+            elif self.game.val_mouse_state == pygame.MOUSEBUTTONUP:
+                # Выкл нажатие
+                self.data["flag_func"] = 1
 
 
-class Hitbox_Button:
-    def __init__(self, parent, game, object, func, coords, size, colors, layer=None, name=None):
-        self.parent = parent
-        # self.game = game
-        self.name = name
-        if "hover" not in colors.keys(): colors["hover"] = colors["inactive"]
-        elif "pressed" not in colors.keys(): colors["pressed"] = colors["inactive"]
-        coords = list(coords)
-        if object != None:
-            coords[0] += object.data["coords"][0]
-            coords[1] += object.data["coords"][1]
-        self.data = {
-            "coords": (coords[0], coords[1], size[0], size[1]),
-            "color": {
-                "inactive": colors["inactive"],
-                "hover":  colors["hover"],
-                "pressed": colors["pressed"],
-                "text": colors["inactive"]
-            },
-            "func": func,
-            # "type_render": 1
-        }
-        if layer is not None:
-            self.create(layer)
 
-    def create(self, layer):
-        self.data["button"] = self.parent.button(coords=self.data["coords"],
-                                             text="",
-                                             color=self.data["color"],
-                                             font=pygame.font.SysFont(None, 30),
-                                             func=self.data["func"],
-                                            layer=layer
-                                            )
 
-    def listen(self, events):
-        self.data["button"].listen(events)
-
-    def delete(self):
-        del self.data["button"]
+# class Hitbox_Button:
+#     def __init__(self, parent, game, object, func, coords, size, colors, layer=None, name=None):
+#         self.parent = parent
+#         # self.game = game
+#         self.name = name
+#         if "hover" not in colors.keys(): colors["hover"] = colors["inactive"]
+#         elif "pressed" not in colors.keys(): colors["pressed"] = colors["inactive"]
+#         coords = list(coords)
+#         if object != None:
+#             coords[0] += object.data["coords"][0]
+#             coords[1] += object.data["coords"][1]
+#         self.data = {
+#             "coords": (coords[0], coords[1], size[0], size[1]),
+#             "color": {
+#                 "inactive": colors["inactive"],
+#                 "hover":  colors["hover"],
+#                 "pressed": colors["pressed"],
+#                 "text": colors["inactive"]
+#             },
+#             "func": func,
+#             # "type_render": 1
+#         }
+#         if layer is not None:
+#             self.create(layer)
+#
+#     def create(self, layer):
+#         self.data["button"] = self.parent.button(coords=self.data["coords"],
+#                                              text="",
+#                                              color=self.data["color"],
+#                                              font=pygame.font.SysFont(None, 30),
+#                                              func=self.data["func"],
+#                                             layer=layer
+#                                             )
+#
+#     def listen(self, events):
+#         self.data["button"].listen(events)
+#
+#     def delete(self):
+#         del self.data["button"]
 
 class Enemy(Object):
-    pass
+        pass
 
 
 class Level1:
@@ -284,6 +291,23 @@ class Start_room:
                                   size=(THICKNESS_PARTITION, partition_side_front_2.data["coords"][1] - partition_front_2.data["coords"][1]),
                                   image='sprites/walls/partition_top.png',
                                   size_rect=(0, -HEIGHT_PARTITION + 30))
+        w_partition_front_3 = 350
+        h_partition_side_3 = 250
+        partition_front_3 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                   coords=[THICKNESS_WALL, self.size_room_layer[1] - 1000],
+                                   size=(w_partition_front_3, HEIGHT_PARTITION),
+                                   image='sprites/walls/partition_front.png',
+                                   size_rect=(0, -HEIGHT_PARTITION + 30))
+        partition_side_3 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                  coords=[partition_front_3.data["coords"][0]+partition_front_3.data["coords"][2], partition_front_3.data["coords"][1]],
+                                  size=(THICKNESS_PARTITION, h_partition_side_3),
+                                  image='sprites/walls/partition_top.png',
+                                  size_rect=(0, -HEIGHT_PARTITION + 30))
+        partition_side_front_3 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                        coords=[partition_side_3.data["coords"][0], partition_side_3.data["coords"][1] + partition_side_3.data["coords"][3]],
+                                        size=(THICKNESS_PARTITION, HEIGHT_PARTITION),
+                                        image='sprites/walls/partition_front.png',
+                                        size_rect=(0, 0))
         # ------ Другие объекты
         self.computer_sprites = ['sprites/comp/gaming_comp_1.png', 'sprites/comp/gaming_comp_2.png',
                                  'sprites/comp/gaming_comp_3.png', 'sprites/comp/gaming_comp_4.png',
@@ -294,11 +318,12 @@ class Start_room:
         coords_computer_1 = [100, 300]
         coords_computer_1 = [THICKNESS_WALL+coords_computer_1[0], self.size_room_layer[1]-SPRITES["comp_size"][1]-coords_computer_1[1]]
         computer_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-                              coords=coords_computer_1,
-                              size=SPRITES["comp_size"],
-                              # +100+delta_wall_right_3_x
-                              image=self.computer_sprites[0],
-                              size_rect=(0, -100))
+                            coords=coords_computer_1,
+                            size=SPRITES["comp_size"],
+                            # +100+delta_wall_right_3_x
+                            image=self.computer_sprites[0],
+                            func=lambda: print("click computer"),
+                            size_rect=(0, -100))
         self.sprite_computer_for_1 = [0, 0.1, 8]
         self.sprite_computer_isprite_1 = self.sprite_computer_for_1[0]
         self.sprite_computer_isprite_1_OLD = self.sprite_computer_isprite_1
@@ -351,11 +376,11 @@ class Start_room:
                          image="sprites/chair/chair_1.png",
                          size_rect=(0, -100))
         # ------ Живые объекты
-        # enemy = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-        #                       coords=[self.size_room_layer[1] - THICKNESS_WALL, THICKNESS_WALL+wall_right_2.data["coords"][3]+WIDTH_DOOR - DELTA_SIZE_NEAR_OBJECTS - delta_wall_right_3_x],
-        #                       size=(THICKNESS_WALL, (size_hall[1]-WIDTH_DOOR)//2+delta_hall[1]+HEIGHT_WALL), # +100+delta_wall_right_3_x
-        #                       image=f'sprites/walls/wall_red_top.png',
-        #                       size_rect=(0, -HEIGHT_WALL+30))
+        enemy = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
+                              coords=[500, 500],
+                              size=(100, 140),
+                              image='sprites/character/base_choice/idle/idle_front_0.png',
+                              size_rect=(82, 20))
         self.objects = {
             "floor_empty_zone": self.floor_empty_zone,
             # Стены:
@@ -366,9 +391,12 @@ class Start_room:
             # Перегородки:
             "partition_side_1": partition_side_1, "partition_side_front_1": partition_side_front_1, "partition_front_1": partition_front_1,
             "partition_front_2": partition_front_2, "partition_side_front_2": partition_side_front_2, "partition_side_2": partition_side_2,
-            # Другие предметы:
+            "partition_front_3": partition_front_3, "partition_side_front_3": partition_side_front_3, "partition_side_3": partition_side_3,
+            # Статичные предметы:
             "computer_1": computer_1, "computer_2": computer_2, "computer_3": computer_3,
             "chair_1": chair_1, "chair_2": chair_2, "chair_3": chair_3,
+            # Живые объекты:
+            "enemy": enemy,
         }
         self.list_objects = list(self.objects.values())
         # ------------------
