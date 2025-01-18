@@ -188,12 +188,15 @@ class Main:
     def format_commands(self, commands):
         res_commands = {}
         for type_key, type_val in commands.items():
-            res_commands[type_key] = {}
-            for key, val in type_val.items():
-                if type(key) in (list, tuple):
-                    for mini_key in key: res_commands[type_key][mini_key] = val
-                else:
-                    res_commands[type_key][key] = val
+            if type(type_val) in (tuple, list, dict):
+                res_commands[type_key] = {}
+                for key, val in type_val.items():
+                    if type(key) in (list, tuple):
+                        for mini_key in key: res_commands[type_key][mini_key] = val
+                    else:
+                        res_commands[type_key][key] = val
+            else:
+                res_commands[type_key] = type_val
         return res_commands
 
     def display_quit(self):

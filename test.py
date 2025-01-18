@@ -200,65 +200,166 @@
 
 
 
-import pygame as pg
+# import pygame
+#
+# # --- constants --- (UPPER_CASE names)
+#
+# BLACK = (0, 0, 0)
+# RED   = (255, 0, 0)
+# GREEN = (0, 255, 0)
+#
+# # --- classes --- (CamelCase names)
+#
+# class Sheldon(pygame.sprite.Sprite):
+#
+#     def __init__(self, x, y):
+#         pygame.sprite.Sprite.__init__(self)
+#
+#         self.image = pygame.Surface((230, 310))
+#         self.image.fill(RED)
+#
+#         self.rect = self.image.get_rect()
+#         self.rect.x = x
+#         self.rect.y = y
+#
+#     def check_click(self, mouse):
+#         if self.rect.collidepoint(mouse):
+#             print("hit RED")
+#
+# class Rake(pygame.sprite.Sprite):
+#
+#     def __init__(self, x, y):
+#         pygame.sprite.Sprite.__init__(self)
+#
+#         self.image = pygame.Surface((230, 310))
+#         self.image.fill(GREEN)
+#
+#         self.rect = self.image.get_rect()
+#         self.rect.x = x
+#         self.rect.y = y
+#
+#     def check_click(self, mouse):
+#         if self.rect.collidepoint(mouse):
+#             print("hit GREEN")
+#
+# # --- main --- (lower_case names)
+#
+# # - init -
+#
+# pygame.init()
+# window = pygame.display.set_mode((800,600))
+#
+# # - objects -
+#
+# sheldon = Sheldon(10, 10)
+# #sheldon.rect.topleft = (10, 10)
+#
+# rake = Rake(400, 250)
+# #rake.rect.topleft = (400, 250)
+#
+# all_sprites = pygame.sprite.Group()
+# all_sprites.add(sheldon, rake)
+#
+# # - mainloop -
+#
+# running = True
+#
+# while running:
+#     for event in pygame.event.get():
+#         if event.type == pygame.QUIT or \
+#            (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+#             running = False
+#
+#         elif event.type == pygame.MOUSEBUTTONDOWN:
+#             for s in all_sprites:
+#                 s.check_click(event.pos)
+#
+#     window.fill(BLACK)
+#     all_sprites.update()
+#     all_sprites.draw(window)
+#     pygame.display.update()
+#
+# # - end -
+#
+# pygame.quit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import pygame
 import sys
-import random as rnd
 
-pg.init()
-win = pg.display.set_mode((500, 500))
-background = pg.image.load("background.png").convert()
-##  Рекомендую использовать .convert(), иначе будет сильно лагать
+pygame.init()
 
-class cam:
-    def __init__(self, x, y):
-        self.rect = pg.Rect(x, y, 500, 500)
+# Настройки экрана
+WIDTH, HEIGHT = 800, 600
+WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Преследование врагом")
 
-    def move(self, vector):
-        self.rect[0] += vector[0]
-        self.rect[1] += vector[1]
+# Цвета
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
 
-class Player:
-    def __init__(self, x, y):
-        self.rect = pg.Rect(x, y, 10, 10)
+# Настройки персонажа
+player_pos = pygame.Vector2(WIDTH // 2, HEIGHT // 2)
+player_speed = 5
+player_radius = 15
 
-    def move(self, vector):
-        self.rect[0] += vector[0]
-        self.rect[1] += vector[1]
+# Настройки врага
+enemy_pos = pygame.Vector2(100, 100)
+enemy_speed = 3
+enemy_radius = 15
+enemy_detection_radius = 200  # Радиус обнаружения врага
 
-    def draw(self):
-        ##  Игрок на самом окне не двигается, двигается мир вокруг него
-        pg.draw.rect(win, (0, 0, 0), (240, 240, 10, 10))
+clock = pygame.time.Clock()
 
-player = Player(0, 0)
-camera = cam(0, 0)
-
-while 1:
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            pg.quit()
+while True:
+    clock.tick(60)  # Ограничение FPS до 60
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
             sys.exit()
 
-    vector = [0, 0]
+    # Движение персонажа
+    keys = pygame.key.get_pressed()
+    movement = pygame.Vector2(0, 0)
+    if keys[pygame.K_w]:
+        movement.y -= player_speed
+    if keys[pygame.K_s]:
+        movement.y += player_speed
+    if keys[pygame.K_a]:
+        movement.x -= player_speed
+    if keys[pygame.K_d]:
+        movement.x += player_speed
+    if movement.length() > 0:
+        movement = movement.normalize() * player_speed
+        player_pos += movement
 
-    kpressed = pg.key.get_pressed()
-    if kpressed[pg.K_UP]:
-        vector[1] -= 3
-    elif kpressed[pg.K_DOWN]:
-        vector[1] += 3
+    # Расчет расстояния между персонажем и врагом
+    distance = player_pos.distance_to(enemy_pos)
+    if distance < enemy_detection_radius:
+        # Враг преследует персонажа
+        direction = (player_pos - enemy_pos).normalize()
+        enemy_pos += direction * enemy_speed
 
-    if kpressed[pg.K_LEFT]:
-        vector[0] -= 3
-    elif kpressed[pg.K_RIGHT]:
-        vector[0] += 3
+    # Отрисовка
+    WIN.fill(WHITE)
+    # Радиус обнаружения
+    pygame.draw.circle(WIN, (200, 200, 200), (int(enemy_pos.x), int(enemy_pos.y)), enemy_detection_radius, 1)
+    # Враг
+    pygame.draw.circle(WIN, RED, (int(enemy_pos.x), int(enemy_pos.y)), enemy_radius)
+    # Персонаж
+    pygame.draw.circle(WIN, BLUE, (int(player_pos.x), int(player_pos.y)), player_radius)
 
-    ##  Если игрок ходил
-    if vector != [0, 0]:
-        player.move(vector)
-        camera.move(vector)
-
-    win.fill((255, 255, 255))
-    win.blit(background, (-camera.rect[0], -camera.rect[1]))
-    player.draw()
-
-    pg.display.flip() ##    = pg.display.update()
-    pg.time.wait(30)
+    pygame.display.flip()

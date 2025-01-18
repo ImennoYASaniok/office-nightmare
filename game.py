@@ -4,7 +4,7 @@
 import pygame
 import pygame_widgets
 
-from levels import Level1, Object, Hitbox_Button
+from levels import Level1, Object # , Hitbox_Button
 
 
 
@@ -263,6 +263,34 @@ class Character:
 
 
 
+class Map:
+    def __init__(self, parent, game, base_style):
+        self.parent = parent
+        self.game = game
+        self.base_style = base_style
+
+        self.rect_cell = {
+            "size": [40, 40],
+            "thickness_border": 5,
+            "color": {
+                "base": (128, 128, 128, 100),
+                "border": (128, 128, 128),
+            }
+        }
+        self.map = [[0 for _ in range(game.game_layer[0]//self.rect_cell["size"][0])] for i in range(game.game_layer[0]//self.rect_cell["size"][0])]
+
+    def draw(self):
+        x, y = 0, 0
+        for i_row in range(len(self.map)):
+            for i_cell in range(len(self.map[i_row])):
+                self.game.set_rect(layer=self.game.game_layer, coords=[x, y, self.rect_cell["size"][0], self.rect_cell["size"][1]],
+                                   color_base=self.rect_cell["color"]["base"], color_border=self.rect_cell["color"]["border"],
+                                   thickness_border=5)
+                x += self.rect_cell["size"][0]
+            y += self.rect_cell["size"][1]
+
+
+
 class Game:
     def __init__(self, parent, base_style):
         self.base_style = base_style
@@ -287,6 +315,7 @@ class Game:
         self.game_layer = self.room_now.room_layer
         self.start_spawn = [self.room_now.size_room_layer[0] // 4 + 200, self.room_now.size_room_layer[1] - 100]
         self.coords_game_layer = [0, 0, self.room_now.size_room_layer[0], self.room_now.size_room_layer[1]]
+        self.coords_game_layer_old = self.coords_game_layer.copy()
         # ------ Динамическая камера
         self.border_dinamic_zone = [500, 300]
         self.coords_dinamic_zone = [
@@ -311,8 +340,9 @@ class Game:
         self.room_now.enter_rooms()
 
         # ------------ Мышка
-        self.coords_cursor = pygame.mouse.get_pos()
-        self.old_coords_cursor = self.coords_cursor
+        # self.coords_cursor = pygame.mouse.get_pos()
+        # self.old_coords_cursor = self.coords_cursor
+        self.val_mouse_state = "click"
 
         # ------ Персонаж
         self.character = Character(self.parent, self, self.base_style)
@@ -325,10 +355,12 @@ class Game:
                 pygame.K_ESCAPE: lambda: self.parent.display_change("menu"),
                 pygame.K_0: lambda: self.parent.display_change("final", dop_type="victory"),
                 pygame.K_9: lambda: self.parent.display_change("final", dop_type="fail")
-            }
+            },
+            pygame.MOUSEBUTTONDOWN: self.mouse_state,
+            pygame.MOUSEBUTTONUP: self.mouse_state
         }
         self.commands = self.parent.format_commands(self.commands)
-        # print("GAME: ", self.commands)
+        print("GAME: ", *self.commands.items(), sep="\n")
         self.list_comands = [self.commands, self.character.commands]
 
         # ------ Надписи и данные о игре, находящиеся сверху слева
@@ -453,6 +485,7 @@ class Game:
             self.room_now.delete_all()
             self.room_now = self.list_rooms[self.type_room](self.parent, self, self.base_style)
             self.room_now.enter_rooms()
+        # print(self.coords_game_layer[0] - self.coords_game_layer_old[0], self.coords_game_layer[1] - self.coords_game_layer_old[1])
         self.room_now.draw()
 
         # ------ Вывод значений и данных о игре
@@ -480,12 +513,20 @@ class Game:
         # print("MOUSE", pygame.mouse.get_pos())
         # print(pygame.mouse._get_cursor()) # pygame.mouse.get_pos()
 
-    def set_rect(self, coords, color, layer):
+        self.coords_game_layer_old = self.coords_game_layer.copy()
+
+    def set_rect(self, layer, coords, color_base, thickness_border=None, color_border=None):
+        if thickness_border == None: thickness_border = 5
         if len(coords) < 4: raise IndexError("Мало параметров coords, как минимум 4 (x, y, w, h)")
-        if len(color) < 3: raise IndexError("Мало параметров RGB цвета color, как минимум 3")
+        if len(color_base) < 3: raise IndexError("Мало параметров RGB цвета color, как минимум 3")
         rect_layer = pygame.Surface((coords[2], coords[3]))
-        if len(color) >= 4: rect_layer.set_alpha(color[3])
-        rect_layer.fill(color[:3])
+        if color_border != None:
+            pygame.draw.lines(rect_layer, color_border, True, [[coords[0], coords[1]],
+                                                               [coords[0]+coords[2], coords[1]],
+                                                               [coords[0]+coords[2], coords[1]+coords[3]],
+                                                               [coords[0], coords[1]+coords[3]]], thickness_border)
+        if len(color_base) >= 4: rect_layer.set_alpha(color_base[3])
+        rect_layer.fill(color_base[:3])
         layer.blit(rect_layer, (coords[0], coords[1]))
 
     def set_dinamic_zone(self, type_output=0):
@@ -499,12 +540,12 @@ class Game:
         elif type_output == 2:
             if list(self.flags_dinamic.values())[0] == 0: # up
                 print(f"up {self.character.character["coords_display"][1]}<{self.coords_dinamic_zone[1]}")
-
-        self.set_rect(coords=(self.start_coords_dinamic_zone[0],
+        self.set_rect(layer=self.parent.display,
+                      coords=(self.start_coords_dinamic_zone[0],
                               self.start_coords_dinamic_zone[1],
                               self.start_coords_dinamic_zone[2] - self.start_coords_dinamic_zone[0],
                               self.start_coords_dinamic_zone[3] - self.start_coords_dinamic_zone[1]),
-                      color=(50, 50, 50, 100), layer=self.parent.display)
+                      color_base=(50, 50, 50, 100))
         # self.set_rect(coords=(self.start2_coords_dinamic_zone[0],
         #                       self.start2_coords_dinamic_zone[1],
         #                       self.start2_coords_dinamic_zone[2] - self.start2_coords_dinamic_zone[0],
@@ -600,6 +641,10 @@ class Game:
         if draw_rects:
             for obj in objects + dop_objects:
                 pygame.draw.rect(self.game_layer, (255, 255, 255), obj.data["rect"])
+
+        # Нажатие на объект
+        for obj in (objects + dop_objects):
+            obj.check_click()
 
         # self.layer_buttons_1.fill(pygame.Color(0, 0, 0, 0))
         # self.layer_buttons_2.fill(pygame.Color(0, 0, 0, 0))
@@ -697,11 +742,20 @@ class Game:
                 for_data[0] = 0
         return for_data
 
+    def mouse_state(self, state):
+        self.val_mouse_state = state
+
     def check_event(self, event):
         for commands in self.list_comands:
-            if event.type in commands.keys() and event.key in commands[event.type].keys():
-                # print(event.type, event.key)
-                commands[event.type][event.key]()
+            if event.type in commands.keys():
+                if type(commands[event.type]) == dict:
+                    if event.key in commands[event.type].keys():
+                        commands[event.type][event.key]()
+                else:
+                    if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+                        commands[event.type](event.type)
+                    else:
+                        commands[event.type]()
 
     def delete_all(self):
         # print("GAME ", *list(map(lambda x: x["text"] if "text" in x.keys() else x["texts"], self.buttons)), sep=" ")
