@@ -3,6 +3,7 @@
 
 import pygame
 import pygame_widgets
+from collections import deque
 
 from levels import Level1, Object # , Hitbox_Button
 
@@ -271,23 +272,68 @@ class Map:
 
         self.rect_cell = {
             "size": [40, 40],
-            "thickness_border": 5,
+            "thickness_border": 3,
+            "val_delta": 4,
             "color": {
-                "base": (128, 128, 128, 100),
+                "start": (1, 1, 1, 50),
+                "end": (255, 255, 255, 50),
                 "border": (128, 128, 128),
+                "0": (0, 0, 0, 50),
+                "1": (0, 0, 200),
+                "2": (0, 200, 0)
             }
         }
-        self.map = [[0 for _ in range(game.game_layer[0]//self.rect_cell["size"][0])] for i in range(game.game_layer[0]//self.rect_cell["size"][0])]
+        self.map = [[0 for _ in range(self.game.coords_game_layer[2]//self.rect_cell["size"][0]+1)] for _ in range(self.game.coords_game_layer[3]//self.rect_cell["size"][1]+1)]
+        self.coords_objects = []
+        self.rows, self.cols = len(self.map), len(self.map[0])
+
+        # print("\nMAP:")
+        # print(*self.map, sep="\n")
+
+    def init_graph(self):
+        self.graph = {}
+        for y, row in enumerate(self.map):
+            for x, col in enumerate(row):
+                if not col:
+                    self.graph[(x, y)] = self.graph.get((x, y), []) + self.get_next_nodes(x, y)
+        # print("graph: ", *self.graph.items(), sep="\n")
+
+    def set_cell(self, x, y, val):
+        self.map[y][x] = val
+
+    def get_next_nodes(self, x, y):
+        check_next_node = lambda x, y: True if 0 <= x < self.cols and 0 <= y < self.rows and not self.map[y][x] else False
+        ways = [-1, 0], [0, -1], [1, 0], [0, 1], [-1, -1], [1, -1], [1, 1], [-1, 1]
+        return [(x + dx, y + dy) for dx, dy in ways if check_next_node(x + dx, y + dy)]
+
+    def set_object(self, coords, name=None, old_coords=None):
+        # if name == "partition_side_1":
+        # print(coords, list(range(coords[1], coords[3])), list(range(coords[0], coords[2])), old_coords, name)
+        if coords[1] == coords[3]: coords[3] += 1
+        if coords[0] == coords[2]: coords[2] += 1
+        for y in range(coords[1], coords[3]):
+            for x in range(coords[0], coords[2]):
+                if y < len(self.map) and x < len(self.map[y]):
+                    self.map[y][x] = 1 # 50
+                    self.coords_objects.append((x, y))
 
     def draw(self):
         x, y = 0, 0
         for i_row in range(len(self.map)):
             for i_cell in range(len(self.map[i_row])):
+                # color = list(self.rect_cell["color"]["start"])
+                # color[0] *= self.map[i_row][i_cell] * self.rect_cell["val_delta"]
+                # color[1] *= self.map[i_row][i_cell] * self.rect_cell["val_delta"]
+                # color[2] *= self.map[i_row][i_cell] * self.rect_cell["val_delta"]
+                # ------
+                color = self.rect_cell["color"][str(self.map[i_row][i_cell])]
+                # print([x, y, self.rect_cell["size"][0], self.rect_cell["size"][1]], color)
                 self.game.set_rect(layer=self.game.game_layer, coords=[x, y, self.rect_cell["size"][0], self.rect_cell["size"][1]],
-                                   color_base=self.rect_cell["color"]["base"], color_border=self.rect_cell["color"]["border"],
-                                   thickness_border=5)
+                                   color_base=color, color_border=self.rect_cell["color"]["border"],
+                                   thickness_border=self.rect_cell["thickness_border"])
                 x += self.rect_cell["size"][0]
             y += self.rect_cell["size"][1]
+            x = 0
 
 
 
@@ -338,6 +384,15 @@ class Game:
         # 1 - постоянная динамическая зона
         # ------ Стартовая отрисовка комнаты
         self.room_now.enter_rooms()
+
+        # ------ Карта
+        self.map = Map(self.parent, self, self.base_style)
+        for name, obj in self.room_now.objects.items():
+            if "enemy" not in name: obj.set_object_map(name)
+            else: obj.init_start()
+        self.map.init_graph()
+        # print("\nMAP:")
+        # print(*self.map.map, sep="\n")
 
         # ------------ Мышка
         # self.coords_cursor = pygame.mouse.get_pos()
@@ -513,6 +568,9 @@ class Game:
         # print("MOUSE", pygame.mouse.get_pos())
         # print(pygame.mouse._get_cursor()) # pygame.mouse.get_pos()
 
+        # ------ Карта
+        self.map.draw()
+
         self.coords_game_layer_old = self.coords_game_layer.copy()
 
     def set_rect(self, layer, coords, color_base, thickness_border=None, color_border=None):
@@ -521,7 +579,7 @@ class Game:
         if len(color_base) < 3: raise IndexError("Мало параметров RGB цвета color, как минимум 3")
         rect_layer = pygame.Surface((coords[2], coords[3]))
         if color_border != None:
-            pygame.draw.lines(rect_layer, color_border, True, [[coords[0], coords[1]],
+            pygame.draw.lines(self.game_layer, color_border, True, [[coords[0], coords[1]],
                                                                [coords[0]+coords[2], coords[1]],
                                                                [coords[0]+coords[2], coords[1]+coords[3]],
                                                                [coords[0], coords[1]+coords[3]]], thickness_border)
@@ -741,6 +799,25 @@ class Game:
             else:
                 for_data[0] = 0
         return for_data
+
+
+    # ==== BFS
+    def bfs(self, start, goal, graph):
+        queue = deque([start])
+        visited = {start: None}
+
+        while queue:
+            cur_node = queue.popleft()
+            if cur_node == goal:
+                break
+
+            next_nodes = graph[cur_node]
+            for next_node in next_nodes:
+                if next_node not in visited:
+                    queue.append(next_node)
+                    visited[next_node] = cur_node
+        return queue, visited
+    # ========
 
     def mouse_state(self, state):
         self.val_mouse_state = state
