@@ -1,5 +1,8 @@
 import pygame
+
+# from pygame.examples.cursors import image
 from pygame.locals import Rect
+from collections import deque
 
 THICKNESS_WALL = 30
 HEIGHT_WALL = 200
@@ -94,11 +97,30 @@ class Object:
         #     self.data["absolute_coords_rect"][0] = self.data["absolute_coords_rect"][0]
         self.set_sprite()
 
-    def set_sprite(self):
-        self.data["rect"].x = self.data["coords"][0] # + self.data["absolute_coords_rect"][0]
-        self.data["rect"].y = self.data["coords"][1] + self.data["coords"][3] - self.data["size_rect"][1] # - self.data["absolute_coords_rect"][1]
-        self.data["rect"].w = self.data["size_rect"][0] # self.data["coords"][2]
-        self.data["rect"].h = self.data["size_rect"][1] # self.character["coords"][3]
+        # Обозначение границ на карте
+    def set_object_map(self, name):
+        # if self.image != None:
+        #     self.game.map.set_object([self.data["coords"][0]//self.game.map.rect_cell["size"][0],
+        #                           self.data["coords"][1]//self.game.map.rect_cell["size"][1],
+        #                           (self.data["coords"][0]+self.data["coords"][2])//self.game.map.rect_cell["size"][0]+1,
+        #                           (self.data["coords"][1]+self.data["coords"][3])//self.game.map.rect_cell["size"][1]+1])
+        self.game.map.set_object([self.data["rect"].x//self.game.map.rect_cell["size"][0],
+                                  self.data["rect"].y//self.game.map.rect_cell["size"][1],
+                                  (self.data["rect"].x+self.data["rect"].w)//self.game.map.rect_cell["size"][0], # +1
+                                  (self.data["rect"].y+self.data["rect"].h)//self.game.map.rect_cell["size"][1]], # +1
+                                 name, [self.data["rect"].x, self.data["rect"].y, self.data["rect"].x+self.data["rect"].w, self.data["rect"].y+self.data["rect"].h])
+
+    def set_sprite(self, coords=None):
+        if coords == None:
+            self.data["rect"].x = self.data["coords"][0] # + self.data["absolute_coords_rect"][0]
+            self.data["rect"].y = self.data["coords"][1] + self.data["coords"][3] - self.data["size_rect"][1] # - self.data["absolute_coords_rect"][1]
+            self.data["rect"].w = self.data["size_rect"][0] # self.data["coords"][2]
+            self.data["rect"].h = self.data["size_rect"][1] # self.character["coords"][3]
+        else:
+            self.data["rect"].x = coords[0]  # + self.data["absolute_coords_rect"][0]
+            self.data["rect"].y = coords[1] + coords[3] - self.data["size_rect"][1]  # - self.data["absolute_coords_rect"][1]
+            self.data["rect"].w = self.data["size_rect"][0]  # self.data["coords"][2]
+            self.data["rect"].h = self.data["size_rect"][1]  # self.character["coords"][3]
         # self.data["mask"] = pygame.mask.from_surface(self.data["sprite"])
 
     def update_sprite(self, image):
@@ -173,7 +195,75 @@ class Object:
 #         del self.data["button"]
 
 class Enemy(Object):
-        pass
+    def __init__(self, parent, game, base_style, coords, size, func=None, image=None, size_rect=(0, 20), type_collide="rect"):
+        super().__init__(parent, game, base_style, coords, size, func, image, size_rect, type_collide)
+        self.way = []
+        self.old_way = []
+        self.data["speed"] = 3
+        self.data["dir"] = "down"
+        self.data["cond"] = "idle"
+
+    def init_start(self):
+        self.start = self.set_start()
+
+    def set_start(self):
+        # return ((self.data["coords"][0] + self.data["coords"][2] // 2) // self.game.map.rect_cell["size"][0],
+        #         (self.data["coords"][1] + self.data["coords"][3] // 2) // self.game.map.rect_cell["size"][1])
+        return ((self.data["rect"].x+self.data["rect"].w//2) // self.game.map.rect_cell["size"][0],
+                (self.data["rect"].y+self.data["rect"].h//2) // self.game.map.rect_cell["size"][1])
+
+    def search_way(self):
+        for cell in self.way:
+            self.game.map.set_cell(cell[0], cell[1], 0)
+        goal = ((self.game.character.character["rect"].x+self.game.character.character["rect"].w//2) // self.game.map.rect_cell["size"][0],
+                (self.game.character.character["rect"].y+self.game.character.character["rect"].h//2) // self.game.map.rect_cell["size"][1])
+        self.queue, self.visited = self.game.bfs(start=self.start,
+                                                  goal=goal,
+                                                  graph=self.game.map.graph)
+        self.way = []
+        path_segment = goal
+        # print(path_segment)
+        while path_segment and path_segment in self.visited:
+            self.way.append(path_segment)
+            path_segment = self.visited[path_segment]
+        self.way.reverse()
+        self.way.append(self.start)
+        if len(self.way) <= 1:
+            self.way = self.old_way.copy()
+        for cell in self.way:
+            self.game.map.set_cell(cell[0], cell[1], 2)
+        self.old_way = self.way.copy()
+        # print(self.way[0], self.way[1])
+
+    def move(self): # Попробовать: если лево - точка перемещения слева, если право, точка перемещения справа
+        old_coords = self.data["coords"].copy()
+        # dirs = []
+        if self.way[0][0] < self.way[1][0]:
+            self.data["cond"] = "walk"
+            self.data["dir"] = "right"
+            self.data["coords"][0] += self.data["speed"]
+        elif self.way[0][0] > self.way[1][0]:
+            self.data["cond"] = "walk"
+            self.data["dir"] = "left"
+            self.data["coords"][0] -= self.data["speed"]
+        if self.way[0][1] > self.way[1][1]:
+            self.data["cond"] = "walk"
+            self.data["dir"] = "up"
+            self.data["coords"][1] -= self.data["speed"]
+        elif self.way[0][1] < self.way[1][1]:
+            self.data["cond"] = "walk"
+            self.data["dir"] = "down"
+            self.data["coords"][1] += self.data["speed"]
+        if self.data["cond"] != "idle":
+            self.set_sprite()
+        self.start = self.set_start()
+
+        if self.start in self.game.map.coords_objects:
+            self.data["coords"] = old_coords.copy()
+            self.set_sprite()
+            self.start = self.set_start()
+
+
 
 
 class Level1:
@@ -377,7 +467,7 @@ class Start_room:
                          size_rect=(0, -100))
         # ------ Живые объекты
         enemy = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
-                              coords=[500, 500],
+                              coords=[200, self.size_room_layer[1]-200],
                               size=(100, 140),
                               image='sprites/character/base_choice/idle/idle_front_0.png',
                               size_rect=(82, 20))
@@ -420,6 +510,10 @@ class Start_room:
 
     def draw(self):
         self.animate_sprite()
+        for name, obj in self.objects.items():
+            if "enemy" in name:
+                obj.search_way()
+                obj.move()
         self.game.render_objects(self.list_objects, dop_objects=self.list_dop_objects) # , draw_rects=True
         # print(self.doors["right"][1][0], self.game.character.character["absolute_coords_rect"][1], self.doors["right"][1][1])
         if self.game.character.character["absolute_coords_rect"][0] >= self.doors["right"][0] and self.doors["right"][1][0] < self.game.character.character["absolute_coords_rect"][1] < self.doors["right"][1][1]:
