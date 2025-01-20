@@ -31,18 +31,24 @@ class Refer:
 
     def init_main_text(self):
         txt = [text for text in main_text]
-        for i, mini_t in enumerate(txt):
-            label_title = {
-                "coords": (25, 80 + i * 30),
-                "text": mini_t,
-                "font": pygame.font.Font(self.base_style["font_path"], 30)
-            }
-            label_title["label"] = self.parent.label_text(coords=label_title["coords"],
-                                                          text=label_title["text"],
-                                                          font=label_title["font"])
-            # label_title["label"], label_title["coords"] = self.parent.align(label_title["label"], label_title["coords"],
-            #                                                                inacurr=-20, type_blit=False)
-            self.labels.append(label_title)
+        prefix_i = 1
+        for mini_t in txt:
+            if mini_t not in ["", "\n"]:
+                label_title = {
+                    "coords": (25, 80 + prefix_i),
+                    "text": mini_t,
+                    "font": pygame.font.Font(self.base_style["font_path"], 25)
+                }
+                # print([label_title["text"]])
+                label_title["label"] = self.parent.label_text(coords=label_title["coords"],
+                                                              text=label_title["text"],
+                                                              font=label_title["font"])
+                # label_title["label"], label_title["coords"] = self.parent.align(label_title["label"], label_title["coords"],
+                #                                                                inacurr=-20, type_blit=False)
+                self.labels.append(label_title)
+                prefix_i += 30
+            else:
+                prefix_i += 20
 
     def init_button_menu(self):
         w, h = 80, 50

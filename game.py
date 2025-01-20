@@ -8,7 +8,6 @@ from collections import deque
 from levels import Level1, Object # , Hitbox_Button
 
 
-
 class Character:
     def __init__(self, parent, game, base_style):
         self.parent = parent
@@ -303,7 +302,7 @@ class Map:
 
     def get_next_nodes(self, x, y):
         check_next_node = lambda x, y: True if 0 <= x < self.cols and 0 <= y < self.rows and not self.map[y][x] else False
-        ways = [-1, 0], [0, -1], [1, 0], [0, 1], [-1, -1], [1, -1], [1, 1], [-1, 1]
+        ways = [-1, 0], [0, -1], [1, 0], [0, 1] # , [-1, -1], [1, -1], [1, 1], [-1, 1]
         return [(x + dx, y + dy) for dx, dy in ways if check_next_node(x + dx, y + dy)]
 
     def set_object(self, coords, name=None, old_coords=None):
@@ -569,7 +568,7 @@ class Game:
         # print(pygame.mouse._get_cursor()) # pygame.mouse.get_pos()
 
         # ------ Карта
-        self.map.draw()
+        # self.map.draw()
 
         self.coords_game_layer_old = self.coords_game_layer.copy()
 
@@ -803,8 +802,10 @@ class Game:
 
     # ==== BFS
     def bfs(self, start, goal, graph):
-        queue = deque([start])
+        queue = deque([start]) # starts
         visited = {start: None}
+        # if start in starts:
+        #     visited[start] = None
 
         while queue:
             cur_node = queue.popleft()

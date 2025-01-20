@@ -125,8 +125,11 @@ class Object:
 
     def update_sprite(self, image):
         if self.image != None:
-            self.image = image
-            self.data["sprite"] = pygame.image.load(self.image).convert_alpha()
+            if type(image) == str:
+                self.image = image
+                self.data["sprite"] = pygame.image.load(self.image).convert_alpha()
+            else:
+                self.data["sprite"] = image
             self.data["sprite"] = pygame.transform.scale(self.data["sprite"],(self.data["coords"][2], self.data["coords"][3]))
             self.set_sprite()
 
@@ -199,16 +202,104 @@ class Enemy(Object):
         super().__init__(parent, game, base_style, coords, size, func, image, size_rect, type_collide)
         self.way = []
         self.old_way = []
+        self.do_hide = False
+        self.is_start = False
+
         self.data["speed"] = 3
         self.data["dir"] = "down"
         self.data["cond"] = "idle"
+        self.data["number_sprite"] = 0
+        self.data["freq_sprite"] = 20
+        self.data["counter_sprite"] = 0
+        part_file_path = r"sprites/character/base_choice" + '/'
+        self.data["type_cond"] = {
+            "walk": {
+                "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
+                "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
+                "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
+                "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
+            },
+            # "run": {
+            #     "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
+            #     "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
+            #     "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
+            #     "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
+            # },
+            # "sneak": {
+            #     "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
+            #     "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
+            #     "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
+            #     "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
+            #
+            # },
+            "idle": {
+                "down": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_front_{x}.png").convert_alpha(), range(5))),
+                "up": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_back_{x}.png").convert_alpha(), range(5))),
+                "left": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), range(5))),
+                "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), 1, 0), range(5)))
+            }
+        }
 
     def init_start(self):
         self.start = self.set_start()
+        self.is_start = True
 
     def set_start(self):
         # return ((self.data["coords"][0] + self.data["coords"][2] // 2) // self.game.map.rect_cell["size"][0],
         #         (self.data["coords"][1] + self.data["coords"][3] // 2) // self.game.map.rect_cell["size"][1])
+        # res_start = [(self.data["rect"].x+self.data["rect"].w//2) // self.game.map.rect_cell["size"][0],
+        #              (self.data["rect"].y+self.data["rect"].h//2) // self.game.map.rect_cell["size"][1]]
+        # old_start = res_start.copy()
+        # if self.is_start:
+        #     dir = []
+        #
+        #     # check_start = res_start
+        #     # check_start[0] += 1
+        #     # if tuple(check_start) in self.game.map.coords_objects:
+        #     #     dir.append("right")
+        #     # check_start = res_start
+        #     # check_start[0] -= 1
+        #     # if tuple(check_start) in self.game.map.coords_objects and "right" not in dir:
+        #     #     dir.append("left")
+        #     #
+        #     # check_start = res_start
+        #     # check_start[1] += 1
+        #     # if tuple(check_start) in self.game.map.coords_objects:
+        #     #     dir.append("down")
+        #     # check_start = res_start
+        #     # check_start[1] -= 1
+        #     # if tuple(check_start) in self.game.map.coords_objects and "down" not in dir:
+        #     #     dir.append("up")
+        #     # print(dir)
+        #     # -----------------------------------------------
+        #     if self.game.character.character["rect"].x - self.data["rect"].x > 0:
+        #         dir.append("left")
+        #     elif self.game.character.character["rect"].x - self.data["rect"].x < 0:
+        #         dir.append("right")
+        #     if self.game.character.character["rect"].y - self.data["rect"].y > 0:
+        #         dir.append("down")
+        #     elif self.game.character.character["rect"].y - self.data["rect"].y < 0:
+        #         dir.append("up")
+        #     print(dir)
+        #
+        #     if "right" in dir:
+        #         # self.data["coords"][0] -= self.data["speed"]
+        #         res_start[0] = (self.data["rect"].x) // self.game.map.rect_cell["size"][0]
+        #     elif "left" in dir:
+        #         # self.data["coords"][0] += self.data["speed"]
+        #         res_start[0] = (self.data["rect"].x + self.data["rect"].w) // self.game.map.rect_cell["size"][0]
+        #
+        #     if "down" in dir:
+        #         # self.data["coords"][1] -= self.data["speed"]
+        #         res_start[1] = (self.data["rect"].y) // self.game.map.rect_cell["size"][1]
+        #     elif "up" in dir:
+        #         # self.data["coords"][1] += self.data["speed"]
+        #         res_start[1] = (self.data["rect"].y + self.data["rect"].h) // self.game.map.rect_cell["size"][1]
+        #
+        # if tuple(res_start) in self.game.map.coords_objects:
+        #     return tuple(old_start)
+        # else:
+        #     return tuple(res_start)
         return ((self.data["rect"].x+self.data["rect"].w//2) // self.game.map.rect_cell["size"][0],
                 (self.data["rect"].y+self.data["rect"].h//2) // self.game.map.rect_cell["size"][1])
 
@@ -217,6 +308,7 @@ class Enemy(Object):
             self.game.map.set_cell(cell[0], cell[1], 0)
         goal = ((self.game.character.character["rect"].x+self.game.character.character["rect"].w//2) // self.game.map.rect_cell["size"][0],
                 (self.game.character.character["rect"].y+self.game.character.character["rect"].h//2) // self.game.map.rect_cell["size"][1])
+
         self.queue, self.visited = self.game.bfs(start=self.start,
                                                   goal=goal,
                                                   graph=self.game.map.graph)
@@ -228,40 +320,90 @@ class Enemy(Object):
             path_segment = self.visited[path_segment]
         self.way.reverse()
         self.way.append(self.start)
-        if len(self.way) <= 1:
+        if len(self.way) <= 2:
             self.way = self.old_way.copy()
+            if len(self.old_way) <= 2:
+                self.data["cond"] = "idle"
+            else:
+                self.data["cond"] = "walk"
+        else:
+            self.data["cond"] = "walk"
+        # print(len(self.way), len(self.old_way))
+        #     if len(self.old_way) > 1:
+        #         self.do_hide = True
+        # else:
+        #     self.do_hide = False
         for cell in self.way:
             self.game.map.set_cell(cell[0], cell[1], 2)
+            # break
         self.old_way = self.way.copy()
         # print(self.way[0], self.way[1])
 
     def move(self): # Попробовать: если лево - точка перемещения слева, если право, точка перемещения справа
-        old_coords = self.data["coords"].copy()
-        # dirs = []
-        if self.way[0][0] < self.way[1][0]:
-            self.data["cond"] = "walk"
-            self.data["dir"] = "right"
-            self.data["coords"][0] += self.data["speed"]
-        elif self.way[0][0] > self.way[1][0]:
-            self.data["cond"] = "walk"
-            self.data["dir"] = "left"
-            self.data["coords"][0] -= self.data["speed"]
-        if self.way[0][1] > self.way[1][1]:
-            self.data["cond"] = "walk"
-            self.data["dir"] = "up"
-            self.data["coords"][1] -= self.data["speed"]
-        elif self.way[0][1] < self.way[1][1]:
-            self.data["cond"] = "walk"
-            self.data["dir"] = "down"
-            self.data["coords"][1] += self.data["speed"]
         if self.data["cond"] != "idle":
-            self.set_sprite()
-        self.start = self.set_start()
+            dop_coords = self.data["coords"].copy()
+            dirs = []
+            if self.way[0][0] < self.way[1][0]:
+                dirs.append("right")
+                dop_coords[0] += self.data["speed"]
+            elif self.way[0][0] > self.way[1][0]:
+                dirs.append("left")
+                dop_coords[0] -= self.data["speed"]
+            self.set_sprite(dop_coords)
+            dop_start = self.set_start()
+            if dop_start in self.game.map.coords_objects:
+                # print("delete:", dirs[-1])
+                dirs.pop(-1)
 
-        if self.start in self.game.map.coords_objects:
-            self.data["coords"] = old_coords.copy()
-            self.set_sprite()
+            dop_coords = self.data["coords"].copy()
+            if self.way[0][1] > self.way[1][1]:
+                dirs.append("up")
+                dop_coords[1] -= self.data["speed"]
+            elif self.way[0][1] < self.way[1][1]:
+                dirs.append("down")
+                dop_coords[1] += self.data["speed"]
+            self.set_sprite(dop_coords)
+            dop_start = self.set_start()
+            if dop_start in self.game.map.coords_objects:
+                # print("delete:", dirs[-1])
+                dirs.pop(-1)
+            # print(dirs, self.way[0][1], self.way[1][1])
+
+            if dirs != []:
+                if "right" in dirs:
+                    self.data["cond"] = "walk"
+                    self.data["dir"] = "right"
+                    self.data["coords"][0] += self.data["speed"]
+                elif "left" in dirs:
+                    self.data["cond"] = "walk"
+                    self.data["dir"] = "left"
+                    self.data["coords"][0] -= self.data["speed"]
+                if "up" in dirs:
+                    self.data["cond"] = "walk"
+                    self.data["dir"] = "up"
+                    self.data["coords"][1] -= self.data["speed"]
+                elif "down" in dirs:
+                    self.data["cond"] = "walk"
+                    self.data["dir"] = "down"
+                    self.data["coords"][1] += self.data["speed"]
+
+            if self.data["counter_sprite"] >= self.data["freq_sprite"]:
+                if self.data["number_sprite"] >= len(
+                        self.data["type_cond"][self.data["cond"]][self.data["dir"]]) - 1:
+                    self.data["number_sprite"] = 0
+                else:
+                    self.data["number_sprite"] += 1
+                self.data["counter_sprite"] = 0
+            self.data["counter_sprite"] += 1
+            self.data["number_sprite"] = min(self.data["number_sprite"], len(
+                self.data["type_cond"][self.data["cond"]][self.data["dir"]]) - 1)
+            self.update_sprite(self.data["type_cond"][self.data["cond"]][self.data["dir"]][self.data["number_sprite"]])
             self.start = self.set_start()
+
+            if self.start == self.way[1]:
+                self.way.pop(0)
+                self.old_way.pop(0)
+        # print(self.data["cond"])
 
 
 
@@ -467,7 +609,7 @@ class Start_room:
                          size_rect=(0, -100))
         # ------ Живые объекты
         enemy = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
-                              coords=[200, self.size_room_layer[1]-200],
+                              coords=[900, self.size_room_layer[1] - 200], # [700, 500],
                               size=(100, 140),
                               image='sprites/character/base_choice/idle/idle_front_0.png',
                               size_rect=(82, 20))
