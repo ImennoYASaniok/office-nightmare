@@ -5,7 +5,23 @@ class Menu:
         self.base_style = base_style
         self.parent = parent
 
-        self.background_image = pygame.image.load("sprites/background.png").convert()
+        self.commands = {
+            pygame.KEYDOWN: {
+                pygame.K_ESCAPE: self.parent.display_quit,
+            }
+        }
+
+        name = "menu"
+        self.back_images = list(map(lambda x: pygame.image.load(f"sprites/{name}_logo/{name}_logo_{x}.jpg").convert(), range(2 + 1)))
+        self.delta_size_image = 100
+        self.back_images = list(map(lambda x: pygame.transform.scale(x, [x.get_rect().w + self.delta_size_image, x.get_rect().h + self.delta_size_image]), self.back_images))
+        # self.back_images = list(map(lambda x: pygame.transform.scale(x, self.parent.resize_image([x.get_rect().w, x.get_rect().h])), self.back_images))
+        self.for_back_image = {
+            "var": 0,
+            "end": len(self.back_images),
+            "count": 0,
+            "freq": 15,
+        }
 
         self.labels = []
         self.buttons = []
@@ -66,6 +82,23 @@ class Menu:
 
     def draw(self):
         self.parent.display.fill(self.base_style["colors"]["dark"])
-        self.parent.display.blit(self.background_image, (0, 0))
+
+        x_mouse, y_mouse = pygame.mouse.get_pos()
+        delta_x = x_mouse // self.delta_size_image * 3
+        delta_y = y_mouse // self.delta_size_image * 3
+        self.parent.display.blit(self.back_images[self.for_back_image["var"]], (0-delta_x, -80-delta_y))
+        if self.for_back_image["count"] >= self.for_back_image["freq"]:
+            self.for_back_image["count"] = 0
+            self.for_back_image["var"] += 1
+        if self.for_back_image["var"] >= self.for_back_image["end"]:
+            self.for_back_image["var"] = 0
+        self.for_back_image["count"] += 1
+
         # self.parent.display.fill(self.base_style["colors"]["dark"])
         for i in self.labels: self.parent.display.blit(i["label"], i["coords"])
+
+    def check_event(self, event):
+        if event.type in self.commands.keys():
+            if type(self.commands[event.type]) == dict:
+                if event.key in self.commands[event.type].keys():
+                    self.commands[event.type][event.key]()

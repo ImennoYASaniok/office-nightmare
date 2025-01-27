@@ -296,70 +296,118 @@
 
 
 
+# import pygame
+# import sys
+#
+# pygame.init()
+#
+# # Настройки экрана
+# WIDTH, HEIGHT = 800, 600
+# WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+# pygame.display.set_caption("Преследование врагом")
+#
+# # Цвета
+# WHITE = (255, 255, 255)
+# RED = (255, 0, 0)
+# BLUE = (0, 0, 255)
+#
+# # Настройки персонажа
+# player_pos = pygame.Vector2(WIDTH // 2, HEIGHT // 2)
+# player_speed = 5
+# player_radius = 15
+#
+# # Настройки врага
+# enemy_pos = pygame.Vector2(100, 100)
+# enemy_speed = 3
+# enemy_radius = 15
+# enemy_detection_radius = 200  # Радиус обнаружения врага
+#
+# clock = pygame.time.Clock()
+#
+# while True:
+#     clock.tick(60)  # Ограничение FPS до 60
+#     for event in pygame.event.get():
+#         if event.type == pygame.QUIT:
+#             pygame.quit()
+#             sys.exit()
+#
+#     # Движение персонажа
+#     keys = pygame.key.get_pressed()
+#     movement = pygame.Vector2(0, 0)
+#     if keys[pygame.K_w]:
+#         movement.y -= player_speed
+#     if keys[pygame.K_s]:
+#         movement.y += player_speed
+#     if keys[pygame.K_a]:
+#         movement.x -= player_speed
+#     if keys[pygame.K_d]:
+#         movement.x += player_speed
+#     if movement.length() > 0:
+#         movement = movement.normalize() * player_speed
+#         player_pos += movement
+#
+#     # Расчет расстояния между персонажем и врагом
+#     distance = player_pos.distance_to(enemy_pos)
+#     if distance < enemy_detection_radius:
+#         # Враг преследует персонажа
+#         direction = (player_pos - enemy_pos).normalize()
+#         enemy_pos += direction * enemy_speed
+#
+#     # Отрисовка
+#     WIN.fill(WHITE)
+#     # Радиус обнаружения
+#     pygame.draw.circle(WIN, (200, 200, 200), (int(enemy_pos.x), int(enemy_pos.y)), enemy_detection_radius, 1)
+#     # Враг
+#     pygame.draw.circle(WIN, RED, (int(enemy_pos.x), int(enemy_pos.y)), enemy_radius)
+#     # Персонаж
+#     pygame.draw.circle(WIN, BLUE, (int(player_pos.x), int(player_pos.y)), player_radius)
+#
+#     pygame.display.flip()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import pygame_widgets
 import pygame
-import sys
+from pygame_widgets.slider import Slider
+from pygame_widgets.textbox import TextBox
 
 pygame.init()
+win = pygame.display.set_mode((1000, 600))
 
-# Настройки экрана
-WIDTH, HEIGHT = 800, 600
-WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Преследование врагом")
+slider = Slider(win, 100, 100, 800, 40, min=0, max=99, step=1, initial=0)
+# output = TextBox(win, 475, 200, 50, 50, fontSize=30)
 
-# Цвета
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
+# output.disable()  # Act as label instead of textbox
 
-# Настройки персонажа
-player_pos = pygame.Vector2(WIDTH // 2, HEIGHT // 2)
-player_speed = 5
-player_radius = 15
-
-# Настройки врага
-enemy_pos = pygame.Vector2(100, 100)
-enemy_speed = 3
-enemy_radius = 15
-enemy_detection_radius = 200  # Радиус обнаружения врага
-
-clock = pygame.time.Clock()
-
-while True:
-    clock.tick(60)  # Ограничение FPS до 60
-    for event in pygame.event.get():
+run = True
+while run:
+    events = pygame.event.get()
+    for event in events:
         if event.type == pygame.QUIT:
             pygame.quit()
-            sys.exit()
+            run = False
+            quit()
 
-    # Движение персонажа
-    keys = pygame.key.get_pressed()
-    movement = pygame.Vector2(0, 0)
-    if keys[pygame.K_w]:
-        movement.y -= player_speed
-    if keys[pygame.K_s]:
-        movement.y += player_speed
-    if keys[pygame.K_a]:
-        movement.x -= player_speed
-    if keys[pygame.K_d]:
-        movement.x += player_speed
-    if movement.length() > 0:
-        movement = movement.normalize() * player_speed
-        player_pos += movement
+    win.fill((255, 255, 255))
 
-    # Расчет расстояния между персонажем и врагом
-    distance = player_pos.distance_to(enemy_pos)
-    if distance < enemy_detection_radius:
-        # Враг преследует персонажа
-        direction = (player_pos - enemy_pos).normalize()
-        enemy_pos += direction * enemy_speed
+    # output.setText(slider.getValue())
 
-    # Отрисовка
-    WIN.fill(WHITE)
-    # Радиус обнаружения
-    pygame.draw.circle(WIN, (200, 200, 200), (int(enemy_pos.x), int(enemy_pos.y)), enemy_detection_radius, 1)
-    # Враг
-    pygame.draw.circle(WIN, RED, (int(enemy_pos.x), int(enemy_pos.y)), enemy_radius)
-    # Персонаж
-    pygame.draw.circle(WIN, BLUE, (int(player_pos.x), int(player_pos.y)), player_radius)
-
-    pygame.display.flip()
+    pygame_widgets.update(events)
+    pygame.display.update()

@@ -12,6 +12,7 @@ class Final:
                 (pygame.K_ESCAPE, pygame.K_RETURN): lambda: self.parent.display_change("menu")
             }
         }
+        self.commands = self.parent.format_commands(self.commands)
         self.types_final = {
             "type": type_final,
             "victory": {
@@ -21,6 +22,7 @@ class Final:
                 "text": "Ты проиграл... Попробуй ещё раз!"
             }
         }
+        # self.
 
         self.init_labels()
         self.init_buttons()
@@ -65,7 +67,15 @@ class Final:
         for _ in range(len(self.buttons)):
             del self.buttons[0]
         del self.buttons
+        self.parent.set_music()
 
     def draw(self):
         self.parent.display.fill(self.base_style["colors"]["dark"])
         for i in self.labels: self.parent.display.blit(i["label"], i["coords"])
+
+
+    def check_event(self, event):
+        if event.type in self.commands.keys():
+            if type(self.commands[event.type]) == dict:
+                if event.key in self.commands[event.type].keys():
+                    self.commands[event.type][event.key]()

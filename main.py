@@ -1,6 +1,7 @@
 import pygame
 import pygame_widgets
 from pygame_widgets.button import ButtonArray, Button
+from pygame_widgets.slider import Slider
 from pygame_widgets.textbox import TextBox
 import numpy as np
 
@@ -20,6 +21,7 @@ class Main:
         self.FPS = 60
         self.running = 1
         self.display_w, self.display_h = pygame.display.Info().current_w - 10, pygame.display.Info().current_h - 50
+        self.start_display_w, self.start_display_h = self.display_w, self.display_h
         print(self.display_w, self.display_h)
         self.list_active_surface = {'menu': Menu,
                                     'game': Game,
@@ -45,7 +47,9 @@ class Main:
 
         ########### МУЗЫКА
         self.musics = {'menu': 'music/menu.mp3',
-                       'game': 'music/game.mp3'}
+                       'game': 'music/game.mp3',
+                       'final_victory': 'music/final_victory.mp3',
+                       'final_fail': 'music/final_fail.mp3',}
         self.type_music = 0
 
         ########### АКТИВНОЕ ОКНО
@@ -54,16 +58,24 @@ class Main:
 
         ########### НАСТРОЙКИ
         self.settings_var = {
+            # ---- Общие настройки
             "music_play": 0,
             # 0 - музыка играет
             # 1 - музыка не играет
+            "color": 0,
+            # 0 - светлая
+            # 1 - тёмная
+            "format_screen": 0,
+            # 0 - выкл полно-экранный режим
+            # 1 - вкл полно-экранный режим
+            # ---- Режим разработчика
             "type_dinamic": 0,
             # 0 - динамическая камера с прямоугольной зоной
             # 1 - постоянная динамическая зона
             "do_draw_dinamic_zone": 0,
             # 0 - отрисовать
             # 1 - не отрисовывать
-            "character_energy": 1
+            "character_energy": 1,
             # 0 - нет энергии у персонажа, может бесконечно бегать по полю
             # 1 - есть энергия у персонажа
         }
@@ -78,7 +90,8 @@ class Main:
         ########### КОНСТАНТЫ
         self.LAYERS = {
             "start_room": [1500, 1500], # [3000, 3000]
-            "meeting_room": [self.display_w, self.display_h]
+            "meeting_room": [self.display_w, self.display_h],
+            "final_boss_room": [self.display_h, self.display_w]
         }
 
 
@@ -160,6 +173,16 @@ class Main:
         borderThickness=bd)
         return textbox
 
+    def slider(self, coords, color, handle_color, min, max, step, border_color, border_thickness=0, start=None, vertical=False, layer=None):
+        if layer is None: layer = self.display
+        if start is None: start = (min + max) // 2
+        return Slider(layer,
+                      coords[0], coords[1], coords[2], coords[3],
+                      min=min, max=max, step=step, initial=start,
+                      colour=color, handleColour=handle_color,
+                      vertical=vertical, handleRadius=int(coords[2 if vertical else 3] / 1.5),
+                      borderColour=border_color, borderThickness=border_thickness)
+
     def align(self, obj, coords, inacurr=(0, 0), type_blit=False, type_align="center"):
         if type(coords) == tuple: coords = list(coords)
         inacurr_w, inacurr_h = 0, 0
@@ -184,6 +207,13 @@ class Main:
             if type(obj) == pygame.surface.Surface:
                 self.display.blit(obj, coords)
         return obj, coords
+
+    def resize_image(self, size, type_side="width"):
+        print(size)
+        if type_side == "width":
+            return (self.display_w, int(size[0] * (self.display_h / size[1])))
+        elif type_side == "height":
+            return (int(size[0] * (self.display_h / size[1])), self.display_w)
 
     def format_commands(self, commands):
         res_commands = {}
@@ -210,10 +240,6 @@ class Main:
                 print("CHANGE FINAL", self.type_final)
         self.type_display = type_display
 
-    def update_widgets(self):
-        # print("EVENT:", self.events)
-        pygame_widgets.update(self.events)
-
     def view_logo(self):
         logo = pygame.image.load('sprites/logo.png')
         logo = pygame.transform.scale(logo, (logo.get_width() // (logo.get_height()/self.display_h), self.display_h))
@@ -222,22 +248,35 @@ class Main:
         pygame.display.flip()
         pygame.time.wait(1000)
 
+    def set_music(self):
+        print(self.type_display)
+        if self.type_display == "menu":
+            pygame.mixer.music.set_volume(0.3)
+            pygame.mixer.music.load(self.musics['menu'])
+            pygame.mixer.music.play(-1)
+        elif self.type_display == "final":
+            pygame.mixer.music.set_volume(0.3)
+            if self.type_final == "victory":
+                pygame.mixer.music.load(self.musics['final_victory'])
+            elif self.type_final == "fail":
+                pygame.mixer.music.load(self.musics['final_fail'])
+            pygame.mixer.music.play()
+            pygame.mixer.music.unpause()
+
+
     def show(self):
         self.view_logo()
         pygame.mixer.music.load(self.musics['menu'])
         pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(0.3)
         while self.running:
             if self.changes_holst:
                 if self.type_display == 'game':
-                    if self.settings_var["music_play"]:
-                        pygame.mixer.music.load(self.musics['game'])
-                        pygame.mixer.music.play(-1)
-                    self.type_music = 1
-                elif self.type_music:
-                    if self.settings_var["music_play"]:
-                        pygame.mixer.music.load(self.musics['menu'])
-                        pygame.mixer.music.play(-1)
-                    self.type_music = 0
+                    pygame.mixer.music.set_volume(0.5)
+                    pygame.mixer.music.pause()
+                    # if self.settings_var["music_play"]:
+                    #     sound = pygame.mixer.Sound(self.musics['game']) # pygame.mixer.music.load(self.musics['game'])
+                    #     sound.play(-1) # ygame.mixer.music.play(-1)
                 self.holst.delete_all()
                 if self.type_display == "final":
                     self.holst = self.list_active_surface[self.type_display](self, self.style, self.type_final)
@@ -247,18 +286,19 @@ class Main:
 
             self.events = pygame.event.get()
 
-            if not self.settings_var["music_play"]:
-                pygame.mixer.music.pause()
-            else:
-                pygame.mixer.music.unpause()
+            if self.type_display not in ('game', 'final'):
+                if self.settings_var["music_play"]:
+                    pygame.mixer.music.unpause()
+                else:
+                    pygame.mixer.music.pause()
+
             self.holst.draw()
 
             for event in self.events:
                 if event.type == pygame.QUIT: self.running = False
-                if self.type_display == "game":
-                    self.holst.check_event(event)
+                self.holst.check_event(event)
             self.clock.tick(self.FPS)
-            self.update_widgets()
+            pygame_widgets.update(self.events)
             pygame.display.update()
 
     def change_music(self):
@@ -276,6 +316,39 @@ class Main:
     def change_character_energy(self):
         self.settings_var["character_energy"] = not self.settings_var["character_energy"]
         self.holst.button_character_energy["button"].setText(["выкл", "вкл"][self.settings_var["character_energy"]])
+
+    def change_color(self):
+        self.settings_var["color"] = not self.settings_var["color"]
+        if self.settings_var["color"] == 0:
+            self.style["colors"] = {
+                "light": (255,217,106), # (187, 148, 87),
+                "base1": (249,125,61), # (153, 88, 42),
+                "base2": (73,181,132), # (111, 29, 27),
+                "dark":  (75,39,41), # (67, 40, 24),
+                "black": (0, 0, 0)
+            }
+        else:
+            self.style["colors"] = {
+                "light": (249, 125, 61),  # (187, 148, 87),
+                "base1": (255,217,106),  # (153, 88, 42),
+                "base2": (73, 181, 132),  # (111, 29, 27),
+                "dark": (75, 39, 41),  # (67, 40, 24),
+                "black": (0, 0, 0)
+            }
+        self.holst.init_frontend()
+        self.holst.button_color["button"].setText(["светлая", "тёмная"][self.settings_var["color"]])
+
+    def change_format_screen(self):
+        self.settings_var["format_screen"] = not self.settings_var["format_screen"]
+        if self.settings_var["format_screen"] == 0:
+            self.display_w, self.display_h = self.start_display_w, self.start_display_h
+            self.display = pygame.display.set_mode((self.display_w, self.display_h))
+        else:
+            self.display = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+            self.display_w, self.display_h = pygame.display.Info().current_w, pygame.display.Info().current_h
+        self.holst.delete_all()
+        self.holst.init_frontend()
+        self.holst.button_format_screen["button"].setText(["выкл", "вкл"][self.settings_var["format_screen"]])
 
 if __name__ == "__main__":
     menu = Main()
