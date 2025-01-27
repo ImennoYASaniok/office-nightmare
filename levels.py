@@ -89,19 +89,6 @@ def load_CONST():
             "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
             "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
         },
-        # "run": {
-        #     "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
-        #     "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
-        #     "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
-        #     "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
-        # },
-        # "sneak": {
-        #     "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
-        #     "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
-        #     "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
-        #     "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
-        #
-        # },
         "idle": {
             "down": list(
                 map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_back_{x}.png").convert_alpha(),
@@ -180,19 +167,10 @@ class Object:
             self.data["sprite"] = pygame.transform.scale(self.data["sprite"], (self.data["coords"][2], self.data["coords"][3]))
             self.data["mask"] = pygame.mask.from_surface(self.data["sprite"])
             self.data["rect"] = self.data["sprite"].get_rect()
-        # if self.data["absolute_coords_rect"][0] <= 0:
-        #     self.data["absolute_coords_rect"][0] = self.data["coords"][0] + self.size[0]
-        # else:
-        #     self.data["absolute_coords_rect"][0] = self.data["absolute_coords_rect"][0]
         self.set_sprite()
 
         # Обозначение границ на карте
     def set_object_map(self, name):
-        # if self.image != None:
-        #     self.game.map.set_object([self.data["coords"][0]//self.game.map.rect_cell["size"][0],
-        #                           self.data["coords"][1]//self.game.map.rect_cell["size"][1],
-        #                           (self.data["coords"][0]+self.data["coords"][2])//self.game.map.rect_cell["size"][0]+1,
-        #                           (self.data["coords"][1]+self.data["coords"][3])//self.game.map.rect_cell["size"][1]+1])
         self.game.map.set_object([self.data["rect"].x//self.game.map.rect_cell["size"][0],
                                   self.data["rect"].y//self.game.map.rect_cell["size"][1],
                                   (self.data["rect"].x+self.data["rect"].w)//self.game.map.rect_cell["size"][0], # +1
@@ -252,48 +230,6 @@ class Object:
                     # Выкл нажатие
                     self.data["flag_func"] = 1
 
-
-
-
-# class Hitbox_Button:
-#     def __init__(self, parent, game, object, func, coords, size, colors, layer=None, name=None):
-#         self.parent = parent
-#         # self.game = game
-#         self.name = name
-#         if "hover" not in colors.keys(): colors["hover"] = colors["inactive"]
-#         elif "pressed" not in colors.keys(): colors["pressed"] = colors["inactive"]
-#         coords = list(coords)
-#         if object != None:
-#             coords[0] += object.data["coords"][0]
-#             coords[1] += object.data["coords"][1]
-#         self.data = {
-#             "coords": (coords[0], coords[1], size[0], size[1]),
-#             "color": {
-#                 "inactive": colors["inactive"],
-#                 "hover":  colors["hover"],
-#                 "pressed": colors["pressed"],
-#                 "text": colors["inactive"]
-#             },
-#             "func": func,
-#             # "type_render": 1
-#         }
-#         if layer is not None:
-#             self.create(layer)
-#
-#     def create(self, layer):
-#         self.data["button"] = self.parent.button(coords=self.data["coords"],
-#                                              text="",
-#                                              color=self.data["color"],
-#                                              font=pygame.font.SysFont(None, 30),
-#                                              func=self.data["func"],
-#                                             layer=layer
-#                                             )
-#
-#     def listen(self, events):
-#         self.data["button"].listen(events)
-#
-#     def delete(self):
-#         del self.data["button"]
 
 class Enemy(Object):
     def __init__(self, parent, game, base_style, category, coords, size, func=None, image=None, size_rect=(0, 20), do_random_spawn=True, do_print=False):
@@ -376,138 +312,14 @@ class Enemy(Object):
                 self.set_rect_to_coords()
                 # self.set_sprite()
                 self.start = self.set_start()
-            # print("period:", period.count(1), period)
-            # i = 1
-            # for dx, dy in deltas_coords:
-            #     print(self.game.map.map[choice_y + dy][choice_x + dx], end=" ")
-            #     if i % 3 == 0:
-            #         print()
-            #     i += 1
-            # print("random:", self.start, self.data["coords"][0], self.data["coords"][1])
-            # i = 1
-            # for dx, dy in deltas_coords:
-            #     print(self.game.map.map[self.start[1] + dy][self.start[0] + dx], end=" ")
-            #     if i % 3 == 0:
-            #         print()
-            #     i += 1
-            # if self.do_random_spawn[0]:
-            #     period = self.game.map.map[self.start[0][1]][:-1]
-            #     period = list(filter(lambda x: x != None, map(lambda i: i if  period[i-1] == 0 and period[i] == 0 and period[i+1] == 0x else None, range(1, len(period)-1))))[1:-1]
-            #     print("period:", *list(map(lambda x: self.game.map.map[self.start[0][1]][x], period)))
-            #     self.data["coords"][0] = choice(period) * self.game.map.rect_cell["size"][0]
-            # if self.do_random_spawn[1]:
-            #     period = list(map(lambda x: x[self.start[0][0]], self.game.map.map))
-            #     period = list(filter(lambda x: x != None, map(lambda i: i if period[i-1] == 0 and period[i] == 0 and period[i+1] == 0 else None, range(1, len(period)-1))))[1:-1]
-            #     print("period:", *list(map(lambda x: self.game.map.map[self.start[0][1]][x], period)))
-            #     self.data["coords"][1] = choice(period) * self.game.map.rect_cell["size"][1]
-            # if self.do_random_spawn[0] or self.do_random_spawn[1]:
-            #     self.set_sprite()
-            #     self.start = self.set_start()
 
     def init_start(self):
         self.start = self.set_start()
         self.is_start = True
 
     def set_start(self):
-        # return ((self.data["coords"][0] + self.data["coords"][2] // 2) // self.game.map.rect_cell["size"][0],
-        #         (self.data["coords"][1] + self.data["coords"][3] // 2) // self.game.map.rect_cell["size"][1])
-        # res_start = [(self.data["rect"].x+self.data["rect"].w//2) // self.game.map.rect_cell["size"][0],
-        #              (self.data["rect"].y+self.data["rect"].h//2) // self.game.map.rect_cell["size"][1]]
-        # old_start = res_start.copy()
-        # if self.is_start:
-        #     dir = []
-        #
-        #     # check_start = res_start
-        #     # check_start[0] += 1
-        #     # if tuple(check_start) in self.game.map.coords_objects:
-        #     #     dir.append("right")
-        #     # check_start = res_start
-        #     # check_start[0] -= 1
-        #     # if tuple(check_start) in self.game.map.coords_objects and "right" not in dir:
-        #     #     dir.append("left")
-        #     #
-        #     # check_start = res_start
-        #     # check_start[1] += 1
-        #     # if tuple(check_start) in self.game.map.coords_objects:
-        #     #     dir.append("down")
-        #     # check_start = res_start
-        #     # check_start[1] -= 1
-        #     # if tuple(check_start) in self.game.map.coords_objects and "down" not in dir:
-        #     #     dir.append("up")
-        #     # print(dir)
-        #     # -----------------------------------------------
-        #     if self.game.character.character["rect"].x - self.data["rect"].x > 0:
-        #         dir.append("left")
-        #     elif self.game.character.character["rect"].x - self.data["rect"].x < 0:
-        #         dir.append("right")
-        #     if self.game.character.character["rect"].y - self.data["rect"].y > 0:
-        #         dir.append("down")
-        #     elif self.game.character.character["rect"].y - self.data["rect"].y < 0:
-        #         dir.append("up")
-        #     print(dir)
-        #
-        #     if "right" in dir:
-        #         # self.data["coords"][0] -= self.data["val_speed"]
-        #         res_start[0] = (self.data["rect"].x) // self.game.map.rect_cell["size"][0]
-        #     elif "left" in dir:
-        #         # self.data["coords"][0] += self.data["val_speed"]
-        #         res_start[0] = (self.data["rect"].x + self.data["rect"].w) // self.game.map.rect_cell["size"][0]
-        #
-        #     if "down" in dir:
-        #         # self.data["coords"][1] -= self.data["val_speed"]
-        #         res_start[1] = (self.data["rect"].y) // self.game.map.rect_cell["size"][1]
-        #     elif "up" in dir:
-        #         # self.data["coords"][1] += self.data["val_speed"]
-        #         res_start[1] = (self.data["rect"].y + self.data["rect"].h) // self.game.map.rect_cell["size"][1]
-        #
-        # if tuple(res_start) in self.game.map.coords_objects:
-        #     return tuple(old_start)
-        # else:
-        #     return tuple(res_start)
-
-        # return ((self.data["rect"].x+self.data["rect"].w//2) // self.game.map.rect_cell["size"][0],
-        #         (self.data["rect"].y+self.data["rect"].h//2) // self.game.map.rect_cell["size"][1])
-
-        # return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0],
-        #         (self.data["rect"].y) // self.game.map.rect_cell["size"][1]),
-        #         ((self.data["rect"].x + self.data["rect"].w//2) // self.game.map.rect_cell["size"][0],
-        #          (self.data["rect"].y + self.data["rect"].h//2) // self.game.map.rect_cell["size"][1]),
-        #         ((self.data["rect"].x + self.data["rect"].w) // self.game.map.rect_cell["size"][0],
-        #          (self.data["rect"].y + self.data["rect"].h) // self.game.map.rect_cell["size"][1])]
-        # if ((self.data["rect"].x) // self.game.map.rect_cell["size"][0],
-        #     (self.data["rect"].y) // self.game.map.rect_cell["size"][1]-1) in self.game.map.coords_objects:
-        #     print("INTO")
-        #     return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0]+1,
-        #             (self.data["rect"].y) // self.game.map.rect_cell["size"][1])
-        #             ]
-        # else:
-        #     return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0] + 1,
-        #              (self.data["rect"].y) // self.game.map.rect_cell["size"][1]),
-        #             ((self.data["rect"].x) // self.game.map.rect_cell["size"][0]+2,
-        #              (self.data["rect"].y) // self.game.map.rect_cell["size"][1])
-        #             ]
-        # -----
-        # if self.data["dir"] == "down":
-        #     return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0] + 1,
-        #             (self.data["rect"].y) // self.game.map.rect_cell["size"][1])]
-        # elif self.data["dir"] == "up":
-        #     return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0] + 2,
-        #          (self.data["rect"].y) // self.game.map.rect_cell["size"][1])]
-        # else:
-        #     return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0],
-        #          (self.data["rect"].y) // self.game.map.rect_cell["size"][1])]
-        # -----
         start = ((self.data["rect"].x) // self.game.map.rect_cell["size"][0] + 1,
                  (self.data["rect"].y) // self.game.map.rect_cell["size"][1])
-        # i = 0
-        # deltas_coords = [(-1, -1), (0, -1), (1, -1),
-        #                  (-1, 0), (0, 0), (1, 0),
-        #                  (-1, 1), (0, 1), (1, 1)]
-        # for dx, dy in deltas_coords:
-        #     print(self.game.map.map[start[1] + dy][start[0] + dx], end=" ")
-        #     if i % 3 == 0:
-        #         print()
-        #     i += 1
         return start
 
     # -------------
@@ -580,11 +392,6 @@ class Enemy(Object):
                 self.data["cond"] = "walk"
         else:
             self.data["cond"] = "walk"
-        # print(len(self.way), len(self.old_way))
-        #     if len(self.old_way) > 1:
-        #         self.do_hide = True
-        # else:
-        #     self.do_hide = False
         for cell in self.way:
             self.game.map.set_cell(cell[0], cell[1], 2)
             # break
@@ -1053,9 +860,6 @@ class Start_room:
             if "enemy" in name:
                 obj.base_actions()
                 obj.set_labels()
-        # if "green_enemy_1" in self.objects: print(self.objects["green_enemy_1"])
-        #  else: print(None)
-        # print(self.objects["green_enemy_1"].data["cond"], self.objects["green_enemy_1"].data["dir"], self.objects["green_enemy_1"].data["number_sprite"])
         if self.game.character.character["absolute_coords_rect"][0] >= self.doors["right"][0] and self.doors["right"][1][0] < self.game.character.character["absolute_coords_rect"][1] < self.doors["right"][1][1]:
             print("start_room -> meeting_room")
             self.game.character.respawn([self.game.character.character["coords"][2], self.parent.display_h // 2])
@@ -1174,13 +978,6 @@ class Meeting_room:
                            ),
                            size_button=(-20, -30), coords_button=(10, 30),
                            size_rect=(0, -100))
-        # coords_partition_1 = [400, 0]
-        # partition_side_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-        #                            coords=[THICKNESS_WALL + coords_partition_1[0],
-        #                                    self.size_room_layer[1] - HEIGHT_PARTITION - coords_partition_1[1]],
-        #                            size=(THICKNESS_PARTITION, HEIGHT_PARTITION),
-        #                            image='sprites/walls/partition_front.png',
-        #                            size_rect=(0, 0))
 
         # ------------
         self.objects = {

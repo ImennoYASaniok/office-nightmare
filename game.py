@@ -338,18 +338,6 @@ class Character:
             # print(self.character["energy"][0],  self.character["energy_counter"][0])
 
     def draw(self):
-        # print(self.character["coords"])
-        # self.character["rect"] = pygame.Rect(self.character["coords"])
-        # Максимально плохая проверка на то что спрайт на вышел за границы
-        # if self.character["coords"][0] + self.character["coords"][2] > 1000:
-        #     self.character["coords"][0] = 1000 - self.character["coords"][2]
-        # if self.character["coords"][1] + self.character["coords"][3] > 800:
-        #     self.character["coords"][1] = 800 - self.character["coords"][3]
-        # if self.character["coords"][0] < 0:
-        #     self.character["coords"][0] = 0
-        #     self.character["coords"][0] = 0
-        # if self.character["coords"][1] < 0:
-        #     self.character["coords"][1] = 0
         self.game.game_layer.blit(self.character["sprite"], self.character["coords"])
         # pygame.draw.rect(self.game.game_layer, self.character["type_cond"][self.character["cond"]][self.character["dir"]], self.character["rect"])
 
@@ -413,11 +401,6 @@ class Map:
         x, y = 0, 0
         for i_row in range(len(self.map)):
             for i_cell in range(len(self.map[i_row])):
-                # color = list(self.rect_cell["color"]["start"])
-                # color[0] *= self.map[i_row][i_cell] * self.rect_cell["val_delta"]
-                # color[1] *= self.map[i_row][i_cell] * self.rect_cell["val_delta"]
-                # color[2] *= self.map[i_row][i_cell] * self.rect_cell["val_delta"]
-                # ------
                 color = self.rect_cell["color"][str(self.map[i_row][i_cell])]
                 # print([x, y, self.rect_cell["size"][0], self.rect_cell["size"][1]], color)
                 self.game.set_rect(layer=self.game.game_layer, coords=[x, y, self.rect_cell["size"][0], self.rect_cell["size"][1]],
@@ -650,8 +633,8 @@ class Game:
         if not self.flag_mini_games:
             if self.character.character["energy"][0] - delta_energy < 0:
                 self.set_message(f"Не хватает энергии чтобы поиграть в игры, нужно ещё {delta_energy + 1} ")
-            elif len(list(filter(lambda x: x == False, self.delete_enemys.values()))) > 0:
-                self.set_message(f"Чтобы поиграть в игру, нужно сначала убить всех монстров в этой комнате")
+            # elif len(list(filter(lambda x: x == False, self.delete_enemys.values()))) > 0:
+            #     self.set_message(f"Чтобы поиграть в игру, нужно сначала убить всех монстров в этой комнате")
             else:
                 self.flag_mini_games = True
                 out_many = self.mini_games[self.type_room][name_game]()
@@ -728,19 +711,6 @@ class Game:
         if self.parent.settings_var["character_energy"] == 1:
             self.set_label("energy", f"энергия: {self.character.character["energy"][0]} / {self.character.character["energy"][2]}")
 
-        # ------ (попробовал - не работает) Обновление кнопок и курсора (нужно было для динмаической камеры)
-        # for button in self.room_now.buttons:
-        #     button.listen(self.parent.events)
-        # pygame_widgets.mouse.Mouse.updateMouseState()
-        # self.parent.update_widgets()
-
-        # ------ Мышка
-        # self.coords_cursor = pygame.mouse.get_pos()
-        # if self.coords_cursor != self.old_coords_cursor:
-        #     pygame.mouse.set_pos(self.coords_cursor)
-        # pygame_widgets.mouse.Mouse.updateMouseState()
-        # self.old_coords_cursor = self.coords_cursor
-
         # ------ Карта
         if self.parent.settings_var["draw_map"] == 1: self.map.draw()
 
@@ -786,20 +756,6 @@ class Game:
                               self.start_coords_dinamic_zone[2] - self.start_coords_dinamic_zone[0],
                               self.start_coords_dinamic_zone[3] - self.start_coords_dinamic_zone[1]),
                       color_base=(50, 50, 50, 100))
-        # self.set_rect(coords=(self.start2_coords_dinamic_zone[0],
-        #                       self.start2_coords_dinamic_zone[1],
-        #                       self.start2_coords_dinamic_zone[2] - self.start2_coords_dinamic_zone[0],
-        #                       self.start2_coords_dinamic_zone[3] - self.start2_coords_dinamic_zone[1]),
-        #               color=(50, 50, 50, 100), layer=self.game_layer)
-        # print((self.coords_dinamic_zone[0],
-        #        self.coords_dinamic_zone[1],
-        #        self.coords_dinamic_zone[2],
-        #        self.coords_dinamic_zone[3]))
-        # self.set_rect(coords=(self.coords_dinamic_zone[0],
-        #                       self.coords_dinamic_zone[1],
-        #                       self.coords_dinamic_zone[2] - self.coords_dinamic_zone[0],
-        #                       self.coords_dinamic_zone[3] - self.coords_dinamic_zone[1]),
-        #               color=(50, 50, 50, 100), layer=self.game_layer)
 
     def set_message(self, text, delay=2500):
         label = {
@@ -855,91 +811,17 @@ class Game:
         if dop_objects_up is not None:
             for obj in dop_objects_up: # sorted(dop_objects_up, key=lambda obj: (obj.data["rect"].y, obj.data["rect"].h)):
                 obj.draw()
-        # if dop_buttons is not None:
-        #     # c = 85
-        #     for dop_but in sorted(list(filter(lambda dop_but: self.character.character["coords"][1] > dop_but.data["coords"][1], dop_buttons)), key=lambda dop_but: (dop_but.data["coords"][1], dop_but.data["coords"][3])):
-        #         # print(dop_but.name, end=" ") # .data["coords"][2], dop_but.data["coords"][3]
-        #         layer = pygame.Surface((dop_but.data["coords"][2], dop_but.data["coords"][3]), pygame.SRCALPHA, 32).convert_alpha()
-        #         # layer = pygame.Surface((dop_but.data["coords"][2], dop_but.data["coords"][3]))
-        #         layer.fill((0, 200, 0, 100)) # (c, c, c, 100)
-        #         # print(c, end=" ")
-        #         # c += 85
-        #         dop_but.create(layer)
-        #         self.game_layer.blit(layer, (dop_but.data["coords"][0], dop_but.data["coords"][1]))
-        #         # layer.fill(pygame.Color(0, 0, 0, 0))
-        #     print()
         for name, obj in sorted(list(filter(lambda name_obj: name_obj[1].data["type_render"] == 1, objects.items())), key=lambda name_obj: name_obj[1].data["rect"].y + name_obj[1].data["rect"].h):
             obj.draw()
         self.character.update(draw_rects)
-        # if dop_buttons is not None:
-        #     for dop_but in sorted(list(filter(lambda dop_but: self.character.character["coords"][1] <= dop_but.data["coords"][1], dop_buttons)), key=lambda dop_but: (dop_but.data["coords"][1], dop_but.data["coords"][3])):
-        #         layer = pygame.Surface((dop_but.data["coords"][2], dop_but.data["coords"][3]), pygame.SRCALPHA, 32).convert_alpha()
-        #         dop_but.create(layer)
-        #         self.game_layer.blit(layer, (dop_but.data["coords"][0], dop_but.data["coords"][1]))
-        #         layer.fill(pygame.Color(0, 0, 0, 0))
         for name, obj in sorted(list(filter(lambda name_obj: name_obj[1].data["type_render"] == 2, objects.items())), key=lambda name_obj: name_obj[1].data["rect"].y + name_obj[1].data["rect"].h):
             obj.draw()
-        # print(self.data_layers, self.old_data_layers)
         if dop_objects_down is not None:
             for obj in dop_objects_down: # sorted(dop_objects_down, key=lambda obj: (obj.data["rect"].y, obj.data["rect"].h)):
                 obj.draw()
         if draw_rects:
             for obj in objects:
                 pygame.draw.rect(self.game_layer, (255, 255, 255), obj.data["rect"])
-
-    def draw_walls(self, color_left, color_up, color_right, thinkess, height, width_door, down="wall"):
-        # down="wall" - только стена
-        # down="pass" - только проход
-        # down="wall, pass" - и стена, и проход
-        # down="wall and pass" - и стена, и проход
-        # down="wall РАЗДЕЛИТЕЛЬ pass" - и стена, и проход
-        # down="passwall" - и стена, и проход
-        # ----------------
-        # print(color_left, color_up, color_right)
-        coords_passage = {}
-        walls = {}
-        def append(key, obj): walls[key] = obj
-        if len(color_up) == 1: # передняя - нет двери
-            append("wall_up", Object(self.parent, self, self.base_style, [0, 0],
-                      (self.parent.display_w, height), f'sprites/walls/front_{color_up[0]}_wall.png', size_rect=(0, 0)))
-        elif len(color_up) == 2: # передняя - есть дверь
-            append("wall_up_1", Object(self.parent, self, self.base_style, [0, 0],
-                      ((self.parent.display_w-width_door)//2, height), f'sprites/walls/front_{color_up[0]}_wall.png', size_rect=(0, 0)))
-            append("wall_up_2", Object(self.parent, self, self.base_style, [(self.parent.display_w+width_door)//2, 0],
-                      ((self.parent.display_w+width_door)//2, height), f'sprites/walls/front_{color_up[1]}_wall.png', size_rect=(0, 0)))
-            coords_passage["up"] = [[(self.parent.display_w-width_door)//2, (self.parent.display_w+width_door)//2], 0]
-
-        if len(color_left) == 1: # левая - нет двери
-            append("wall_left", Object(self.parent, self, self.base_style, [0, 0],
-                              (thinkess, self.parent.display_h), f'sprites/walls/side_{color_left[0]}_wall.png', size_rect=(0, 0)))
-        elif len(color_left) == 2: # левая - есть стена
-            append("wall_left_1", Object(self.parent, self, self.base_style, [0, (self.parent.display_h + width_door) // 2],
-                                (thinkess, (self.parent.display_h + width_door) // 2), f'sprites/walls/side_{color_left[0]}_wall.png', size_rect=(0, 0)))
-            append("wall_left_2", Object(self.parent, self, self.base_style, [0, 0],
-                                (thinkess, (self.parent.display_h-width_door)//2), f'sprites/walls/side_{color_left[1]}_wall.png', size_rect=(0, 0)))
-            coords_passage["left"] = [0, [(self.parent.display_h-width_door)//2, (self.parent.display_h+width_door) // 2]]
-
-        if len(color_right) == 1: # правая - нет двери
-            append("wall_right", Object(self.parent, self, self.base_style, [self.parent.display_w-thinkess, 0],
-                       (thinkess, self.parent.display_h), f'sprites/walls/side_{color_right[0]}_wall.png', size_rect=(0, 0)))
-        elif len(color_right) == 2: # правая - есть дверь
-            append("wall_right_1", Object(self.parent, self, self.base_style, [self.parent.display_w - thinkess, 0],
-                                (thinkess, (self.parent.display_h-width_door)//2), f'sprites/walls/side_{color_right[0]}_wall.png', size_rect=(0, 0)))
-            append("wall_right_2", Object(self.parent, self, self.base_style, [self.parent.display_w - thinkess, (self.parent.display_h+width_door)//2],
-                                (thinkess, (self.parent.display_h+width_door)//2), f'sprites/walls/side_{color_right[1]}_wall.png', size_rect=(0, 0)))
-            coords_passage["right"] = [self.parent.display_w, [(self.parent.display_h - width_door) // 2, (self.parent.display_h + width_door) // 2]]
-
-        # print(down, "wall" in down, "pass" in down)
-        if "wall" in down:
-            append("wall_down", Object(self.parent, self, self.base_style, [0, self.parent.display_h],
-                                        (self.parent.display_w, thinkess),
-                                        image=None, size_rect=(0, 0)))
-        if "pass" in down:
-            coords_passage["down"] = [[(self.parent.display_w-width_door)//2, (self.parent.display_w+width_door)//2], self.parent.display_h-20]
-        if len(coords_passage) == 0:
-            return walls
-        else:
-            return walls, coords_passage
 
     def collide(self, base_object, objects, draw_rects, type_collide="rect", type_return="dirs"):
         if type(objects) == dict:
@@ -994,24 +876,7 @@ class Game:
                 for_data[0] = 0
         return for_data
 
-    # def change_color_sprite(self, sprite, color="red"):
-    #     # Get the pixels
-    #     pixels = PixelArray(sprite)
-    #     # Iterate over every pixel
-    #     for x in range(sprite.get_width()):
-    #         for y in range(sprite.get_height()):
-    #             rgb = sprite.unmap_rgb(pixels[x][y])
-    #             color = Color(*rgb)
-    #             # h, s, l, a = color.hsla
-    #             # color.hsla = (int(h) + 120) % 360, int(s), int(l), int(a)
-    #             color.rgb = color.
-    #             if color == "red":
-    #                 color.rgb =
-    #             pixels[x][y] = color
-    #     del pixels
-
-
-        # ==== BFS
+    # ==== BFS
     def bfs(self, start, goal, graph):
         queue = deque([start])
         visited = {start: None} # {}
