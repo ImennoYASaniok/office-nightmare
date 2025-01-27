@@ -11,7 +11,6 @@ from final import Final
 from settings import Settings
 from refer import Refer
 
-# 35% моего ЦП при запуске игры съедает виджеты библиотеки pygame_widgets, в дальнейшем это может стать проблемой оптимизации
 class Main:
     def __init__(self):
         pygame.init()
@@ -121,20 +120,16 @@ class Main:
             if k not in color.keys():
                 color[k] = v
         return ButtonArray(
-            self.display,  # Surface to place button array on
+            self.display,
             coords[0], coords[1], coords[2]*layout[0], coords[3]*layout[1],
             layout,
-            # border=100,  # Distance between buttons and edge of array
             texts=texts,
             fonts=fonts,
             colour=color["text"],
-            inactiveColours=[color["inactive"]]*len(texts),  # Colour of button when not being interacted with
-            hoverColours=[color["hover"]]*len(texts),  # Colour of button when being hovered over
-            pressedColours=[color["pressed"]]*len(texts),  # Colour of button when being clicked
+            inactiveColours=[color["inactive"]]*len(texts),
+            hoverColours=[color["hover"]]*len(texts),
+            pressedColours=[color["pressed"]]*len(texts),
             textColours=[color["text"]]*len(texts),
-            # images=len(texts)*[pygame.transform.scale(pygame.image.load("sprites/button/button_big.png").convert_alpha(), (coords[2], coords[3]))],
-            # imageZooms=len(texts)*[pygame.transform.scale(pygame.image.load("sprites/button/button_big_hover.png").convert_alpha(), (coords[2], coords[3]))],
-            # imageFills=len(texts)*[pygame.transform.scale(pygame.image.load("sprites/button/button_big_hover.png").convert_alpha(), (coords[2], coords[3]))],
             onClicks=funcs
         )
 
@@ -161,8 +156,6 @@ class Main:
             hoverColour=color["hover"],  # Colour of button when being hovered over
             pressedColour=color["pressed"],  # Colour of button when being clicked
             textColour=color["text"],
-            # image=pygame.transform.scale(pygame.image.load("sprites/button/button_big.png").convert_alpha(), (coords[2], coords[3])),
-            # imageZoom=pygame.transform.scale(pygame.image.load("sprites/button/button_big_hover.png").convert_alpha(), (coords[2], coords[3])),
             onClick=func
         )
 
@@ -206,9 +199,7 @@ class Main:
         if type(inacurr) == list:
             if len(inacurr) == 1: inacurr_w = inacurr[0]
             elif len(inacurr) == 2: inacurr_w, inacurr_h = inacurr
-        # print(type(obj))
-        # if type(obj) == pygame.surface.Surface:
-        #print(obj)
+
         if type_align == "horizontal":
             coords[0] = (self.display.get_width() - obj.get_width()) // 2 + inacurr_w
         elif type_align == "vertical":
@@ -288,9 +279,6 @@ class Main:
                 if self.type_display == 'game':
                     pygame.mixer.music.set_volume(0.5)
                     pygame.mixer.music.pause()
-                    # if self.settings_var["music_play"]:
-                    #     sound = pygame.mixer.Sound(self.musics['game']) # pygame.mixer.music.load(self.musics['game'])
-                    #     sound.play(-1) # ygame.mixer.music.play(-1)
                 self.holst.delete_all()
                 if self.type_display == "final":
                     self.holst = self.list_active_surface[self.type_display](self, self.style, self.type_final)
