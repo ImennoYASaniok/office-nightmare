@@ -78,8 +78,7 @@ ENEMYS = { # Все элементы со значением None или зак�
         "speed_attack": 8,
         "size": (120, 160),
         "size_rect": (82, 30),
-    },
-    "count": [0, 10, 10]
+    }
 }
 part_file_path = r"sprites/monster_1" + '/'
 def load_CONST():
@@ -1012,7 +1011,7 @@ class Start_room:
         load_CONST()
         category_enemy = "green_enemy"
         start_count_enemys = 0
-        for i in range(0, ENEMYS["count"][0]):
+        for i in range(0, self.parent.const["count_enemy"]["curr"][0]):
             green_enemy_i = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
                                   category=category_enemy,
                                   coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
@@ -1193,8 +1192,8 @@ class Meeting_room:
         }
         # ------------ Живые объекты
         category_enemy = "green_enemy"
-        start_count_enemys = ENEMYS["count"][0]
-        for i in range(0, ENEMYS["count"][1]):
+        start_count_enemys = self.parent.const["count_enemy"]["curr"][0]
+        for i in range(0, self.parent.const["count_enemy"]["curr"][1]):
             green_enemy_i = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
                                   category=category_enemy,
                                   coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
@@ -1293,13 +1292,19 @@ class Final_boss_room:
 
         # ------ Проходы
         self.doors = {
+            "up": ([(self.size_room_layer[0] - UP_WIDTH_DOOR) // 2, (self.size_room_layer[0] + UP_WIDTH_DOOR) // 2], HEIGHT_WALL // 2),
             "down": ([(self.size_room_layer[0] - UP_WIDTH_DOOR) // 2, (self.size_room_layer[0] + UP_WIDTH_DOOR) // 2], self.size_room_layer[1])
         }
 
         # ------ Стены
-        wall_up = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+        wall_up_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                            coords=[0, 0],
-                           size=(self.size_room_layer[0], HEIGHT_WALL),
+                           size=(self.doors["up"][0][0], HEIGHT_WALL),
+                           image=f'sprites/walls/wall_red_front.png',
+                           size_rect=(0, 0))
+        wall_up_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=[self.doors["up"][0][1], 0],
+                           size=(self.doors["up"][0][0], HEIGHT_WALL),
                            image=f'sprites/walls/wall_red_front.png',
                            size_rect=(0, 0))
         wall_down_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
@@ -1330,13 +1335,17 @@ class Final_boss_room:
                                     size=(THICKNESS_WALL, HEIGHT_WALL + DELTA_SIZE_NEAR_OBJECTS),
                                     image=f'sprites/walls/wall_red_front.png',
                                     size_rect=(0, 0))
-        # coords_partition_1 = [400, 0]
-        # partition_side_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-        #                            coords=[THICKNESS_WALL + coords_partition_1[0],
-        #                                    self.size_room_layer[1] - HEIGHT_PARTITION - coords_partition_1[1]],
-        #                            size=(THICKNESS_PARTITION, HEIGHT_PARTITION),
-        #                            image='sprites/walls/partition_front.png',
-        #                            size_rect=(0, 0))
+        # ------ Дверь 1
+        coords_door_1 = [self.doors["up"][0][0],
+                            self.doors["up"][1] - HEIGHT_WALL // 2]
+        door_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=coords_door_1,
+                           size=(UP_WIDTH_DOOR, HEIGHT_WALL),
+                           # +100+delta_wall_right_3_x
+                           image="sprites/door.png",
+                           func=lambda: self.game.set_message("Этот выход. Чтобы выйти убейте всех врагов", delay=1500),
+                           # size_button=(-20, -30), coords_button=(10, 30),
+                           size_rect=(0, -100))
         # ------ Автомат 1
         coords_avtomat_1 = [20, 0]
         coords_avtomat_1 = [THICKNESS_WALL + coords_avtomat_1[0], self.size_room_layer[1] - coords_avtomat_1[1] - SPRITES["avtomat_size"][1]]
@@ -1354,16 +1363,17 @@ class Final_boss_room:
 
         # ------------
         self.objects = {
-            "wall_up": wall_up,
+            "wall_up_1": wall_up_1, "wall_up_2": wall_up_2,
             "wall_down_1": wall_down_1, "wall_down_2": wall_down_2,
             "wall_left_1":wall_left_1, "wall_left_front_1": wall_left_front_1,
             "wall_right_1":wall_right_1, "wall_right_front_1": wall_right_front_1,
-            "avtomat_1": avtomat_1
+            "avtomat_1": avtomat_1,
+            "DINAMIC_door_1": door_1
         }
         # ------------ Живые объекты
         category_enemy = "green_enemy"
-        start_count_enemys = ENEMYS["count"][0] + ENEMYS["count"][1]
-        for i in range(0, ENEMYS["count"][2]):
+        start_count_enemys = self.parent.const["count_enemy"]["curr"][0] + self.parent.const["count_enemy"]["curr"][1]
+        for i in range(0, self.parent.const["count_enemy"]["curr"][2]):
             green_enemy_i = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
                                   category=category_enemy,
                                   coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
@@ -1429,15 +1439,19 @@ class Final_boss_room:
     def draw(self):
         self.animate_sprite()
         self.game.render_objects()  # draw_rects=True
+
         for name, obj in self.objects.items():
             if "enemy" in name:
                 obj.base_actions()
                 obj.set_labels()
+
         # print(self.doors["left"][1][0], self.game.character.character["absolute_coords_rect"][1], self.doors["left"][1][1])
         if self.doors["down"][0][0] < self.game.character.character["absolute_coords_rect"][0] < self.doors["down"][0][1] and self.game.character.character["absolute_coords_rect"][1] >= self.size_room_layer[1]:
             print("final_boss_room -> meeting_room")
             self.game.character.respawn([(self.parent.LAYERS["meeting_room"][0] - UP_WIDTH_DOOR + self.game.character.character["coords"][2]) // 2, self.game.character.character["coords"][3]])
             self.game.room_change("meeting_room")
+        elif self.doors["up"][0][0] < self.game.character.character["absolute_coords_rect"][0] < self.doors["up"][0][1] and self.game.character.character["absolute_coords_rect"][1] <= self.doors["up"][1]:
+            self.parent.display_change("final", dop_type="victory")
 
     def animate_sprite(self):
         pass
