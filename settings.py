@@ -5,13 +5,30 @@ class Settings:
     def __init__(self, parent, base_style):
         self.base_style = base_style
         self.parent = parent
+
+        self.commands = {
+            pygame.KEYDOWN: {
+                pygame.K_ESCAPE: lambda: self.parent.display_change("menu"),
+            }
+        }
+
+        name = "settings"
+        self.back_images = list(map(lambda x: pygame.image.load(f"sprites/{name}_logo/{name}_logo_{x}.jpg").convert(), range(2 + 1)))
+        self.delta_size_image = 100
+        self.back_images = list(map(lambda x: pygame.transform.scale(x, [x.get_rect().w + self.delta_size_image, x.get_rect().h + self.delta_size_image]),self.back_images))
+        self.for_back_image = {
+            "var": 0,
+            "end": len(self.back_images),
+            "count": 0,
+            "freq": 10,
+        }
+        self.init_frontend()
+
+    def init_frontend(self):
         self.labels = []
         self.buttons = []
         self.lines = []
 
-        self.init_frontend()
-
-    def init_frontend(self):
         # !!! Если нужно будет создавать много label -> сделай init_label_title общей для всех и возвращай label_title
         # ------ Переменные
         SPACES = {"title":10, "point":30, "line":30} # Вертикальные пробелы между объектами
@@ -118,6 +135,84 @@ class Settings:
                                                          func=self.button_music["func"])
         self.buttons.append(self.button_music)
         height_base += label_music["label"].get_height()
+        # =-=-=-
+        # =-=-=- Строка
+        # ------ Надпись
+        height_base += SPACES["point"]
+        label_color = {
+            "coords": [INDENTS[0], height_base],
+            "text": "тема",
+            "font": pygame.font.Font(self.base_style["font_path"], SIZE_LABEL)
+        }
+        label_color["label"] = self.parent.label_text(coords=label_color["coords"],
+                                                      text=label_color["text"],
+                                                      font=label_color["font"])
+        self.labels.append(label_color)
+        # ------ Кнопка
+        delta_width = 50
+        self.button_color = {
+            "font": pygame.font.Font(self.base_style["font_path"], 30),
+            "coords": [self.parent.display_w - INDENTS[1] - button_w - delta_width, height_base, button_w + delta_width,
+                       button_h],
+            "text": "светлая",
+            "color": {
+                "inactive": self.base_style["colors"]["base1"],
+                "hover": self.base_style["colors"]["base2"],
+                "pressed": self.base_style["colors"]["light"],
+                "text": self.base_style["colors"]["light"]
+            },
+            "func": lambda: self.parent.change_color()
+        }
+        if self.parent.settings_var["color"] == 0:
+            self.button_color["text"] = "светлая"
+        elif self.parent.settings_var["color"] == 1:
+            self.button_color["text"] = "тёмная"
+        self.button_color["button"] = self.parent.button(coords=self.button_color["coords"],
+                                                         text=self.button_color["text"],
+                                                         color=self.button_color["color"],
+                                                         font=self.button_color["font"],
+                                                         func=self.button_color["func"])
+        self.buttons.append(self.button_color)
+        height_base += label_color["label"].get_height()
+        # =-=-=-
+        # =-=-=- Строка
+        # ------ Надпись
+        height_base += SPACES["point"]
+        label_format_screen = {
+            "coords": [INDENTS[0], height_base],
+            "text": "полноэкранный режим",
+            "font": pygame.font.Font(self.base_style["font_path"], SIZE_LABEL)
+        }
+        label_format_screen["label"] = self.parent.label_text(coords=label_format_screen["coords"],
+                                                      text=label_format_screen["text"],
+                                                      font=label_format_screen["font"])
+        self.labels.append(label_format_screen)
+        # ------ Кнопка
+        delta_width = 50
+        self.button_format_screen = {
+            "font": pygame.font.Font(self.base_style["font_path"], 30),
+            "coords": [self.parent.display_w - INDENTS[1] - button_w - delta_width, height_base, button_w + delta_width,
+                       button_h],
+            "text": "выкл",
+            "color": {
+                "inactive": self.base_style["colors"]["base1"],
+                "hover": self.base_style["colors"]["base2"],
+                "pressed": self.base_style["colors"]["light"],
+                "text": self.base_style["colors"]["light"]
+            },
+            "func": lambda: self.parent.change_format_screen()
+        }
+        if self.parent.settings_var["format_screen"] == 0:
+            self.button_format_screen["text"] = "выкл"
+        elif self.parent.settings_var["format_screen"] == 1:
+            self.button_format_screen["text"] = "вкл"
+        self.button_format_screen["button"] = self.parent.button(coords=self.button_format_screen["coords"],
+                                                         text=self.button_format_screen["text"],
+                                                         color=self.button_format_screen["color"],
+                                                         font=self.button_format_screen["font"],
+                                                         func=self.button_format_screen["func"])
+        self.buttons.append(self.button_format_screen)
+        height_base += label_color["label"].get_height()
         # =-=-=-
         # ------ Линия
         height_base += SPACES["line"]
@@ -226,15 +321,15 @@ class Settings:
         # =-=-=- Строка
         # ------ Надпись
         height_base += SPACES["point"]
-        label_type_dinamic_camera = {
+        label_character_energy = {
             "coords": [INDENTS[0], height_base],
             "text": "энергия у персонажа",
             "font": pygame.font.Font(self.base_style["font_path"], SIZE_LABEL)
         }
-        label_type_dinamic_camera["label"] = self.parent.label_text(coords=label_type_dinamic_camera["coords"],
-                                                                    text=label_type_dinamic_camera["text"],
-                                                                    font=label_type_dinamic_camera["font"])
-        self.labels.append(label_type_dinamic_camera)
+        label_character_energy["label"] = self.parent.label_text(coords=label_character_energy["coords"],
+                                                                    text=label_character_energy["text"],
+                                                                    font=label_character_energy["font"])
+        self.labels.append(label_character_energy)
         # ------ Кнопка
         delta_width = 50
         self.button_character_energy = {
@@ -260,15 +355,16 @@ class Settings:
                                                                        font=self.button_character_energy["font"],
                                                                        func=self.button_character_energy["func"])
         self.buttons.append(self.button_character_energy)
-        height_base += label_type_dinamic_camera["label"].get_height()
+        height_base += label_character_energy["label"].get_height()
         # =-=-=-
-
 
     def delete_all(self):
         # print("SETT", *list(map(lambda x: x["text"] if "text" in x.keys() else x["texts"], self.buttons)), sep=" ")
         for _ in range(len(self.buttons)):
             del self.buttons[0]
         del self.button_music
+        del self.button_color
+        del self.button_format_screen
         del self.button_type_dinamic_camera
         del self.button_draw_dinamic_camera
         del self.button_character_energy
@@ -276,6 +372,18 @@ class Settings:
 
     def draw(self):
         self.parent.display.fill(self.base_style["colors"]["dark"])
+
+        x_mouse, y_mouse = pygame.mouse.get_pos()
+        delta_x = x_mouse // self.delta_size_image * 3
+        delta_y = y_mouse // self.delta_size_image * 3
+        self.parent.display.blit(self.back_images[self.for_back_image["var"]], (0 - delta_x, -80 - delta_y))
+        if self.for_back_image["count"] >= self.for_back_image["freq"]:
+            self.for_back_image["count"] = 0
+            self.for_back_image["var"] += 1
+        if self.for_back_image["var"] >= self.for_back_image["end"]:
+            self.for_back_image["var"] = 0
+        self.for_back_image["count"] += 1
+
         # Отрисовка надписей
         for i in self.labels: self.parent.display.blit(i["label"], i["coords"])
         # Отрисовка линий
@@ -284,3 +392,9 @@ class Settings:
                              start_pos=line["start_pos"],
                              end_pos=line["end_pos"],
                              width=line["width"])
+
+    def check_event(self, event):
+        if event.type in self.commands.keys():
+            if type(self.commands[event.type]) == dict:
+                if event.key in self.commands[event.type].keys():
+                    self.commands[event.type][event.key]()

@@ -1,22 +1,36 @@
 import pygame
-
+from random import shuffle, choice, randint
 # from pygame.examples.cursors import image
 from pygame.locals import Rect
 from collections import deque
 
+from unicodedata import category
 THICKNESS_WALL = 30
 HEIGHT_WALL = 200
 THICKNESS_PARTITION = 10
 HEIGHT_PARTITION = 120
 DELTA_SIZE_NEAR_OBJECTS = 3
 WIDTH_DOOR = 250
+UP_WIDTH_DOOR = 150
 SPRITES = {
     "comp_size": (200, 125),
+    "kuler_size": (40, 140),
     "sofa_size": (200, 100),
     "avtomat_size": (120, 200), # (100, 150)
     "avtomat_y_up": 50,
-    'chair': (80, 132),
-    'clock': (40, 40)
+    'chair_size': (80, 132),
+    'clock_size': (40, 40),
+    'plant_1_size': (70, 100),
+    'plant_2_size': (80, 160),
+    "height_dop_table_front": 50,
+    'blood_1_size': (70, 70),
+    'blood_2_size': (70, 90),
+    'blood_3_size': (70, 70),
+    'blood_4_size': (70, 70),
+    'blood_5_size': (70, 70),
+    'bone_1_size': (50, 50),
+    'bone_2_size': (50, 50),
+    'bone_3_size': (55, 55),
 }
 BUTTONS = {
     "comp_cord": (77, -5), "comp_size": (83, 47), # (63, 28)
@@ -42,7 +56,12 @@ BUTTONS = {
 # ------- <-HEIGHT_DOOR (=THICKNESS_WALL)      |
 #                                             /
 #                                          HEIGHT_DOOR (=THICKNESS_WALL)
-
+TYPE_AVTOMAT = {
+    "green": {"price": 3, "val": 5},
+    "yellow": {"price": 6, "val": 10},
+    "blue": {"price": 8, "val": 15},
+    "type_val":"hp"
+}
 TYPE_BUTTONS = {
     "color": {
             "inactive": (0, 200, 0, 100), # (0, 0, 0, 0)
@@ -51,31 +70,109 @@ TYPE_BUTTONS = {
             "text": (200, 208, 200)
     }
 }
+ENEMYS = { # Все элементы со значением None или закоменченные ключи, заполняются ниже в коде
+    "speed": [[2, 3, 4], [0, 0, 0]],
+    "green_enemy": {
+        # "sprite":
+        "damage": 5,
+        "speed_attack": 8,
+        "size": (120, 160),
+        "size_rect": (82, 30),
+    },
+    "count": [0, 10, 10]
+}
+part_file_path = r"sprites/monster_1" + '/'
+def load_CONST():
+    ENEMYS["green_enemy"]["sprite"] = {
+        "walk": {
+            "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
+            "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
+            "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
+            "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
+        },
+        # "run": {
+        #     "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
+        #     "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
+        #     "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
+        #     "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
+        # },
+        # "sneak": {
+        #     "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
+        #     "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
+        #     "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
+        #     "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
+        #
+        # },
+        "idle": {
+            "down": list(
+                map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_back_{x}.png").convert_alpha(),
+                    range(4))),
+            "up": list(
+                map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_front_{x}.png").convert_alpha(),
+                    range(4))),
+            "left": list(map(lambda x: pygame.transform.flip(
+                pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), 1, 0),
+                             range(4))),
+            "right": list(
+                map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(),
+                    range(4)))
+        },
+        "attack": {
+            "down": list(map(lambda x: pygame.image.load(
+                part_file_path + "attack/" + f"attack_back_{x}.png").convert_alpha(), range(6))),
+            "up": list(map(lambda x: pygame.image.load(
+                part_file_path + "attack/" + f"attack_front_{x}.png").convert_alpha(), range(6))),
+            "left": list(map(lambda x: pygame.transform.flip(
+                pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), 1, 0),
+                             range(6))),
+            "right": list(map(lambda x: pygame.image.load(
+                part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), range(6)))
+        },
+        "hit": {
+            "down": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_back_{x}.png").convert_alpha(), range(4))),
+            "up": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_front_{x}.png").convert_alpha(), range(4))),
+            "left": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "hit/" + f"hit_side_{x}.png").convert_alpha(), 1, 0), range(4))),
+            "right": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_side_{x}.png").convert_alpha(), range(4)))
+        }
+    }
 
 
 
 class Object:
-    def __init__(self, parent, game, base_style, coords, size, func=None, image=None, size_rect=(0, 20), type_collide="rect"): #absolute_coords_rect=(0, 0)
+    def __init__(self, parent, game, base_style, coords, size, size_button=(0, 0), coords_button=(0, 0), func=None, image=None, size_rect=(0, 20), type_collide="rect"): #absolute_coords_rect=(0, 0)
         self.base_style = base_style
         self.parent = parent
         self.game = game
         self.image = image
         self.func = func
 
-        size_rect = list(size_rect)
+        if size_rect == None:
+            size_rect = [0, 0]
+        else:
+            size_rect = list(size_rect)
+            if size_rect != None:
+                for i in range(len(size_rect)):
+                    if size_rect[i] == 0:
+                        size_rect[i] = size[i]
+                    elif size_rect[i] < 0:
+                        size_rect[i] = size[i] - abs(size_rect[i])
+                    else:
+                        size_rect[i] = size_rect[i]
 
         self.data = {
             "color": self.base_style["colors"]["light"],
             "coords": [coords[0], coords[1], size[0], size[1]],  # 50, 70
             "size_rect": size_rect,
+            "size_button": size_button, "coords_button": coords_button,
             # "absolute_coords_rect": absolute_coords_rect,
             "type_render": 1, # тип слоя, на котором будет отрисовка
             # "type_collide": type_collide
             # "mask" - коллизия по маске
             # "rect" - коллизия по прямоугольнику
-            "flag_func": 0
+            "flag_func": 0,
             # 0 - не нужно выполнять
             # 1 - нужно выполнять
+            "flag_collide": 0,
         }
         if self.image == None:
             self.data["rect"] = Rect(coords[0], coords[1], size[0], size[1])
@@ -84,13 +181,6 @@ class Object:
             self.data["sprite"] = pygame.transform.scale(self.data["sprite"], (self.data["coords"][2], self.data["coords"][3]))
             self.data["mask"] = pygame.mask.from_surface(self.data["sprite"])
             self.data["rect"] = self.data["sprite"].get_rect()
-        for i in range(len(size_rect)):
-            if self.data["size_rect"][i] == 0:
-                self.data["size_rect"][i] = size[i]
-            elif self.data["size_rect"][i] < 0:
-                self.data["size_rect"][i] = size[i] - abs(size_rect[i])
-            else:
-                self.data["size_rect"][i] = size_rect[i]
         # if self.data["absolute_coords_rect"][0] <= 0:
         #     self.data["absolute_coords_rect"][0] = self.data["coords"][0] + self.size[0]
         # else:
@@ -123,6 +213,10 @@ class Object:
             self.data["rect"].h = self.data["size_rect"][1]  # self.character["coords"][3]
         # self.data["mask"] = pygame.mask.from_surface(self.data["sprite"])
 
+    def set_rect_to_coords(self):
+        self.data["coords"][0] = self.data["rect"].x
+        self.data["coords"][1] = self.data["rect"].y - (self.data["coords"][3] - self.data["size_rect"][1])
+
     def update_sprite(self, image):
         if self.image != None:
             if type(image) == str:
@@ -134,25 +228,30 @@ class Object:
             self.set_sprite()
 
     def draw(self): # layer
+        self.check_click()
         if self.image != None:
             self.game.game_layer.blit(self.data["sprite"], self.data["coords"]) # self.parent.display
 
     def check_click(self):
-        if self.func != None:
+        if self.func != None and not self.game.flag_mini_games:
             mouse_pos = pygame.mouse.get_pos()
-            rect = Rect(self.game.coords_game_layer[0]+self.data["coords"][0], self.game.coords_game_layer[1]+self.data["coords"][1], self.data["coords"][2], self.data["coords"][3])
+            rect = Rect(self.game.coords_game_layer[0]+self.data["coords"][0]+self.data["coords_button"][0], self.game.coords_game_layer[1]+self.data["coords"][1]+self.data["coords_button"][1], self.data["coords"][2]+self.data["size_button"][0], self.data["coords"][3]+self.data["size_button"][1])
             # print(rect.x, rect.y, mouse_pos)
             if rect.collidepoint(mouse_pos):
                 # Наведение
                 self.game.set_rect(layer=self.parent.display, coords=[rect.x, rect.y, rect.w, rect.h], color_base=BUTTONS["color"]["hover"])
-            if rect.collidepoint(mouse_pos) and self.game.val_mouse_state == pygame.MOUSEBUTTONDOWN and self.data["flag_func"] == 1:
-                # Нажатие
-                self.game.set_rect(layer=self.parent.display, coords=[rect.x, rect.y, rect.w, rect.h], color_base=BUTTONS["color"]["pressed"])
-                self.func()
-                self.data["flag_func"] = 0
-            elif self.game.val_mouse_state == pygame.MOUSEBUTTONUP:
-                # Выкл нажатие
-                self.data["flag_func"] = 1
+                self.data["flag_collide"] = 1
+            else:
+                self.data["flag_collide"] = 0
+            if self.data["flag_collide"] == 1:
+                if self.game.val_mouse_state == pygame.MOUSEBUTTONDOWN and self.data["flag_func"] == 1:
+                    # Нажатие
+                    self.game.set_rect(layer=self.parent.display, coords=[rect.x, rect.y, rect.w, rect.h], color_base=BUTTONS["color"]["pressed"])
+                    self.func()
+                    self.data["flag_func"] = 0
+                elif self.game.val_mouse_state == pygame.MOUSEBUTTONUP:
+                    # Выкл нажатие
+                    self.data["flag_func"] = 1
 
 
 
@@ -198,47 +297,113 @@ class Object:
 #         del self.data["button"]
 
 class Enemy(Object):
-    def __init__(self, parent, game, base_style, coords, size, func=None, image=None, size_rect=(0, 20), type_collide="rect"):
-        super().__init__(parent, game, base_style, coords, size, func, image, size_rect, type_collide)
+    def __init__(self, parent, game, base_style, category, coords, size, func=None, image=None, size_rect=(0, 20), do_random_spawn=True, do_print=False):
+        super().__init__(parent=parent, game=game, base_style=base_style, coords=coords, size=size, func=func, image=image, size_rect=size_rect)
+        self.category = category
+
+        # ------- Настройки
+        self.do_random_spawn = do_random_spawn
+        self.do_print = do_print
+        self.do_hide = False
+
+        # ------- Для нахождения кратчайшего путя
         self.way = []
         self.old_way = []
-        self.do_hide = False
         self.is_start = False
 
-        self.data["speed"] = 3
+        # ------- Направления и тип
         self.data["dir"] = "down"
         self.data["cond"] = "idle"
+        self.data["type_cond"] = ENEMYS[category]["sprite"]
+        # print("TYPE_COND:", *self.data["type_cond"].items(), sep="\n")
+
+        # ------- Скорость
+        speeds = ENEMYS["speed"][0].copy()
+        shuffle(speeds)
+        if ENEMYS["speed"][1] == [0] * len(ENEMYS["speed"][1]):
+            speed = speeds[0]
+        else:
+            speed = ENEMYS["speed"][0][ENEMYS["speed"][1].index(min(ENEMYS["speed"][1]))]
+        ENEMYS["speed"][1][ENEMYS["speed"][0].index(speed)] += 1
+        self.data["speed"] = {"idle": 0, "walk": speed, "attack": 0, "hit": 0} # {"idle": 0, "sneak": 2, "walk": 4, "run": 6}
+        self.data["speed_TO_freq"] = {"idle": 20, "walk": 7, "attack": ENEMYS[category]["speed_attack"], "hit": 3} # {"idle": 20, "sneak": 8, "walk": 7, "run": 4}
+        self.data["val_speed"] = self.data["speed"][self.data["cond"]]
+
+        # ------- Счётчиков спрайтов
         self.data["number_sprite"] = 0
         self.data["freq_sprite"] = 20
         self.data["counter_sprite"] = 0
-        part_file_path = r"sprites/character/base_choice" + '/'
-        self.data["type_cond"] = {
-            "walk": {
-                "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
-                "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
-                "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
-                "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
-            },
-            # "run": {
-            #     "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
-            #     "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
-            #     "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
-            #     "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
-            # },
-            # "sneak": {
-            #     "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
-            #     "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
-            #     "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
-            #     "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
-            #
-            # },
-            "idle": {
-                "down": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_front_{x}.png").convert_alpha(), range(5))),
-                "up": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_back_{x}.png").convert_alpha(), range(5))),
-                "left": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), range(5))),
-                "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), 1, 0), range(5)))
-            }
-        }
+        self.data["time_hit"] = 0
+        self.data["period_hit"] = 4
+        # print(ENEMYS[category]["sprite"])
+
+        # ------- Атака
+        self.data["flag_attack"] = 0
+        self.test_counter = 0
+
+        # ------- Стандартные данные
+        self.data["hp"] = [100, 100]
+
+        # ------- Вывод данных
+        self.labels = {}
+        self.init_labels()
+
+    def check_random_spawn(self):
+        if self.do_random_spawn:
+            # print("RANDOM:")
+            # print("start:", self.start, self.data["coords"][0], self.data["coords"][1], self.game.map.map[self.start[0]][self.start[1]])
+            deltas_coords = [(-1, -1), (0, -1), (1, -1),
+                             (-1, 0), (0, 0), (1, 0),
+                             (-1, 1), (0, 1), (1, 1)]
+            period = []
+            for y in range(3, len(self.game.map.map)-3):
+                for x in range(3, len(self.game.map.map[0])-3):
+                    do_append = True
+                    for dx, dy in deltas_coords:
+                        if self.game.map.map[y+dy][x+dx] == 1:
+                            do_append = False
+                            break
+                    if do_append:
+                        period.append([x, y])
+            choice_x, choice_y = choice(period)
+
+            do_1_in = False
+            for dx, dy in deltas_coords:
+                if self.game.map.map[choice_y + dy][choice_x + dx] == 1:
+                    do_1_in = True
+                    break
+            if do_1_in == False:
+                self.data["rect"].x, self.data["rect"].y = choice_x * self.game.map.rect_cell["size"][0], choice_y * self.game.map.rect_cell["size"][1]
+                self.set_rect_to_coords()
+                # self.set_sprite()
+                self.start = self.set_start()
+            # print("period:", period.count(1), period)
+            # i = 1
+            # for dx, dy in deltas_coords:
+            #     print(self.game.map.map[choice_y + dy][choice_x + dx], end=" ")
+            #     if i % 3 == 0:
+            #         print()
+            #     i += 1
+            # print("random:", self.start, self.data["coords"][0], self.data["coords"][1])
+            # i = 1
+            # for dx, dy in deltas_coords:
+            #     print(self.game.map.map[self.start[1] + dy][self.start[0] + dx], end=" ")
+            #     if i % 3 == 0:
+            #         print()
+            #     i += 1
+            # if self.do_random_spawn[0]:
+            #     period = self.game.map.map[self.start[0][1]][:-1]
+            #     period = list(filter(lambda x: x != None, map(lambda i: i if  period[i-1] == 0 and period[i] == 0 and period[i+1] == 0x else None, range(1, len(period)-1))))[1:-1]
+            #     print("period:", *list(map(lambda x: self.game.map.map[self.start[0][1]][x], period)))
+            #     self.data["coords"][0] = choice(period) * self.game.map.rect_cell["size"][0]
+            # if self.do_random_spawn[1]:
+            #     period = list(map(lambda x: x[self.start[0][0]], self.game.map.map))
+            #     period = list(filter(lambda x: x != None, map(lambda i: i if period[i-1] == 0 and period[i] == 0 and period[i+1] == 0 else None, range(1, len(period)-1))))[1:-1]
+            #     print("period:", *list(map(lambda x: self.game.map.map[self.start[0][1]][x], period)))
+            #     self.data["coords"][1] = choice(period) * self.game.map.rect_cell["size"][1]
+            # if self.do_random_spawn[0] or self.do_random_spawn[1]:
+            #     self.set_sprite()
+            #     self.start = self.set_start()
 
     def init_start(self):
         self.start = self.set_start()
@@ -283,25 +448,111 @@ class Enemy(Object):
         #     print(dir)
         #
         #     if "right" in dir:
-        #         # self.data["coords"][0] -= self.data["speed"]
+        #         # self.data["coords"][0] -= self.data["val_speed"]
         #         res_start[0] = (self.data["rect"].x) // self.game.map.rect_cell["size"][0]
         #     elif "left" in dir:
-        #         # self.data["coords"][0] += self.data["speed"]
+        #         # self.data["coords"][0] += self.data["val_speed"]
         #         res_start[0] = (self.data["rect"].x + self.data["rect"].w) // self.game.map.rect_cell["size"][0]
         #
         #     if "down" in dir:
-        #         # self.data["coords"][1] -= self.data["speed"]
+        #         # self.data["coords"][1] -= self.data["val_speed"]
         #         res_start[1] = (self.data["rect"].y) // self.game.map.rect_cell["size"][1]
         #     elif "up" in dir:
-        #         # self.data["coords"][1] += self.data["speed"]
+        #         # self.data["coords"][1] += self.data["val_speed"]
         #         res_start[1] = (self.data["rect"].y + self.data["rect"].h) // self.game.map.rect_cell["size"][1]
         #
         # if tuple(res_start) in self.game.map.coords_objects:
         #     return tuple(old_start)
         # else:
         #     return tuple(res_start)
-        return ((self.data["rect"].x+self.data["rect"].w//2) // self.game.map.rect_cell["size"][0],
-                (self.data["rect"].y+self.data["rect"].h//2) // self.game.map.rect_cell["size"][1])
+
+        # return ((self.data["rect"].x+self.data["rect"].w//2) // self.game.map.rect_cell["size"][0],
+        #         (self.data["rect"].y+self.data["rect"].h//2) // self.game.map.rect_cell["size"][1])
+
+        # return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0],
+        #         (self.data["rect"].y) // self.game.map.rect_cell["size"][1]),
+        #         ((self.data["rect"].x + self.data["rect"].w//2) // self.game.map.rect_cell["size"][0],
+        #          (self.data["rect"].y + self.data["rect"].h//2) // self.game.map.rect_cell["size"][1]),
+        #         ((self.data["rect"].x + self.data["rect"].w) // self.game.map.rect_cell["size"][0],
+        #          (self.data["rect"].y + self.data["rect"].h) // self.game.map.rect_cell["size"][1])]
+        # if ((self.data["rect"].x) // self.game.map.rect_cell["size"][0],
+        #     (self.data["rect"].y) // self.game.map.rect_cell["size"][1]-1) in self.game.map.coords_objects:
+        #     print("INTO")
+        #     return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0]+1,
+        #             (self.data["rect"].y) // self.game.map.rect_cell["size"][1])
+        #             ]
+        # else:
+        #     return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0] + 1,
+        #              (self.data["rect"].y) // self.game.map.rect_cell["size"][1]),
+        #             ((self.data["rect"].x) // self.game.map.rect_cell["size"][0]+2,
+        #              (self.data["rect"].y) // self.game.map.rect_cell["size"][1])
+        #             ]
+        # -----
+        # if self.data["dir"] == "down":
+        #     return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0] + 1,
+        #             (self.data["rect"].y) // self.game.map.rect_cell["size"][1])]
+        # elif self.data["dir"] == "up":
+        #     return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0] + 2,
+        #          (self.data["rect"].y) // self.game.map.rect_cell["size"][1])]
+        # else:
+        #     return [((self.data["rect"].x) // self.game.map.rect_cell["size"][0],
+        #          (self.data["rect"].y) // self.game.map.rect_cell["size"][1])]
+        # -----
+        start = ((self.data["rect"].x) // self.game.map.rect_cell["size"][0] + 1,
+                 (self.data["rect"].y) // self.game.map.rect_cell["size"][1])
+        # i = 0
+        # deltas_coords = [(-1, -1), (0, -1), (1, -1),
+        #                  (-1, 0), (0, 0), (1, 0),
+        #                  (-1, 1), (0, 1), (1, 1)]
+        # for dx, dy in deltas_coords:
+        #     print(self.game.map.map[start[1] + dy][start[0] + dx], end=" ")
+        #     if i % 3 == 0:
+        #         print()
+        #     i += 1
+        return start
+
+    # -------------
+    def init_labels(self):
+        label_hp = {
+            "start_coords": [0, 0],
+            "coords": [0, 0],
+            "text": f"hp: {self.data["hp"][0]} / {self.data["hp"][1]}",
+            "font": pygame.font.Font(self.base_style["font_path"], 20)
+        }
+        label_hp["label"] = self.parent.label_text(coords=label_hp["coords"],
+                                                   text=label_hp["text"],
+                                                   font=label_hp["font"],
+                                                   color=self.base_style["colors"]["light"],
+                                                   type_blit=False)
+        self.labels["hp"] = label_hp
+
+    def set_label(self, key, text):
+        self.labels[key]["text"] = text
+        self.labels[key]["coords"][0] = self.labels[key]["start_coords"][0] + self.data["coords"][0]
+        self.labels[key]["coords"][1] = self.labels[key]["start_coords"][1] + self.data["coords"][1]
+        self.labels[key]["label"] = self.parent.label_text(coords=self.labels[key]["coords"],
+                                                    text=self.labels[key]["text"],
+                                                    font=self.labels[key]["font"],
+                                                    color=self.base_style["colors"]["light"],
+                                                    type_blit=False)
+        self.game.game_layer.blit(self.labels[key]["label"], self.labels[key]["coords"])
+
+    def set_labels(self):
+        self.set_label("hp", f"hp: {self.data["hp"][0]} / {self.data["hp"][1]}")
+    # -------------
+
+    def base_actions(self):
+        if self.data["cond"] == "hit":
+            if self.data["time_hit"] < self.data["period_hit"]:
+                self.data["time_hit"] += 1
+            else:
+                self.data["cond"] = "idle"
+                self.data["time_hit"] = 0
+        else:
+            self.search_way()
+            self.move()
+            self.attack()
+        self.counting()
 
     def search_way(self):
         for cell in self.way:
@@ -320,10 +571,12 @@ class Enemy(Object):
             path_segment = self.visited[path_segment]
         self.way.reverse()
         self.way.append(self.start)
+
+
         if len(self.way) <= 2:
             self.way = self.old_way.copy()
             if len(self.old_way) <= 2:
-                self.data["cond"] = "idle"
+                self.data["cond"] = "attack"
             else:
                 self.data["cond"] = "walk"
         else:
@@ -340,70 +593,93 @@ class Enemy(Object):
         # print(self.way[0], self.way[1])
 
     def move(self): # Попробовать: если лево - точка перемещения слева, если право, точка перемещения справа
-        if self.data["cond"] != "idle":
-            dop_coords = self.data["coords"].copy()
-            dirs = []
-            if self.way[0][0] < self.way[1][0]:
-                dirs.append("right")
-                dop_coords[0] += self.data["speed"]
-            elif self.way[0][0] > self.way[1][0]:
-                dirs.append("left")
-                dop_coords[0] -= self.data["speed"]
-            self.set_sprite(dop_coords)
-            dop_start = self.set_start()
-            if dop_start in self.game.map.coords_objects:
-                # print("delete:", dirs[-1])
-                dirs.pop(-1)
+        dop_coords = self.data["coords"].copy()
+        dirs = []
+        if self.way[0][0] < self.way[1][0]:
+            dirs.append("right")
+            dop_coords[0] += self.data["val_speed"]
+        elif self.way[0][0] > self.way[1][0]:
+            dirs.append("left")
+            dop_coords[0] -= self.data["val_speed"]
+        self.set_sprite(dop_coords)
+        dop_start = self.set_start()
+        if dop_start in self.game.map.coords_objects and dirs != []:
+            # print("delete:", dirs[-1])
+            dirs.pop(-1)
 
-            dop_coords = self.data["coords"].copy()
-            if self.way[0][1] > self.way[1][1]:
-                dirs.append("up")
-                dop_coords[1] -= self.data["speed"]
-            elif self.way[0][1] < self.way[1][1]:
-                dirs.append("down")
-                dop_coords[1] += self.data["speed"]
-            self.set_sprite(dop_coords)
-            dop_start = self.set_start()
-            if dop_start in self.game.map.coords_objects:
-                # print("delete:", dirs[-1])
-                dirs.pop(-1)
-            # print(dirs, self.way[0][1], self.way[1][1])
+        dop_coords = self.data["coords"].copy()
+        if self.way[0][1] > self.way[1][1]:
+            dirs.append("up")
+            dop_coords[1] -= self.data["val_speed"]
+        elif self.way[0][1] < self.way[1][1]:
+            dirs.append("down")
+            dop_coords[1] += self.data["val_speed"]
+        self.set_sprite(dop_coords)
+        dop_start = self.set_start()
+        if dop_start in self.game.map.coords_objects and dirs != []:
+            # print("delete:", dirs[-1])
+            dirs.pop(-1)
+        # print(dirs, self.way[0][1], self.way[1][1])
 
-            if dirs != []:
-                if "right" in dirs:
-                    self.data["cond"] = "walk"
-                    self.data["dir"] = "right"
-                    self.data["coords"][0] += self.data["speed"]
-                elif "left" in dirs:
-                    self.data["cond"] = "walk"
-                    self.data["dir"] = "left"
-                    self.data["coords"][0] -= self.data["speed"]
-                if "up" in dirs:
-                    self.data["cond"] = "walk"
-                    self.data["dir"] = "up"
-                    self.data["coords"][1] -= self.data["speed"]
-                elif "down" in dirs:
-                    self.data["cond"] = "walk"
-                    self.data["dir"] = "down"
-                    self.data["coords"][1] += self.data["speed"]
+        if dirs != []:
+            if "right" in dirs:
+                self.data["dir"] = "right"
+                if self.data["cond"] == "walk": self.data["coords"][0] += self.data["val_speed"]
+            elif "left" in dirs:
+                self.data["dir"] = "left"
+                if self.data["cond"] == "walk": self.data["coords"][0] -= self.data["val_speed"]
+            if "up" in dirs:
+                self.data["dir"] = "up"
+                if self.data["cond"] == "walk": self.data["coords"][1] -= self.data["val_speed"]
+            elif "down" in dirs:
+                self.data["dir"] = "down"
+                if self.data["cond"] == "walk": self.data["coords"][1] += self.data["val_speed"]
 
-            if self.data["counter_sprite"] >= self.data["freq_sprite"]:
-                if self.data["number_sprite"] >= len(
-                        self.data["type_cond"][self.data["cond"]][self.data["dir"]]) - 1:
-                    self.data["number_sprite"] = 0
-                else:
-                    self.data["number_sprite"] += 1
-                self.data["counter_sprite"] = 0
-            self.data["counter_sprite"] += 1
-            self.data["number_sprite"] = min(self.data["number_sprite"], len(
-                self.data["type_cond"][self.data["cond"]][self.data["dir"]]) - 1)
-            self.update_sprite(self.data["type_cond"][self.data["cond"]][self.data["dir"]][self.data["number_sprite"]])
-            self.start = self.set_start()
+    def counting(self):
+        if self.data["counter_sprite"] >= self.data["freq_sprite"]:
+            if self.data["number_sprite"] >= len(
+                    self.data["type_cond"][self.data["cond"]][self.data["dir"]]) - 1:
+                self.data["number_sprite"] = 0
+            else:
+                self.data["number_sprite"] += 1
+            self.data["counter_sprite"] = 0
+        self.data["counter_sprite"] += 1
+        self.data["number_sprite"] = min(self.data["number_sprite"], len(self.data["type_cond"][self.data["cond"]][self.data["dir"]]) - 1)
+        self.update_sprite(self.data["type_cond"][self.data["cond"]][self.data["dir"]][self.data["number_sprite"]])
+        self.data["val_speed"] = self.data["speed"][self.data["cond"]]
+        self.data["freq_sprite"] = self.data["speed_TO_freq"][self.data["cond"]]
+        self.start = self.set_start()
 
-            if self.start == self.way[1]:
-                self.way.pop(0)
-                self.old_way.pop(0)
-        # print(self.data["cond"])
+        if self.start == self.way[1]:
+            self.way.pop(0)
+            self.old_way.pop(0)
+        # print(self.data["cond"], self.data["dir"], self.data["number_sprite"])
+
+    def attack(self):
+        if self.data["cond"] == "attack":
+            if self.data["number_sprite"] == 0:
+                self.data["flag_attack"] = 1
+            if self.data["number_sprite"] == 1 and self.data["flag_attack"]:
+                # if self.do_print: print(self.data["flag_attack"], "ATTACK")
+                self.game.character.character["hp"][0] -= ENEMYS[self.category]["damage"]
+                self.game.character.character["cond"] = "hit"
+                self.data["flag_attack"] = 0
+
+    def hit(self, hp, name):
+        if self.data["hp"][0] - hp <= 0:
+            # print("DEAD")
+            self.dead(name)
+        else:
+            self.data["hp"][0] -= hp
+            self.data["cond"] = "hit"
+            # print("HP:", self.data["hp"])
+
+    def dead(self, name):
+        del self.game.room_now.objects[name]
+        self.game.delete_enemys[name] = True
+        self.game.character.character["money"][0] += 3
+        self.game.set_label("money", f"монеты: {self.game.character.character["money"][0]}")
+        # self.data["dead"] = True
 
 
 
@@ -414,8 +690,11 @@ class Level1:
         self.game = game
         self.base_style = base_style
 
-        self.list_rooms = {'start_room': Start_room,
-                           "meeting_room": Meeting_room}
+        self.list_rooms = {
+            'start_room': Start_room,
+            "meeting_room": Meeting_room,
+            "final_boss_room": Final_boss_room
+        }
 
 
 
@@ -554,7 +833,7 @@ class Start_room:
                             size=SPRITES["comp_size"],
                             # +100+delta_wall_right_3_x
                             image=self.computer_sprites[0],
-                            func=lambda: print("click computer"),
+                            func=lambda: self.game.change_game('dino'),
                             size_rect=(0, -100))
         self.sprite_computer_for_1 = [0, 0.1, 8]
         self.sprite_computer_isprite_1 = self.sprite_computer_for_1[0]
@@ -563,7 +842,7 @@ class Start_room:
         coords_chair_1 = [80, 20]
         chair_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                             coords=[coords_computer_1[0]+coords_chair_1[0], coords_computer_1[1]+coords_chair_1[1]],
-                            size=SPRITES["chair"],
+                            size=SPRITES["chair_size"],
                             # +100+delta_wall_right_3_x
                             image="sprites/chair/chair_1.png",
                             size_rect=(0, -100))
@@ -575,15 +854,16 @@ class Start_room:
                             size=SPRITES["comp_size"],
                             # +100+delta_wall_right_3_x
                             image=self.computer_sprites[0],
+                            func=lambda: self.game.change_game('dash_hex'),
                             size_rect=(0, -100))
-        self.sprite_computer_for_2 = [5, 0.1, 8]
+        self.sprite_computer_for_2 = [4, 0.2, 8]
         self.sprite_computer_isprite_2 = self.sprite_computer_for_2[0]
         self.sprite_computer_isprite_2_OLD = self.sprite_computer_isprite_2
         # ------ Стул 2
         coords_chair_2 = [40, 20]
         chair_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                          coords=[coords_computer_2[0] + coords_chair_2[0], coords_computer_2[1] + coords_chair_2[1]],
-                         size=SPRITES["chair"],
+                         size=SPRITES["chair_size"],
                          # +100+delta_wall_right_3_x
                          image="sprites/chair/chair_1.png",
                          size_rect=(0, -100))
@@ -595,24 +875,117 @@ class Start_room:
                             size=SPRITES["comp_size"],
                             # +100+delta_wall_right_3_x
                             image=self.computer_sprites[0],
+                            func=lambda: self.game.change_game('hyper_dash'),
                             size_rect=(0, -100))
-        self.sprite_computer_for_3 = [2, 0.1, 8]
+        self.sprite_computer_for_3 = [5, 0.1, 8]
         self.sprite_computer_isprite_3 = self.sprite_computer_for_3[0]
         self.sprite_computer_isprite_3_OLD = self.sprite_computer_isprite_3
         # ------ Стул 3
         coords_chair_3 = [40, 20]
         chair_3 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                          coords=[coords_computer_3[0] + coords_chair_3[0], coords_computer_3[1] + coords_chair_3[1]],
-                         size=SPRITES["chair"],
+                         size=SPRITES["chair_size"],
                          # +100+delta_wall_right_3_x
                          image="sprites/chair/chair_1.png",
                          size_rect=(0, -100))
-        # ------ Живые объекты
-        enemy = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
-                              coords=[900, self.size_room_layer[1] - 200], # [700, 500],
-                              size=(100, 140),
-                              image='sprites/character/base_choice/idle/idle_front_0.png',
-                              size_rect=(82, 20))
+        # ------ Доп стол 1
+        width_table_1 = 150
+        coords_table_front_1 = [20, 0]
+        coords_table_front_1 = [self.size_room_layer[0] - size_hall[0] - coords_table_front_1[0] - width_table_1,
+                                self.size_room_layer[1] - SPRITES["height_dop_table_front"] - coords_table_front_1[1]]
+        table_front_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                         coords=coords_table_front_1,
+                         size=[width_table_1, SPRITES["height_dop_table_front"]],
+                         # +100+delta_wall_right_3_x
+                         image="sprites/table/table_front.png",
+                         size_rect=(0, 0))
+        height_table_top_1 = 40
+        coords_table_top_1 = [coords_table_front_1[0],
+                                coords_table_front_1[1]-height_table_top_1]
+        table_top_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                               coords=coords_table_top_1,
+                               size=[width_table_1, SPRITES["height_dop_table_front"]],
+                               # +100+delta_wall_right_3_x
+                               image="sprites/table/table_top.png",
+                               size_rect=(0, -height_table_top_1))
+        # ------ Растение 1
+        coords_plant_1 = [10, 30 + 5]
+        coords_plant_1 = [coords_table_top_1[0] + coords_plant_1[0], coords_table_top_1[1] - SPRITES["plant_1_size"][1] + coords_plant_1[1]]
+        plant_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                         coords=coords_plant_1,
+                         size=SPRITES["plant_1_size"],
+                         # +100+delta_wall_right_3_x
+                         image="sprites/plant/plant_1.png",
+                         size_rect=None)
+        # ------ Растение 2
+        coords_plant_2 = [0, 30]
+        coords_plant_2 = [self.size_room_layer[0] - THICKNESS_WALL - SPRITES["plant_2_size"][0] - coords_plant_2[0],
+                          HEIGHT_WALL - SPRITES["plant_2_size"][1] + coords_plant_2[1]]
+        plant_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                         coords=coords_plant_2,
+                         size=SPRITES["plant_2_size"],
+                         # +100+delta_wall_right_3_x
+                         image="sprites/plant/plant_2.png",
+                         size_rect=(0, 0))
+        # ------ Автомат 1
+        coords_avtomat_1 = [500, 0]
+        coords_avtomat_1 = [THICKNESS_WALL + coords_avtomat_1[0], THICKNESS_WALL + coords_avtomat_1[1]]
+        avtomat_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=coords_avtomat_1,
+                           size=SPRITES["avtomat_size"],
+                           # +100+delta_wall_right_3_x
+                           image="sprites/avtomat/avtomat_1.png",
+                           func=lambda: self.game.hp_character_up(
+                               price=TYPE_AVTOMAT["green"]["price"],
+                               val=TYPE_AVTOMAT["green"]["val"], type_val=TYPE_AVTOMAT["type_val"]
+                           ),
+                           size_button=(-20, -30), coords_button=(10, 30),
+                           size_rect=(0, -100))
+        # ------ Кулер 1
+        self.kuler_sprites = ['sprites/kuler/1.png', 'sprites/kuler/2.png', 'sprites/kuler/3.png', 'sprites/kuler/4.png',
+                               'sprites/kuler/5.png', 'sprites/kuler/6.png', 'sprites/kuler/7.png', 'sprites/kuler/8.png',
+                               'sprites/kuler/9.png']
+        coords_kuler_1 = [10, -10]
+        coords_kuler_1 = [THICKNESS_WALL + coords_computer_1[0] + SPRITES["comp_size"][0] + coords_kuler_1[0],
+                             coords_computer_1[1] + coords_kuler_1[1]]
+        kuler_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                            coords=coords_kuler_1,
+                            size=SPRITES["kuler_size"],
+                            # +100+delta_wall_right_3_x
+                            image=self.kuler_sprites[0],
+                            size_rect=(0, -100))
+        self.sprite_kuler_for_1 = [0, 0.1, 8]
+        self.sprite_kuler_isprite_1 = self.sprite_computer_for_1[0]
+        self.sprite_kuler_isprite_1_OLD = self.sprite_kuler_isprite_1
+        # ------ Кулер 2
+        self.kuler_sprites = ['sprites/kuler/1.png', 'sprites/kuler/2.png', 'sprites/kuler/3.png',
+                              'sprites/kuler/4.png',
+                              'sprites/kuler/5.png', 'sprites/kuler/6.png', 'sprites/kuler/7.png',
+                              'sprites/kuler/8.png',
+                              'sprites/kuler/9.png']
+        coords_kuler_2 = [5, -5]
+        coords_kuler_2 = [coords_avtomat_1[0] + SPRITES["avtomat_size"][0] + coords_kuler_2[0],
+                          coords_avtomat_1[1] + SPRITES["avtomat_size"][1] - SPRITES["kuler_size"][1] + coords_kuler_2[1]]
+        kuler_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                         coords=coords_kuler_2,
+                         size=SPRITES["kuler_size"],
+                         # +100+delta_wall_right_3_x
+                         image=self.kuler_sprites[0],
+                         size_rect=(0, -100))
+        self.sprite_kuler_for_2 = [2, 0.1, 8]
+        self.sprite_kuler_isprite_2 = self.sprite_computer_for_2[0]
+        self.sprite_kuler_isprite_2_OLD = self.sprite_kuler_isprite_2
+        # ------ Кровь 1
+        coords_blood_1 = [0, 30]
+        coords_blood_1 = [self.size_room_layer[0] - SPRITES["blood_1_size"][0] - coords_blood_1[0],
+                          HEIGHT_WALL + (size_hall[1] - WIDTH_DOOR)//2 + coords_blood_1[1]]
+        blood_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                         coords=coords_blood_1,
+                         size=SPRITES["blood_1_size"],
+                         # +100+delta_wall_right_3_x
+                         image="sprites/scary_decor/blood_1.png",
+                         size_rect=None)
+        # ------ Все объекты
         self.objects = {
             "floor_empty_zone": self.floor_empty_zone,
             # Стены:
@@ -627,37 +1000,63 @@ class Start_room:
             # Статичные предметы:
             "computer_1": computer_1, "computer_2": computer_2, "computer_3": computer_3,
             "chair_1": chair_1, "chair_2": chair_2, "chair_3": chair_3,
+            "kuler_1": kuler_1, "kuler_2": kuler_2,
+            "avtomat_1": avtomat_1,
+            "plant_2": plant_2,
             # Живые объекты:
-            "enemy": enemy,
+            # ВАЖНО: Программа отличает живые объекты от статичных по тексту "enemy" в ключу к объекту.
+            #        То есть все живые объекты должны создаваться под ключом, в котором будет текст "enemy"!!!
+            # (Живые объекты могут создавать for-ом несколько строк ниже)
         }
-        self.list_objects = list(self.objects.values())
+        # ------ Живые объекты
+        load_CONST()
+        category_enemy = "green_enemy"
+        start_count_enemys = 0
+        for i in range(0, ENEMYS["count"][0]):
+            green_enemy_i = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
+                                  category=category_enemy,
+                                  coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
+                                  size=ENEMYS[category_enemy]["size"],
+                                  image='sprites/character/base_choice/idle/idle_front_0.png',
+                                  size_rect=ENEMYS[category_enemy]["size_rect"],
+                                  do_random_spawn=True)  # do_print=True
+            self.objects[f"green_enemy_{i + start_count_enemys}"] = green_enemy_i
+        for name, value in self.game.delete_enemys.items():
+            if value == True:
+                if name in self.objects and "enemy" in name:
+                    del self.objects[name]
         # ------------------
-        self.dop_objects = {}
-        self.list_dop_objects = list(self.dop_objects.values())
+        self.dop_objects_up = {
+            "blood_1": blood_1
+        }
+        self.dop_objects_down = {
+            "table_front_1": table_front_1, "table_top_1": table_top_1, "plant_1": plant_1
+        }
         # ------------------
         doors_right_x = THICKNESS_WALL + self.objects["wall_left_front"].data["coords"][2] + HEIGHT_WALL
         self.doors = {"right": (self.size_room_layer[0], [doors_right_x, doors_right_x + WIDTH_DOOR])}
-        # ------ Кнопки
-        self.buttons = []
 
     def enter_rooms(self):
         self.game.game_layer = self.room_layer
         self.game.coords_game_layer[2] = self.size_room_layer[0]
         self.game.coords_game_layer[3] = self.size_room_layer[1]
-        self.game.data_layers = [0] * len(self.buttons)
-        self.game.old_data_layers = [0] * len(self.buttons)
+        for name, obj in self.objects.items():
+            if name not in self.game.delete_enemys and "enemy" in name:
+                self.game.delete_enemys[name] = False
 
     def delete_all(self):
         pass
 
     def draw(self):
         self.animate_sprite()
+        self.game.render_objects() # draw_rects=True
         for name, obj in self.objects.items():
             if "enemy" in name:
-                obj.search_way()
-                obj.move()
-        self.game.render_objects(self.list_objects, dop_objects=self.list_dop_objects) # , draw_rects=True
-        # print(self.doors["right"][1][0], self.game.character.character["absolute_coords_rect"][1], self.doors["right"][1][1])
+                obj.base_actions()
+                obj.set_labels()
+        # if "green_enemy_1" in self.objects: print(self.objects["green_enemy_1"])
+        #  else: print(None)
+        # print(self.objects["green_enemy_1"].data["cond"], self.objects["green_enemy_1"].data["dir"], self.objects["green_enemy_1"].data["number_sprite"])
         if self.game.character.character["absolute_coords_rect"][0] >= self.doors["right"][0] and self.doors["right"][1][0] < self.game.character.character["absolute_coords_rect"][1] < self.doors["right"][1][1]:
             print("start_room -> meeting_room")
             self.game.character.respawn([self.game.character.character["coords"][2], self.parent.display_h // 2])
@@ -682,6 +1081,18 @@ class Start_room:
             self.objects["computer_3"].update_sprite(self.computer_sprites[self.sprite_computer_isprite_3])
         self.sprite_computer_isprite_3_OLD = self.sprite_computer_isprite_3
 
+        self.sprite_kuler_for_1 = self.game.animate_sprite(self.sprite_kuler_for_1)
+        self.sprite_kuler_isprite_1 = int(self.sprite_kuler_for_1[0])
+        if self.sprite_kuler_isprite_1 != self.sprite_kuler_isprite_1_OLD:
+            self.objects["kuler_1"].update_sprite(self.kuler_sprites[self.sprite_kuler_isprite_1])
+        self.sprite_kuler_isprite_1_OLD = self.sprite_kuler_isprite_1
+
+        self.sprite_kuler_for_2 = self.game.animate_sprite(self.sprite_kuler_for_2)
+        self.sprite_kuler_isprite_2 = int(self.sprite_kuler_for_2[0])
+        if self.sprite_kuler_isprite_2 != self.sprite_kuler_isprite_2_OLD:
+            self.objects["kuler_2"].update_sprite(self.kuler_sprites[self.sprite_kuler_isprite_2])
+        self.sprite_kuler_isprite_2_OLD = self.sprite_kuler_isprite_2
+
 
 
 
@@ -695,10 +1106,22 @@ class Meeting_room:
         self.room_layer = pygame.Surface(self.size_room_layer)
         self.floor = pygame.image.load('sprites/floor/floor_meeting_room.png')
         self.room_layer.blit(self.floor, (0, 0))
+
+        # ------ Проходы
+        self.doors = {
+            "left": (0, [(self.size_room_layer[1] - WIDTH_DOOR) // 2, (self.size_room_layer[1] + WIDTH_DOOR) // 2 + HEIGHT_WALL]),
+            "up": ([(self.size_room_layer[0] - UP_WIDTH_DOOR) // 2, (self.size_room_layer[0] + UP_WIDTH_DOOR) // 2], HEIGHT_WALL // 2)
+        }
+
         # ------ Стены
-        wall_up = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+        wall_up_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                            coords=[0, 0],
-                           size=(self.size_room_layer[0], HEIGHT_WALL),
+                           size=(self.doors["up"][0][0], HEIGHT_WALL),
+                           image=f'sprites/walls/wall_red_front.png',
+                           size_rect=(0, 0))
+        wall_up_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=[self.doors["up"][0][1], 0],
+                           size=(self.doors["up"][0][0], HEIGHT_WALL),
                            image=f'sprites/walls/wall_red_front.png',
                            size_rect=(0, 0))
         wall_down = Object(parent=self.parent, game=self.game, base_style=self.base_style,
@@ -730,27 +1153,28 @@ class Meeting_room:
                              size_rect=(0, 0))
         wall_right_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                              coords=[self.size_room_layer[0]-THICKNESS_WALL, THICKNESS_WALL - DELTA_SIZE_NEAR_OBJECTS],
-                             size=(THICKNESS_WALL, (self.parent.display_h - WIDTH_DOOR - HEIGHT_WALL) // 2),
+                             size=(THICKNESS_WALL, self.size_room_layer[1] - HEIGHT_WALL - THICKNESS_WALL),
                              image=f'sprites/walls/wall_red_top.png',
                              size_rect=(0, 0))
         wall_right_front_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-                                   coords=[self.size_room_layer[0]-THICKNESS_WALL, THICKNESS_WALL + wall_left_1.data["coords"][3] - DELTA_SIZE_NEAR_OBJECTS],
-                                   size=(THICKNESS_WALL, HEIGHT_WALL),
+                                   coords=[wall_right_1.data["coords"][0], wall_right_1.data["coords"][1] + wall_right_1.data["coords"][3]],
+                                   size=(THICKNESS_WALL, HEIGHT_WALL + DELTA_SIZE_NEAR_OBJECTS),
                                    image=f'sprites/walls/wall_red_front.png',
                                    size_rect=(0, 0))
-        delta_wall_right_2_x = 30
-        wall_right_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-                             coords=[self.size_room_layer[0]-THICKNESS_WALL, THICKNESS_WALL + wall_right_1.data["coords"][3] + WIDTH_DOOR - DELTA_SIZE_NEAR_OBJECTS - delta_wall_right_2_x],
-                             size=(THICKNESS_WALL, (self.parent.display_h - WIDTH_DOOR) // 2),
-                             # +100+delta_wall_right_3_x
-                             image=f'sprites/walls/wall_red_top.png',
-                             size_rect=(0, -HEIGHT_WALL + 30))
-        wall_right_front_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-                                   coords=[self.size_room_layer[0]-THICKNESS_WALL, self.size_room_layer[1] - HEIGHT_WALL],
-                                   size=(THICKNESS_WALL, HEIGHT_WALL),
-                                   # +100+delta_wall_right_3_x
-                                   image=f'sprites/walls/wall_red_front.png',
-                                   size_rect=(0, 0))
+        # ------ Автомат 1
+        coords_avtomat_1 = [100, 0]
+        coords_avtomat_1 = [THICKNESS_WALL + coords_avtomat_1[0], THICKNESS_WALL + coords_avtomat_1[1]]
+        avtomat_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=coords_avtomat_1,
+                           size=SPRITES["avtomat_size"],
+                           # +100+delta_wall_right_3_x
+                           image="sprites/avtomat/avtomat_2.png",
+                           func=lambda: self.game.hp_character_up(
+                               price=TYPE_AVTOMAT["yellow"]["price"],
+                               val=TYPE_AVTOMAT["yellow"]["val"], type_val=TYPE_AVTOMAT["type_val"]
+                           ),
+                           size_button=(-20, -30), coords_button=(10, 30),
+                           size_rect=(0, -100))
         # coords_partition_1 = [400, 0]
         # partition_side_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
         #                            coords=[THICKNESS_WALL + coords_partition_1[0],
@@ -758,40 +1182,262 @@ class Meeting_room:
         #                            size=(THICKNESS_PARTITION, HEIGHT_PARTITION),
         #                            image='sprites/walls/partition_front.png',
         #                            size_rect=(0, 0))
-        self.objects = {
-            "wall_up": wall_up, "wall_down": wall_down,
-            "wall_left_1":wall_left_1, "wall_left_front_1": wall_left_front_1, "wall_left_2": wall_left_2, "wall_left_front_2": wall_left_front_2,
-            "wall_right_1":wall_right_1, "wall_right_front_1": wall_right_front_1, "wall_right_2": wall_right_2, "wall_right_front_2": wall_right_front_2,
-        }
-        self.list_objects = list(self.objects.values())
-        # ------------------
-        self.dop_objects = {}
-        self.list_dop_objects = list(self.dop_objects.values())
-        # ------------------
-        self.doors = {"left": (0, [(self.size_room_layer[1]-WIDTH_DOOR) // 2, (self.size_room_layer[1]+WIDTH_DOOR) // 2 + HEIGHT_WALL])}
 
-        # ------ Кнопки
-        self.buttons = []
+        # ------------
+        self.objects = {
+            "wall_up_1": wall_up_1, "wall_up_2": wall_up_2,
+            "wall_down": wall_down,
+            "wall_left_1":wall_left_1, "wall_left_front_1": wall_left_front_1, "wall_left_2": wall_left_2, "wall_left_front_2": wall_left_front_2,
+            "wall_right_1":wall_right_1, "wall_right_front_1": wall_right_front_1,
+            "avtomat_1": avtomat_1
+        }
+        # ------------ Живые объекты
+        category_enemy = "green_enemy"
+        start_count_enemys = ENEMYS["count"][0]
+        for i in range(0, ENEMYS["count"][1]):
+            green_enemy_i = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
+                                  category=category_enemy,
+                                  coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
+                                  size=ENEMYS[category_enemy]["size"],
+                                  image='sprites/character/base_choice/idle/idle_front_0.png',
+                                  size_rect=ENEMYS[category_enemy]["size_rect"],
+                                  do_random_spawn=True) # do_print=True
+            self.objects[f"green_enemy_{i+start_count_enemys}"] = green_enemy_i
+        for name, value in self.game.delete_enemys.items():
+            if value == True:
+                if name in self.objects and "enemy" in name:
+                    del self.objects[name]
+        # ------------------
+        self.dop_objects_up = {}
+        self.dop_objects_down = {}
+        # ------------ Кровь
+        max_blood_w = max(list(map(lambda x: SPRITES[f"blood_{x}_size"][0], range(1, 6))))
+        max_blood_h = max(list(map(lambda x: SPRITES[f"blood_{x}_size"][1], range(1, 6))))
+        for i in range(6):
+            coords_blood_delta = 70
+            coords_blood_i = [0, 0]
+            coords_blood_i[0] = randint(THICKNESS_WALL + coords_blood_delta, self.size_room_layer[0] - THICKNESS_WALL - max_blood_w - coords_blood_delta)
+            coords_blood_i[1] = randint(HEIGHT_WALL + coords_blood_delta, self.size_room_layer[1] - max_blood_h - coords_blood_delta)
+            index = choice(list(range(1, 5 + 1)))
+            blood_i = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                             coords=coords_blood_i,
+                             size=SPRITES[f"blood_{index}_size"],
+                             # +100+delta_wall_right_3_x
+                             image=f"sprites/scary_decor/blood_{index}.png",
+                             size_rect=None)
+            self.dop_objects_up[f"blood_{index}"] = blood_i
+        # ------------ Кости
+        max_bone_w = max(list(map(lambda x: SPRITES[f"bone_{x}_size"][0], range(1, 3+1))))
+        max_bone_h = max(list(map(lambda x: SPRITES[f"bone_{x}_size"][1], range(1, 3+1))))
+        for i in range(5):
+            coords_bone_delta = 70
+            coords_bone_i = [0, 0]
+            coords_bone_i[0] = randint(THICKNESS_WALL + coords_bone_delta, self.size_room_layer[0] - THICKNESS_WALL - max_bone_w - coords_bone_delta)
+            coords_bone_i[1] = randint(HEIGHT_WALL + coords_bone_delta, self.size_room_layer[1] - max_bone_h - coords_bone_delta)
+            index = choice(list(range(1, 3+1)))
+            if index == 3: size_rect = (0, -8)
+            else: size_rect = (0, 15)
+            bone_i = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                             coords=coords_bone_i,
+                             size=SPRITES[f"bone_{index}_size"],
+                             # +100+delta_wall_right_3_x
+                             image=f"sprites/scary_decor/bone_{index}.png",
+                             size_rect=size_rect)
+            self.objects[f"bone_{index}"] = bone_i
 
     def enter_rooms(self):
         # self.game.floor.blit(self.texture_floor, (0, 0))
         self.game.game_layer = self.room_layer
         self.game.coords_game_layer[2] = self.size_room_layer[0]
         self.game.coords_game_layer[3] = self.size_room_layer[1]
-        self.game.data_layers = [0] * len(self.buttons)
-        self.game.old_data_layers = [0] * len(self.buttons)
+        for name, obj in self.objects.items():
+            if name not in self.game.delete_enemys and "enemy" in name:
+                self.game.delete_enemys[name] = False
 
     def delete_all(self):
         pass
 
     def draw(self):
         self.animate_sprite()
-        self.game.render_objects(self.list_objects, dop_objects=self.list_dop_objects) # buttons=self.buttons
+        self.game.render_objects()  # draw_rects=True
+        for name, obj in self.objects.items():
+            if "enemy" in name:
+                obj.base_actions()
+                obj.set_labels()
         # print(self.doors["left"][1][0], self.game.character.character["absolute_coords_rect"][1], self.doors["left"][1][1])
         if self.game.character.character["absolute_coords_rect"][0] <= self.doors["left"][0] and self.doors["left"][1][0] < self.game.character.character["absolute_coords_rect"][1] < self.doors["left"][1][1]:
             print("meeting_room -> start_room")
             self.game.character.respawn([self.parent.LAYERS["start_room"][0]-self.game.character.character["coords"][2], self.doors["left"][1][0]])
             self.game.room_change("start_room")
+        elif self.doors["up"][0][0] < self.game.character.character["absolute_coords_rect"][0] < self.doors["up"][0][1] and self.game.character.character["absolute_coords_rect"][1] <= self.doors["up"][1]:
+            print("meeting_room -> final_boss_room")
+            self.game.character.respawn([(self.parent.LAYERS["final_boss_room"][0] - UP_WIDTH_DOOR + self.game.character.character["coords"][2]) // 2, self.parent.LAYERS["final_boss_room"][1] -  self.game.character.character["coords"][3]])
+            self.game.room_change("final_boss_room")
+
+    def animate_sprite(self):
+        pass
+
+
+
+
+class Final_boss_room:
+    def __init__(self, parent, game, base_style):
+        self.parent = parent
+        self.game = game
+        self.base_style = base_style
+
+        self.size_room_layer = self.parent.LAYERS["final_boss_room"]  # [3000, 3000]
+        self.room_layer = pygame.Surface(self.size_room_layer)
+        self.floor = pygame.transform.rotate(pygame.image.load('sprites/floor/floor_meeting_room.png'), 90)
+        self.room_layer.blit(self.floor, (0, 0))
+
+        # ------ Проходы
+        self.doors = {
+            "down": ([(self.size_room_layer[0] - UP_WIDTH_DOOR) // 2, (self.size_room_layer[0] + UP_WIDTH_DOOR) // 2], self.size_room_layer[1])
+        }
+
+        # ------ Стены
+        wall_up = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=[0, 0],
+                           size=(self.size_room_layer[0], HEIGHT_WALL),
+                           image=f'sprites/walls/wall_red_front.png',
+                           size_rect=(0, 0))
+        wall_down_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=[0, self.size_room_layer[1]],
+                           size=(self.doors["down"][0][0], HEIGHT_WALL),
+                           image=None, size_rect=(0, 0))
+        wall_down_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=[self.doors["down"][0][1], self.size_room_layer[1]],
+                           size=(self.doors["down"][0][0], HEIGHT_WALL),
+                           image=None, size_rect=(0, 0))
+        wall_left_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                              coords=[0, THICKNESS_WALL - DELTA_SIZE_NEAR_OBJECTS],
+                              size=(THICKNESS_WALL, self.size_room_layer[1] - HEIGHT_WALL - THICKNESS_WALL),
+                              image=f'sprites/walls/wall_red_top.png',
+                              size_rect=(0, 0))
+        wall_left_front_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                    coords=[wall_left_1.data["coords"][0], wall_left_1.data["coords"][1] + wall_left_1.data["coords"][3]],
+                                    size=(THICKNESS_WALL, HEIGHT_WALL + DELTA_SIZE_NEAR_OBJECTS),
+                                    image=f'sprites/walls/wall_red_front.png',
+                                    size_rect=(0, 0))
+        wall_right_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                              coords=[self.size_room_layer[0] - THICKNESS_WALL, THICKNESS_WALL - DELTA_SIZE_NEAR_OBJECTS],
+                              size=(THICKNESS_WALL, self.size_room_layer[1] - HEIGHT_WALL - THICKNESS_WALL),
+                              image=f'sprites/walls/wall_red_top.png',
+                              size_rect=(0, 0))
+        wall_right_front_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                    coords=[wall_right_1.data["coords"][0], wall_right_1.data["coords"][1] + wall_right_1.data["coords"][3]],
+                                    size=(THICKNESS_WALL, HEIGHT_WALL + DELTA_SIZE_NEAR_OBJECTS),
+                                    image=f'sprites/walls/wall_red_front.png',
+                                    size_rect=(0, 0))
+        # coords_partition_1 = [400, 0]
+        # partition_side_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+        #                            coords=[THICKNESS_WALL + coords_partition_1[0],
+        #                                    self.size_room_layer[1] - HEIGHT_PARTITION - coords_partition_1[1]],
+        #                            size=(THICKNESS_PARTITION, HEIGHT_PARTITION),
+        #                            image='sprites/walls/partition_front.png',
+        #                            size_rect=(0, 0))
+        # ------ Автомат 1
+        coords_avtomat_1 = [20, 0]
+        coords_avtomat_1 = [THICKNESS_WALL + coords_avtomat_1[0], self.size_room_layer[1] - coords_avtomat_1[1] - SPRITES["avtomat_size"][1]]
+        avtomat_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=coords_avtomat_1,
+                           size=SPRITES["avtomat_size"],
+                           # +100+delta_wall_right_3_x
+                           image="sprites/avtomat/avtomat_3.png",
+                           func=lambda: self.game.hp_character_up(
+                               price=TYPE_AVTOMAT["blue"]["price"],
+                               val=TYPE_AVTOMAT["blue"]["val"], type_val=TYPE_AVTOMAT["type_val"]
+                           ),
+                           size_button=(-20, -30), coords_button=(10, 30),
+                           size_rect=(0, -100))
+
+        # ------------
+        self.objects = {
+            "wall_up": wall_up,
+            "wall_down_1": wall_down_1, "wall_down_2": wall_down_2,
+            "wall_left_1":wall_left_1, "wall_left_front_1": wall_left_front_1,
+            "wall_right_1":wall_right_1, "wall_right_front_1": wall_right_front_1,
+            "avtomat_1": avtomat_1
+        }
+        # ------------ Живые объекты
+        category_enemy = "green_enemy"
+        start_count_enemys = ENEMYS["count"][0] + ENEMYS["count"][1]
+        for i in range(0, ENEMYS["count"][2]):
+            green_enemy_i = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
+                                  category=category_enemy,
+                                  coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
+                                  size=ENEMYS[category_enemy]["size"],
+                                  image='sprites/character/base_choice/idle/idle_front_0.png',
+                                  size_rect=ENEMYS[category_enemy]["size_rect"],
+                                  do_random_spawn=True)  # do_print=True
+            self.objects[f"green_enemy_{i + start_count_enemys}"] = green_enemy_i
+        for name, value in self.game.delete_enemys.items():
+            if value == True:
+                if name in self.objects and "enemy" in name:
+                    del self.objects[name]
+        # ------------------
+        self.dop_objects_up = {}
+        self.dop_objects_down = {}
+        # ------------ Кровь
+        max_blood_w = max(list(map(lambda x: SPRITES[f"blood_{x}_size"][0], range(1, 6))))
+        max_blood_h = max(list(map(lambda x: SPRITES[f"blood_{x}_size"][1], range(1, 6))))
+        for i in range(6):
+            coords_blood_delta = 70
+            coords_blood_i = [0, 0]
+            coords_blood_i[0] = randint(THICKNESS_WALL + coords_blood_delta, self.size_room_layer[0] - THICKNESS_WALL - max_blood_w - coords_blood_delta)
+            coords_blood_i[1] = randint(HEIGHT_WALL + coords_blood_delta, self.size_room_layer[1] - max_blood_h - coords_blood_delta)
+            index = choice(list(range(1, 5 + 1)))
+            blood_i = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                             coords=coords_blood_i,
+                             size=SPRITES[f"blood_{index}_size"],
+                             # +100+delta_wall_right_3_x
+                             image=f"sprites/scary_decor/blood_{index}.png",
+                             size_rect=None)
+            self.dop_objects_up[f"blood_{index}"] = blood_i
+        # ------------ Кости
+        max_bone_w = max(list(map(lambda x: SPRITES[f"bone_{x}_size"][0], range(1, 3+1))))
+        max_bone_h = max(list(map(lambda x: SPRITES[f"bone_{x}_size"][1], range(1, 3+1))))
+        for i in range(5):
+            coords_bone_delta = 70
+            coords_bone_i = [0, 0]
+            coords_bone_i[0] = randint(THICKNESS_WALL + coords_bone_delta, self.size_room_layer[0] - THICKNESS_WALL - max_bone_w - coords_bone_delta)
+            coords_bone_i[1] = randint(HEIGHT_WALL + coords_bone_delta, self.size_room_layer[1] - max_bone_h - coords_bone_delta)
+            index = choice(list(range(1, 3+1)))
+            if index == 3: size_rect = (0, -8)
+            else: size_rect = (0, 15)
+            bone_i = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                             coords=coords_bone_i,
+                             size=SPRITES[f"bone_{index}_size"],
+                             # +100+delta_wall_right_3_x
+                             image=f"sprites/scary_decor/bone_{index}.png",
+                             size_rect=size_rect)
+            self.objects[f"bone_{index}"] = bone_i
+
+    def enter_rooms(self):
+        # self.game.floor.blit(self.texture_floor, (0, 0))
+        self.game.game_layer = self.room_layer
+        self.game.coords_game_layer[2] = self.size_room_layer[0]
+        self.game.coords_game_layer[3] = self.size_room_layer[1]
+        for name, obj in self.objects.items():
+            if name not in self.game.delete_enemys and "enemy" in name:
+                self.game.delete_enemys[name] = False
+
+    def delete_all(self):
+        pass
+
+    def draw(self):
+        self.animate_sprite()
+        self.game.render_objects()  # draw_rects=True
+        for name, obj in self.objects.items():
+            if "enemy" in name:
+                obj.base_actions()
+                obj.set_labels()
+        # print(self.doors["left"][1][0], self.game.character.character["absolute_coords_rect"][1], self.doors["left"][1][1])
+        if self.doors["down"][0][0] < self.game.character.character["absolute_coords_rect"][0] < self.doors["down"][0][1] and self.game.character.character["absolute_coords_rect"][1] >= self.size_room_layer[1]:
+            print("final_boss_room -> meeting_room")
+            self.game.character.respawn([(self.parent.LAYERS["meeting_room"][0] - UP_WIDTH_DOOR + self.game.character.character["coords"][2]) // 2, self.game.character.character["coords"][3]])
+            self.game.room_change("meeting_room")
 
     def animate_sprite(self):
         pass

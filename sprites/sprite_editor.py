@@ -87,9 +87,8 @@ def set_image_expansion(input_path, output_path, k=None, size=None, type_side="w
     elif k == None and size != None:
         if type(size) == int:
             if type_side == "width":
-                image = image.resize((size, int(image.size[0] // (image.size[1] / size))))
+                image = image.resize((size, int(image.size[1] / (image.size[0] / size))))
             elif type_side == "height":
-                print()
                 image = image.resize((int(image.size[0] // (image.size[1] / size)), size))
             else:
                 raise ValueError("type_side должен быть равен или width, или height")
@@ -129,6 +128,21 @@ def make_floor(input_path, output_path, size, random_flip=("horizontal", "vertic
     res_img.save(output_path)
 
 
+def color_image(input_path, output_path, color=(20, 0, 0)):
+    img = Image.open(input_path)
+    # img = img.convert("L")
+    # img = img.convert("RGBA")
+    all_pxs = img.load()
+    for x in range(img.size[0]):
+        for y in range(img.size[1]):
+            r, g, b, a = all_pxs[x, y]
+            r += color[0]
+            g += color[1]
+            b += color[2]
+            if len(color) >= 4: a += color[3]
+            all_pxs[x, y] = (min(r, 255), min(g, 255), min(b, 255), min(a, 255))
+    img.save(output_path)
+
 ############################## ПРОСТРАНСТВО РЕДАКТОРА ##############################
 # --------------
 # del_border("character/choice1/death/death.png", type_save="save", new_name="crop_death.png")
@@ -139,23 +153,37 @@ def make_floor(input_path, output_path, size, random_flip=("horizontal", "vertic
 #             sprite=(20, 35), grid=(2, 4),
 #             inacurr=[1], sep=())
 
+# Спрайты ударов персонажа --------------
+# sprite_crop(r"character/base_choice/attack/_down attack.png",
+#             type_sprites=["front", "front_2"], name="attack",
+#             sprite=(40, 54), grid=(2, 2),
+#             inacurr=[4, 13, -4, 1], sep=())
+# sprite_crop(r"character/base_choice/attack/_side attack.png",
+#             type_sprites=["side", "side_2"], name="attack",
+#             sprite=(40, 54), grid=(2, 2),
+#             inacurr=[-8, 10, -5, -10], sep=())
+# sprite_crop(r"character/base_choice/attack/_up attack.png",
+#             type_sprites=["back", "back_2"], name="attack",
+#             sprite=(40, 54), grid=(2, 2),
+#             inacurr=[4, 0, -3, -7], sep=())
+
 # --------------
 # set_image_expansion(image_paths=list(map(lambda i: f"comp/gaming_comp_{i}.png", range(1, 10))),
 #                     k=3,
 #                     quality=35)
 
 # --------------
-set_image_expansion(input_path="floor/start_floor_wood_1.png",
-                    output_path="floor/floor_wood_1.png",
-                    k=None,
-                    size=140,
-                    type_side="height",
-                    quality=95)
-
-make_floor(input_path="floor/floor_wood_1.png",
-           output_path="floor/floor_start_room.png",
-           size=[1500, 1500],
-           random_flip=["horizontal"])
+# set_image_expansion(input_path="floor/start_floor_wood_1.png",
+#                     output_path="floor/floor_wood_1.png",
+#                     k=None,
+#                     size=140,
+#                     type_side="height",
+#                     quality=95)
+#
+# make_floor(input_path="floor/floor_wood_1.png",
+#            output_path="floor/floor_start_room.png",
+#            size=[1500, 1500],
+#            random_flip=["horizontal"])
 
 # --------------
 # set_image_expansion(input_path="buttons.png",
@@ -176,3 +204,65 @@ make_floor(input_path="floor/floor_wood_1.png",
 #            output_path="floor/floor_meeting_room.png",
 #            size=[1526, 814],
 #            random_flip=["horizontal"])
+
+# Обрезка спрайтов --------------
+# sprite_crop(r"monster_1/idle/_idle.png",
+#             type_sprites=["front", "side", "delete", "back"], name="idle",
+#             sprite=(40, 54), grid=(4, 4),
+#             inacurr=[3, 0, -4, -7], sep=())
+# sprite_crop(r"monster_1/walk/_walk.png",
+#             type_sprites=["front", "side", "delete", "back"], name="walk",
+#             sprite=(40, 54), grid=(4, 6),
+#             inacurr=[3, 0, -4, -7], sep=())
+# sprite_crop(r"monster_1/attack/_attack.png",
+#             type_sprites=["front", "side", "delete", "back"], name="attack",
+#             sprite=(40, 54), grid=(4, 6),
+#             inacurr=[3, 0, -4, -7], sep=())
+
+# Создание спрайтов, когда перс ударился --------------
+# paths, res_paths = list(map(lambda x1: list(map(lambda x2: f"character/base_choice/idle/idle_{x1}_{x2}.png", range(5))), ["front", "back", "side"])), []
+# for path in paths: res_paths += path
+# for path in res_paths:
+#     dop_path = "_".join(path.split("_")[-2:])
+#     print(dop_path, path)
+#     color_image(input_path=path,
+#                 output_path="character/base_choice/hit/hit_"+dop_path,
+#                 color=(140, -30, -30))
+
+# Создание спрайтов, когда враг ударился --------------
+# paths, res_paths = list(map(lambda x1: list(map(lambda x2: f"monster_1/idle/idle_{x1}_{x2}.png", range(4))), ["front", "back", "side"])), []
+# for path in paths: res_paths += path
+# for path in res_paths:
+#     dop_path = "_".join(path.split("_")[-2:])
+#     print(dop_path, path)
+#     color_image(input_path=path,
+#                 output_path="monster_1/hit/hit_"+dop_path,
+#                 color=(140, -30, -30))
+
+# Улучшение спрайтов растений --------------
+# set_image_expansion(input_path="plant/plant_1.png",
+#                     output_path="plant/plant_1.png",
+#                     k=None,
+#                     size=32,
+#                     type_side="width",
+#                     quality=95)
+# set_image_expansion(input_path="plant/plant_2.png",
+#                     output_path="plant/plant_2.png",
+#                     k=None,
+#                     size=32,
+#                     type_side="width",
+#                     quality=95)
+# set_image_expansion(input_path="plant/plant_3.png",
+#                     output_path="plant/plant_3.png",
+#                     k=None,
+#                     size=32,
+#                     type_side="width",
+#                     quality=95)
+# Пикселизация спрайтов крови --------------
+for i in range(1, 6):
+    set_image_expansion(input_path=f"scary_decor/blood_{i}.png",
+                        output_path=f"scary_decor/blood_{i}.png",
+                        k=None,
+                        size=16,
+                        type_side="width",
+                        quality=95)

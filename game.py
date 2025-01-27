@@ -1,11 +1,14 @@
 # import time
 # import numpy as np
-
 import pygame
+from pygame import PixelArray, Color
 import pygame_widgets
 from collections import deque
 
 from levels import Level1, Object # , Hitbox_Button
+from mini_games.dino import dino_game
+from mini_games.circle import curcle
+from mini_games.dash_hex import dash_hex
 
 
 class Character:
@@ -23,6 +26,7 @@ class Character:
                 (pygame.K_UP, pygame.K_w): lambda: self.set_flag("key_up", 1), # lambda: print("character - back"),
                 (pygame.K_LEFT, pygame.K_a): lambda: self.set_flag("key_left", 1), # lambda: print("character - left"),
                 (pygame.K_RIGHT, pygame.K_d): lambda: self.set_flag("key_right", 1), # lambda: print("character - right")
+                (pygame.K_SPACE, pygame.K_RETURN): lambda: self.set_flag("key_space", 1),
                 (pygame.K_RCTRL, pygame.K_LCTRL): lambda: self.set_move("sneak"),
                 (pygame.K_RSHIFT, pygame.K_LSHIFT): lambda: self.set_move("run")
             },
@@ -31,21 +35,139 @@ class Character:
                 (pygame.K_UP, pygame.K_w): lambda: self.set_flag("key_up", 0),
                 (pygame.K_LEFT, pygame.K_a): lambda: self.set_flag("key_left", 0),
                 (pygame.K_RIGHT, pygame.K_d): lambda: self.set_flag("key_right", 0),
+                # (pygame.K_SPACE, pygame.K_RETURN): lambda: self.set_flag("key_space", 0),
                 (pygame.K_RCTRL, pygame.K_LCTRL, pygame.K_RSHIFT, pygame.K_LSHIFT): lambda: self.set_move("walk")
             }
         }
         self.commands = self.parent.format_commands(self.commands)
         #print("CHARACTER: ", self.commands)
 
+    def init_shell(self):
+        part_file_path = r"sprites/character/base_choice" + '/'
+       # print(part_file_path)
+        self.character = {
+            "type_cond": {
+                # !!! Написать позже отдельную функцию загрузку спрайтов под нужны направления (dir) и cond
+                "walk": {
+                    "front": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_front_{x}.png").convert_alpha(), range(6))),
+                    "back": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_back_{x}.png").convert_alpha(), range(6))),
+                    "left": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), range(6))),
+                    "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
+                },
+                "run": {
+                    "front": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_front_{x}.png").convert_alpha(), range(6))),
+                    "back": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_back_{x}.png").convert_alpha(), range(6))),
+                    "left": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), range(6))),
+                    "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
+                },
+                "sneak": {
+                    "front": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_front_{x}.png").convert_alpha(), range(6))),
+                    "back": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_back_{x}.png").convert_alpha(), range(6))),
+                    "left": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), range(6))),
+                    "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
+
+                },
+                "idle": {
+                    "front": list(map(lambda x: pygame.image.load(part_file_path+"idle/"+f"idle_front_{x}.png").convert_alpha(), range(5))),
+                    "back": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_back_{x}.png").convert_alpha(), range(5))),
+                    "left": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), range(5))),
+                    "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path+"idle/"+f"idle_side_{x}.png").convert_alpha(), 1, 0), range(5)))
+                },
+                "hit": {
+                    "front": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_front_{x}.png").convert_alpha(), range(5))),
+                    "back": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_back_{x}.png").convert_alpha(), range(5))),
+                    "left": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_side_{x}.png").convert_alpha(), range(5))),
+                    "right": list(map(lambda x: pygame.transform.flip( pygame.image.load(part_file_path + "hit/" + f"hit_side_{x}.png").convert_alpha(), 1, 0), range(5)))
+                },
+                "attack": {
+                    "front": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_front_{x}.png").convert_alpha(), range(3))),
+                    "back": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_back_{x}.png").convert_alpha(), range(3))),
+                    "left": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), range(3))),
+                    "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), 1, 0), range(3)))
+                }
+            },
+            "flags": {
+                "key_down": 0,  # front
+                "key_up": 0,  # back
+                "key_left": 0,  # left
+                "key_right": 0,  # right
+                "key_space": 0  # right
+            },
+            "dir" : "front",
+            "cond": "idle", "old_cond": "idle", "dop_old_cond": "walk",
+            "number_sprite": 0,
+            "freq_sprite": 20,
+            "counter_sprite": 0,
+            "speed": {"idle": 0, "sneak": 2, "walk": 4, "run": 5, "attack": 0, "hit": 0},
+            "speed_TO_freq": {"idle": 20, "sneak": 8, "walk": 7, "run": 4, "attack": 8, "hit": 0},
+            "val_speed": 4,
+            "coords": [self.parent.display_w // 2, self.parent.display_h // 2+100, 100, 140], # 50, 70
+            # "center_coords": [0, 0],
+            "coords_rect": [7, 0, 82, 20], "absolute_coords_rect": [0, 0], "coords_display": [0, 0],
+            "energy": [70, 0, 100, 1], # текущие, мин, макс, шаг
+            "energy_counter": [0, 10, 15], # текущие, макс для уменьшения, макс для увеличения
+            "hp": [100, 0, 100, 1],  # текущие, мин, макс, шаг
+            "money": [0, 0], # текущие, мин
+            "time_hit": 0, "period_hit": 4,
+            "time_attack": 0, "period_attack": None,
+            "delta_coords_attack": [0, -20],
+            "damage": 10,
+        }
+        self.character["period_attack"] = self.character["speed_TO_freq"]["attack"] + 1
+
+        self.character["sprite"] = self.character["type_cond"][self.character["cond"]][self.character["dir"]][self.character["number_sprite"]]
+        self.character["rect"] = self.character["sprite"].get_rect()
+
+        for i in [2, 3]:
+            if self.character["coords_rect"][i] == 0:
+                self.character["coords_rect"][i] = self.character["coords"][i]
+            elif self.character["coords_rect"][i] < 0:
+                self.character["coords_rect"][i] = self.character["coords"][i] - abs(self.character["coords_rect"][i])
+        #print(self.character)
+        self.character["coords"][0] -= self.character["coords"][2] / 2
+        self.character["coords"][1] -= self.character["coords"][3] / 2
+
+        for k in self.game.flags_dinamic.keys():
+            self.game.flags_dinamic[k] = 0
+
+        delta_size = {
+            "attack": {
+                "right": (40, 10),
+                "left": (40, 10),
+                "front": (40, 30),
+                "back": (40, 30),
+            }
+        }
+        for cond in self.character["type_cond"].keys():
+            if cond not in delta_size.keys():
+                delta_size[cond] = {}
+            for dir in self.character["type_cond"][cond].keys():
+                if dir not in delta_size[cond].keys():
+                    delta_size[cond][dir] = (0, 0)
+        # print("delta_size:", delta_size)
+        for name_cond in self.character["type_cond"].keys():
+            for name_dir, dir in self.character["type_cond"][name_cond].items():
+                self.character["type_cond"][name_cond][name_dir] = list(map(lambda x: pygame.transform.scale(x, (self.character["coords"][2] + delta_size[name_cond][name_dir][0], self.character["coords"][3] + delta_size[name_cond][name_dir][1])), self.character["type_cond"][name_cond][name_dir]))
+        self.set_sprite()
+
     def set_flag(self, key, val):
         self.character["flags"][key] = val
-        if self.flag_walk == 1:
-            self.set_move("walk")
-            self.flag_walk = 0
+        if key == "key_space" and self.character["cond"] != "attack":
+            self.set_move("attack")
+        elif key in ("key_right", "key_left", "key_down", "key_up"):
+            self.set_move(self.character["dop_old_cond"])
+        else:
+            if self.flag_walk == 1:
+                self.set_move(self.character["old_cond"])
+                self.flag_walk = 0
 
     def set_move(self, cond):
-        if list(self.character["flags"].values()) != [0, 0, 0, 0] or cond == "idle":
+        if list(self.character["flags"].values()) != [0] * len(self.character["flags"].values()) or cond == "idle":
             self.character["val_speed"] = self.character["speed"][cond]
+            if cond == "attack": self.character["old_cond"] = self.character["cond"]
+            if cond == "walk": self.character["dop_old_cond"] = "walk"
+            elif cond == "run": self.character["dop_old_cond"] = "run"
+            elif cond == "sneak": self.character["dop_old_cond"] = "sneak"
             self.character["cond"] = cond
             # print(self.character["cond"])
             self.character["freq_sprite"] = self.character["speed_TO_freq"][cond]
@@ -68,7 +190,6 @@ class Character:
 
     def set_sprite(self):
         self.character["sprite"] = self.character["type_cond"][self.character["cond"]][self.character["dir"]][self.character["number_sprite"]]
-        self.character["sprite"] = pygame.transform.scale(self.character["sprite"],(self.character["coords"][2], self.character["coords"][3]))
         self.character["rect"].x = self.character["coords"][0] + self.character["coords_rect"][0]
         self.character["rect"].y = self.character["coords"][1] + self.character["coords"][3] - self.character["coords_rect"][3] - self.character["coords_rect"][1]
         self.character["rect"].w = self.character["coords_rect"][2]
@@ -78,11 +199,56 @@ class Character:
             self.character["coords_display"] = self.character["absolute_coords_rect"]
         # self.character["center_coords"] = (self.character["coords"][0] + self.character["coords"][2]//2, self.character["coords"][1] + self.character["coords"][3]//2)
 
-    def update(self, objects, draw_rects):
-        # !!! Если нужно будет, перепишем алгос коллизии в отдельный метод
+    def update(self, draw_rects):
+        dir_collides = self.game.collide(base_object=self.character,
+                                         objects=list(self.game.room_now.objects.values())+list(self.game.room_now.dop_objects_up.values())+list(self.game.room_now.dop_objects_down.values()),
+                                         draw_rects=draw_rects)
 
+        if self.character["cond"] == "hit":
+            if self.character["time_hit"] < self.character["period_hit"]:
+                self.character["time_hit"] += 1
+            else:
+                self.set_move(self.character["dop_old_cond"])
+                self.character["time_hit"] = 0
+        elif self.character["cond"] == "attack":
+            if self.character["time_attack"] == 0:
+                collide_enemys = self.game.collide(base_object=self.character,
+                                  objects=dict(list(filter(lambda x:  hasattr(x[1], 'category') and "enemy" in x[1].category, self.game.room_now.objects.items()))),
+                                  type_return="objcts",
+                                  type_collide="rect",
+                                  draw_rects=False)
+                list(map(lambda name_enemy: name_enemy[1].hit(self.character["damage"], name_enemy[0]), collide_enemys.items()))
+                self.character["coords"][0] += self.character["delta_coords_attack"][0]
+                self.character["coords"][1] += self.character["delta_coords_attack"][1]
+            if self.character["time_attack"] < self.character["period_attack"]:
+                self.character["time_attack"] += 1
+            else:
+                self.set_move(self.character["old_cond"])
+
+                self.character["coords"][0] -= self.character["delta_coords_attack"][0]
+                self.character["coords"][1] -= self.character["delta_coords_attack"][1]
+                self.character["time_attack"] = 0
+                self.character["flags"]["key_space"] = 0
+                if self.character["energy"][0] - 3 >= self.character["energy"][1]:
+                    self.character["energy"][0] -= 3
+                self.set_sprite()
+        else:
+            self.move(dir_collides)
+        # print(self.character["time_attack"], self.character["dir"], self.character["cond"])
+
+        self.counting()
+
+        self.set_sprite()
+        self.draw()  # !!! Для оптиммизации можно добавить основной флаг, который будет отслеживать изменился ли персонаж
+
+        if self.character["cond"] in ("walk", "run", "sneak", "attack"):
+            self.game.set_sound(self.character["cond"])
+        else:
+            self.game.set_sound(None)
+
+
+    def move(self, dir_collides):
         # print(set(dir_collides))
-        dir_collides = self.game.collide(base_object=self.character, objects=objects, draw_rects=draw_rects)
         flag_change = 0
         flag_changes = {"down": 1, "up": 1, "right": 1, "left": 1}
         if "down" not in dir_collides and self.character["flags"]["key_down"] and flag_changes["down"] == 1:
@@ -141,9 +307,8 @@ class Character:
             self.set_move("idle")
             self.flag_idle = 0
             self.flag_walk = 1
-            # print(self.character["flags"], self.character["cond"])
-        # print(flag_changes)
 
+    def counting(self):
         if self.character["counter_sprite"] >= self.character["freq_sprite"]:
             if self.character["number_sprite"] >= len(self.character["type_cond"][self.character["cond"]][self.character["dir"]])-1:
                 self.character["number_sprite"] = 0
@@ -172,77 +337,6 @@ class Character:
                 self.set_move("walk")
             # print(self.character["energy"][0],  self.character["energy_counter"][0])
 
-        self.set_sprite()
-        self.draw()  # !!! Для оптиммизации можно добавить основной флаг, который будет отслеживать изменился ли персонаж
-
-
-    def init_shell(self):
-        part_file_path = r"sprites/character/base_choice" + '/'
-       # print(part_file_path)
-        self.character = {
-            "type_cond": {
-                # !!! Написать позже отдельную функцию загрузку спрайтов под нужны направления (dir) и cond
-                "walk": {
-                    "front": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_front_{x}.png").convert_alpha(), range(6))),
-                    "back": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_back_{x}.png").convert_alpha(), range(6))),
-                    "left": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), range(6))),
-                    "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
-                },
-                "run": {
-                    "front": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_front_{x}.png").convert_alpha(), range(6))),
-                    "back": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_back_{x}.png").convert_alpha(), range(6))),
-                    "left": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), range(6))),
-                    "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
-                },
-                "sneak": {
-                    "front": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_front_{x}.png").convert_alpha(), range(6))),
-                    "back": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_back_{x}.png").convert_alpha(), range(6))),
-                    "left": list(map(lambda x: pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), range(6))),
-                    "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path+"walk/"+f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
-
-                },
-                "idle": {
-                    "front": list(map(lambda x: pygame.image.load(part_file_path+"idle/"+f"idle_front_{x}.png").convert_alpha(), range(5))),
-                    "back": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_back_{x}.png").convert_alpha(), range(5))),
-                    "left": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), range(5))),
-                    "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path+"idle/"+f"idle_side_{x}.png").convert_alpha(), 1, 0), range(5)))
-                }
-            },
-            "flags": {
-                "key_down": 0,  # front
-                "key_up": 0,  # back
-                "key_left": 0,  # left
-                "key_right": 0  # right
-            },
-            "dir" : "front",
-            "cond": "idle",
-            "number_sprite": 0,
-            "freq_sprite": 20,
-            "counter_sprite": 0,
-            "speed": {"idle": 0, "sneak": 2, "walk": 4, "run": 6},
-            "speed_TO_freq": {"idle": 20, "sneak": 8, "walk": 7, "run": 4},
-            "val_speed": 4,
-            "coords": [self.parent.display_w // 2, self.parent.display_h // 2+100, 100, 140], # 50, 70
-            # "center_coords": [0, 0],
-            "coords_rect": [7, 0, 82, 20], "absolute_coords_rect": [0, 0], "coords_display": [0, 0],
-            "energy": [70, 20, 100, 1], # текущие, мин, макс, шаг
-            "energy_counter": [0, 8, 22], # текущие, макс для уменьшения, макс для увеличения
-            "hp": [100, 0, 100, 1],  # текущие, мин, макс, шаг
-        }
-        self.character["sprite"] = self.character["type_cond"][self.character["cond"]][self.character["dir"]][self.character["number_sprite"]]
-        self.character["rect"] = self.character["sprite"].get_rect()
-        for i in [2, 3]:
-            if self.character["coords_rect"][i] == 0:
-                self.character["coords_rect"][i] = self.character["coords"][i]
-            elif self.character["coords_rect"][i] < 0:
-                self.character["coords_rect"][i] = self.character["coords"][i] - abs(self.character["coords_rect"][i])
-        #print(self.character)
-        self.character["coords"][0] -= self.character["coords"][2] / 2
-        self.character["coords"][1] -= self.character["coords"][3] / 2
-        for k in self.game.flags_dinamic.keys():
-            self.game.flags_dinamic[k] = 0
-        self.set_sprite()
-
     def draw(self):
         # print(self.character["coords"])
         # self.character["rect"] = pygame.Rect(self.character["coords"])
@@ -256,7 +350,6 @@ class Character:
         #     self.character["coords"][0] = 0
         # if self.character["coords"][1] < 0:
         #     self.character["coords"][1] = 0
-
         self.game.game_layer.blit(self.character["sprite"], self.character["coords"])
         # pygame.draw.rect(self.game.game_layer, self.character["type_cond"][self.character["cond"]][self.character["dir"]], self.character["rect"])
 
@@ -341,13 +434,22 @@ class Game:
         self.base_style = base_style
         self.parent = parent
 
-        # ------ Слои для Hitbox_Button
-        self.layer_buttons_1 = pygame.Surface((self.parent.display_w, self.parent.display_h), pygame.SRCALPHA, 32)
-        self.layer_buttons_1 = self.layer_buttons_1.convert_alpha()
-        self.layer_buttons_2 = pygame.Surface((self.parent.display_w, self.parent.display_h), pygame.SRCALPHA, 32)
-        self.layer_buttons_2 = self.layer_buttons_2.convert_alpha()
-        self.old_data_layers = []
-        self.data_layers = []
+        # ------ Живые объекты
+        self.coords_enemy = {}
+        self.delete_enemys = {}
+        self.hp_enemys = {}
+
+        # ------ Звуки
+        self.sounds = {
+            "walk": 'sounds/walk.mp3',
+            "run": 'sounds/run.mp3',
+            "sneak": 'sounds/sneak.mp3',
+            "attack": "sounds/attack.mp3",
+        }
+        # for k, v in self.sounds.items():
+        #     self.sounds[k] = pygame.mixer.music.load(v)
+        self.flag_sound = 1
+        self.curr_sound = None
 
         # ------ Уровень
         self.level1 = Level1(self.parent, self, self.base_style)
@@ -358,7 +460,7 @@ class Game:
         self.room_now = self.list_rooms[self.type_room](self.parent, self, self.base_style)
         # ------ Слой комнаты
         self.game_layer = self.room_now.room_layer
-        self.start_spawn = [self.room_now.size_room_layer[0] // 4 + 200, self.room_now.size_room_layer[1] - 100]
+        self.start_spawn = [self.room_now.size_room_layer[0] // 4 + 200, self.room_now.size_room_layer[1] - 100] # [500, self.room_now.size_room_layer[1] // 2]
         self.coords_game_layer = [0, 0, self.room_now.size_room_layer[0], self.room_now.size_room_layer[1]]
         self.coords_game_layer_old = self.coords_game_layer.copy()
         # ------ Динамическая камера
@@ -385,11 +487,7 @@ class Game:
         self.room_now.enter_rooms()
 
         # ------ Карта
-        self.map = Map(self.parent, self, self.base_style)
-        for name, obj in self.room_now.objects.items():
-            if "enemy" not in name: obj.set_object_map(name)
-            else: obj.init_start()
-        self.map.init_graph()
+        self.init_map()
         # print("\nMAP:")
         # print(*self.map.map, sep="\n")
 
@@ -402,6 +500,7 @@ class Game:
         self.character = Character(self.parent, self, self.base_style)
         self.character.respawn(self.start_spawn)
         self.start2_coords_dinamic_zone = self.coords_dinamic_zone.copy()
+
 
         # ------ Команды и горячие клавиши
         self.commands = {
@@ -417,12 +516,37 @@ class Game:
         print("GAME: ", *self.commands.items(), sep="\n")
         self.list_comands = [self.commands, self.character.commands]
 
+        # ------ Мини игры
+        self.mini_games = {
+            'start_room': {
+                'dino': lambda: dino_game(self.parent.display),
+                'hyper_dash': lambda: curcle(self.parent.display),
+                'dash_hex': lambda: dash_hex(self.parent.display),
+            },
+        }
+        self.flag_mini_games = False
+
         # ------ Надписи и данные о игре, находящиеся сверху слева
         self.labels = {}
         self.init_labels()
         # ------ Кнопки на экране
         self.buttons = []
         self.init_button_menu()
+
+    def init_map(self):
+        self.map = Map(self.parent, self, self.base_style)
+        for name, obj in self.room_now.objects.items():
+            if "enemy" not in name: # Статический объект
+                obj.set_object_map(name)
+            else:
+                if name in self.coords_enemy.keys(): # Динамический объект (объект, который перемещается)
+                    self.room_now.objects[name].data["coords"][0] = self.coords_enemy[name][0]
+                    self.room_now.objects[name].data["coords"][1] = self.coords_enemy[name][1]
+                    self.room_now.objects[name].data["hp"] = self.hp_enemys[name]
+                obj.init_start()
+                if name not in self.coords_enemy.keys():
+                    obj.check_random_spawn()
+        self.map.init_graph()
 
     def init_labels(self):
         self.labels = {}
@@ -461,6 +585,17 @@ class Game:
                                                        color=self.base_style["colors"]["light"])
             self.labels["energy"] = label_energy
 
+        label_money = {
+            "coords": (5, 90),
+            "text": f"монеты: {self.character.character["money"][0]}",
+            "font": pygame.font.Font(self.base_style["font_path"], 30)
+        }
+        label_money["label"] = self.parent.label_text(coords=label_money["coords"],
+                                                       text=label_money["text"],
+                                                       font=label_money["font"],
+                                                       color=self.base_style["colors"]["light"])
+        self.labels["money"] = label_money
+
     def set_label(self, key, text):
         self.labels[key]["text"] = text
         self.labels[key]["label"] = self.parent.label_text(coords=self.labels[key]["coords"],
@@ -489,9 +624,44 @@ class Game:
                                                               func=button_ToMenu["func"])
         self.buttons.append(button_ToMenu)
 
+    def set_sound(self, sound):
+        if self.curr_sound != sound:
+            if sound == None:
+                pygame.mixer.music.pause()
+                # print("INTO")
+                # self.flag_sound = 1
+            else: # elif self.flag_sound:
+                pygame.mixer.music.load(self.sounds[sound])
+                print(self.sounds[sound])
+                pygame.mixer.music.play(-1)
+                pygame.mixer.music.unpause()
+                # self.flag_sound = 0
+        self.curr_sound = sound
+
+    def set_sound_player(self, type_player):
+        if type_player == "pause": pygame.mixer.music.pause()
+        elif type_player == "play": pygame.mixer.music.unpause()
+
     def room_change(self, type_room):
         self.type_room = type_room
         self.flag_change_room = 1
+
+    def change_game(self, name_game):
+        delta_energy = 3
+        if not self.flag_mini_games:
+            if self.character.character["energy"][0] - delta_energy < 0:
+                self.set_message(f"Не хватает энергии чтобы поиграть в игры, нужно ещё {delta_energy + 1} ")
+            elif len(list(filter(lambda x: x == False, self.delete_enemys.values()))) > 0:
+                self.set_message(f"Чтобы поиграть в игру, нужно сначала убить всех монстров в этой комнате")
+            else:
+                self.flag_mini_games = True
+                out_many = self.mini_games[self.type_room][name_game]()
+                self.character.character["money"][0] += out_many
+                self.set_label("money", f"монеты: {self.character.character["money"][0]}")
+                self.character.character["energy"][0] -= delta_energy
+                for obj in self.room_now.objects.values():
+                    obj.data["func"] = 0
+                self.flag_mini_games = False
 
     def draw(self):
         # ------ Иницилизация карты, пола
@@ -536,9 +706,18 @@ class Game:
         # ------ Отрисовка всех объектов
         if self.flag_change_room:
             self.flag_change_room = 0
+            for name, obj in self.room_now.objects.items():
+                if "enemy" in name and self.delete_enemys[name] == False:
+                    self.coords_enemy[name] = [obj.data["coords"][0], obj.data["coords"][1]]
+                    self.hp_enemys[name] = obj.data["hp"]
+                # if "enemy" in name and name not in self.coords_enemy.keys():
+                #     self.coords_enemy[name] = [obj.data["coords"][0], obj.data["coords"][1]]
             self.room_now.delete_all()
             self.room_now = self.list_rooms[self.type_room](self.parent, self, self.base_style)
             self.room_now.enter_rooms()
+            self.init_map()
+            # print("enemys", list(filter(lambda x: "enemy" in x, self.room_now.objects.keys())))
+            # print("coords_enemy", list(self.coords_enemy.keys()))
         # print(self.coords_game_layer[0] - self.coords_game_layer_old[0], self.coords_game_layer[1] - self.coords_game_layer_old[1])
         self.room_now.draw()
 
@@ -546,7 +725,7 @@ class Game:
         # if self.flag_message_energy == 1: self.set_message()
         for i in self.labels.values(): self.parent.display.blit(i["label"], i["coords"])
         self.set_label("fps", f"fps: {self.parent.clock.get_fps():2.0f} / {self.parent.FPS}")
-        # self.set_label("hp", f"hp: {self.character.character["hp"][0]} / {self.character.character["hp"][2]}")
+        self.set_label("hp", f"hp: {self.character.character["hp"][0]} / {self.character.character["hp"][2]}")
         if self.parent.settings_var["character_energy"] == 1:
             self.set_label("energy", f"энергия: {self.character.character["energy"][0]} / {self.character.character["energy"][2]}")
 
@@ -563,14 +742,19 @@ class Game:
         # pygame_widgets.mouse.Mouse.updateMouseState()
         # self.old_coords_cursor = self.coords_cursor
 
-        # ------ Вывод данных в консоль
-        # print("MOUSE", pygame.mouse.get_pos())
-        # print(pygame.mouse._get_cursor()) # pygame.mouse.get_pos()
-
         # ------ Карта
         # self.map.draw()
 
-        self.coords_game_layer_old = self.coords_game_layer.copy()
+        # ------ Условия выхода
+        if self.character.character["hp"][0] <= 0:
+            self.parent.display_change("final", dop_type="fail")
+
+        # ------ Вывод данных в консоль
+        # print("MOUSE", pygame.mouse.get_pos())
+        # print(pygame.mouse._get_cursor()) # pygame.mouse.get_pos()
+        # print(list(self.delete_enemys.values()))
+
+        # self.coords_game_layer_old = self.coords_game_layer.copy()
 
     def set_rect(self, layer, coords, color_base, thickness_border=None, color_border=None):
         if thickness_border == None: thickness_border = 5
@@ -618,11 +802,11 @@ class Game:
         #                       self.coords_dinamic_zone[3] - self.coords_dinamic_zone[1]),
         #               color=(50, 50, 50, 100), layer=self.game_layer)
 
-    def set_message(self, text, delay=1500):
+    def set_message(self, text, delay=2500):
         label = {
             "coords": (100, 100),
             "text": text,
-            "font": pygame.font.Font(self.base_style["font_path"], 50)  # self.base_style["dop_font"]
+            "font": pygame.font.Font(self.base_style["font_path"], 40)  # self.base_style["dop_font"]
         }
         label["label"] = self.parent.label_text(coords=label["coords"],
                                                 text=label["text"],
@@ -635,39 +819,35 @@ class Game:
                        label["coords"][1]-bortic,
                        label["label"].get_width()+bortic,
                        label["label"].get_height()+bortic)
-        pygame.draw.rect(self.parent.display, (0, 0, 0), coords_rect) # self.game_layer
+        pygame.draw.rect(self.parent.display, self.base_style["colors"]["base2"], coords_rect) # self.game_layer
         self.parent.display.blit(label["label"], label["coords"]) # self.game_layer
         pygame.display.flip()
         pygame.time.wait(delay)
 
-    def render_objects(self, objects, buttons=None, dop_objects=None, draw_rects=False): # dop_buttons=None,
-        if dop_objects is not None: all_objects = objects + dop_objects
-        else: all_objects = objects
+    def hp_character_up(self, price, val, type_val):
+        if self.character.character["money"][0] - price < 0: self.set_message(f"Не хватает денег, для {val} {type_val} нужно {price} монет ")
+        elif self.character.character[type_val][0] + val > self.character.character[type_val][2]: self.set_message(f"Всё hp {type_val} восстановлено (макс. {self.character.character[type_val][2]} {type_val}) ")
+        else:
+            self.character.character["money"][0] -= price
+            self.character.character[type_val][0] += val
+            self.set_label("money", f"монеты: {self.character.character["money"][0]}")
 
+    def render_objects(self, draw_rects=False): # dop_buttons=None,
+        objects = list(self.room_now.objects.values())
+        dop_objects_down = list(self.room_now.dop_objects_down.values())
+        dop_objects_up = list(self.room_now.dop_objects_up.values())
         # Распределение по слоям
+
         for obj in objects:
             if self.character.character["rect"].centery > obj.data["rect"].centery:
                 obj.data["type_render"] = 1
             else:
                 obj.data["type_render"] = 2
-        if buttons is not None:
-            for i in range(len(buttons)):
-                # buttons[i].delete()
-                # if i == 1: print(self.character.character["coords"][1], buttons[i].data["coords"][1]-buttons[i].data["coords"][3])
-                if self.character.character["coords"][1] > (buttons[i].data["coords"][1]-buttons[i].data["coords"][3]//2):
-                    buttons[i].create(self.layer_buttons_1)
-                    self.data_layers[i] = 1
-                else:
-                    buttons[i].create(self.layer_buttons_2)
-                    self.data_layers[i] = 2
-        # print(self.data_layers)
 
         # Отрисовка
-        if dop_objects is not None:
-            for obj in sorted(list(filter(lambda obj: obj.data["type_render"] == 1, dop_objects)), key=lambda obj: (obj.data["rect"].y, obj.data["rect"].h)):
+        if dop_objects_up is not None:
+            for obj in dop_objects_up: # sorted(dop_objects_up, key=lambda obj: (obj.data["rect"].y, obj.data["rect"].h)):
                 obj.draw()
-        if buttons is not None:
-            self.game_layer.blit(self.layer_buttons_1, (0, 0))
         # if dop_buttons is not None:
         #     # c = 85
         #     for dop_but in sorted(list(filter(lambda dop_but: self.character.character["coords"][1] > dop_but.data["coords"][1], dop_buttons)), key=lambda dop_but: (dop_but.data["coords"][1], dop_but.data["coords"][3])):
@@ -681,36 +861,24 @@ class Game:
         #         self.game_layer.blit(layer, (dop_but.data["coords"][0], dop_but.data["coords"][1]))
         #         # layer.fill(pygame.Color(0, 0, 0, 0))
         #     print()
-        for obj in sorted(list(filter(lambda obj: obj.data["type_render"] == 1, objects)), key=lambda obj: (obj.data["rect"].y, obj.data["rect"].h)):
+        for obj in sorted(list(filter(lambda obj: obj.data["type_render"] == 1, objects)), key=lambda obj: obj.data["rect"].y + obj.data["rect"].h):
             obj.draw()
-        self.character.update(all_objects, draw_rects)
-        if buttons is not None:
-            self.game_layer.blit(self.layer_buttons_2, (0, 0))
+        self.character.update(draw_rects)
         # if dop_buttons is not None:
         #     for dop_but in sorted(list(filter(lambda dop_but: self.character.character["coords"][1] <= dop_but.data["coords"][1], dop_buttons)), key=lambda dop_but: (dop_but.data["coords"][1], dop_but.data["coords"][3])):
         #         layer = pygame.Surface((dop_but.data["coords"][2], dop_but.data["coords"][3]), pygame.SRCALPHA, 32).convert_alpha()
         #         dop_but.create(layer)
         #         self.game_layer.blit(layer, (dop_but.data["coords"][0], dop_but.data["coords"][1]))
         #         layer.fill(pygame.Color(0, 0, 0, 0))
-        for obj in sorted(list(filter(lambda obj: obj.data["type_render"] == 2, objects)), key=lambda obj: (obj.data["rect"].y, obj.data["rect"].h)):
+        for obj in sorted(list(filter(lambda obj: obj.data["type_render"] == 2, objects)), key=lambda obj: obj.data["rect"].y + obj.data["rect"].h):
             obj.draw()
         # print(self.data_layers, self.old_data_layers)
+        if dop_objects_down is not None:
+            for obj in dop_objects_down: # sorted(dop_objects_down, key=lambda obj: (obj.data["rect"].y, obj.data["rect"].h)):
+                obj.draw()
         if draw_rects:
-            for obj in objects + dop_objects:
+            for obj in objects:
                 pygame.draw.rect(self.game_layer, (255, 255, 255), obj.data["rect"])
-
-        # Нажатие на объект
-        for obj in (objects + dop_objects):
-            obj.check_click()
-
-        # self.layer_buttons_1.fill(pygame.Color(0, 0, 0, 0))
-        # self.layer_buttons_2.fill(pygame.Color(0, 0, 0, 0))
-        if buttons is not None:
-            if self.data_layers != self.old_data_layers:
-                # print("INTO")
-                self.layer_buttons_1.fill(pygame.Color(0, 0, 0, 0))
-                self.layer_buttons_2.fill(pygame.Color(0, 0, 0, 0))
-        self.old_data_layers = self.data_layers.copy()
 
     def draw_walls(self, color_left, color_up, color_right, thinkess, height, width_door, down="wall"):
         # down="wall" - только стена
@@ -766,27 +934,47 @@ class Game:
         else:
             return walls, coords_passage
 
-    def collide(self, base_object, objects, draw_rects):
-        if draw_rects: pygame.draw.rect(self.game_layer, (255, 0, 0), base_object["rect"])
+    def collide(self, base_object, objects, draw_rects, type_collide="rect", type_return="dirs"):
+        if type(objects) == dict:
+            names_objects = list(objects.keys())
+            objects = list(objects.values())
         dir_collides = []
+        if type_return == "objcts": collide_objcts = {}
+
+        if type_collide == "rect":
+            base_rect = base_object["rect"]
+        elif type_collide == "sprite":
+            base_rect = base_object["sprite"].get_rect()
+            base_rect.x = base_object["coords"][0]
+            base_rect.y = base_object["coords"][1]
+        else:
+            base_rect = base_object["rect"]
+        if draw_rects: pygame.draw.rect(self.game_layer, (255, 0, 0), base_rect)
+
+        i = 0
         for obj in objects:
-            if base_object["rect"].colliderect(obj.data["rect"]):
+            if base_rect.colliderect(obj.data["rect"]):
                 obj_rect = obj.data["rect"]
-                collision_area = base_object["rect"].clip(obj_rect)
+                collision_area = base_rect.clip(obj_rect)
+                if type_return == "objcts": collide_objcts[names_objects[i]] = obj
                 if collision_area.width > collision_area.height:
-                    if base_object["rect"].centery < obj_rect.centery:
+                    if base_rect.centery < obj_rect.centery:
                         dir_collides.append("down")
                     else:
                         dir_collides.append("up")
                 else:
-                    if base_object["rect"].centerx < obj_rect.centerx:
+                    if base_rect.centerx < obj_rect.centerx:
                         dir_collides.append("right")
                     else:
                         dir_collides.append("left")
+                i += 1
 
         if dir_collides == []: dir_collides = [None]
         dir_collides = list(set(dir_collides))
-        return dir_collides
+        if type_return == "dirs":
+            return dir_collides
+        elif type_return == "objcts":
+            return collide_objcts
 
     def animate_sprite(self, for_data, reverse=False):
         for_data[0] += for_data[1]
@@ -799,12 +987,28 @@ class Game:
                 for_data[0] = 0
         return for_data
 
+    # def change_color_sprite(self, sprite, color="red"):
+    #     # Get the pixels
+    #     pixels = PixelArray(sprite)
+    #     # Iterate over every pixel
+    #     for x in range(sprite.get_width()):
+    #         for y in range(sprite.get_height()):
+    #             rgb = sprite.unmap_rgb(pixels[x][y])
+    #             color = Color(*rgb)
+    #             # h, s, l, a = color.hsla
+    #             # color.hsla = (int(h) + 120) % 360, int(s), int(l), int(a)
+    #             color.rgb = color.
+    #             if color == "red":
+    #                 color.rgb =
+    #             pixels[x][y] = color
+    #     del pixels
 
-    # ==== BFS
+
+        # ==== BFS
     def bfs(self, start, goal, graph):
-        queue = deque([start]) # starts
-        visited = {start: None}
-        # if start in starts:
+        queue = deque([start])
+        visited = {start: None} # {}
+        # for start in starts:
         #     visited[start] = None
 
         while queue:
@@ -838,3 +1042,5 @@ class Game:
     def delete_all(self):
         # print("GAME ", *list(map(lambda x: x["text"] if "text" in x.keys() else x["texts"], self.buttons)), sep=" ")
         for j in range(len(self.buttons)): del self.buttons[0]
+        # self.parent.type_music = 1
+        self.parent.set_music()
