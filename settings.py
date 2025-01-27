@@ -214,6 +214,45 @@ class Settings:
         self.buttons.append(self.button_format_screen)
         height_base += label_color["label"].get_height()
         # =-=-=-
+        # =-=-=- Строка
+        # ------ Надпись
+        height_base += SPACES["point"]
+        label_difficulty = {
+            "coords": [INDENTS[0], height_base],
+            "text": "сложность",
+            "font": pygame.font.Font(self.base_style["font_path"], SIZE_LABEL)
+        }
+        label_difficulty["label"] = self.parent.label_text(coords=label_difficulty["coords"],
+                                                              text=label_difficulty["text"],
+                                                              font=label_difficulty["font"])
+        self.labels.append(label_difficulty)
+        # ------ Кнопка
+        delta_width = 50
+        self.button_difficulty = {
+            "font": pygame.font.Font(self.base_style["font_path"], 30),
+            "coords": [self.parent.display_w - INDENTS[1] - button_w - delta_width, height_base, button_w + delta_width,
+                       button_h],
+            "text": "сложная",
+            "color": {
+                "inactive": self.base_style["colors"]["base1"],
+                "hover": self.base_style["colors"]["base2"],
+                "pressed": self.base_style["colors"]["light"],
+                "text": self.base_style["colors"]["light"]
+            },
+            "func": lambda: self.parent.change_difficulty()
+        }
+        if self.parent.settings_var["difficulty"] == 0:
+            self.button_difficulty["text"] = "лёгкая"
+        elif self.parent.settings_var["difficulty"] == 1:
+            self.button_difficulty["text"] = "сложная"
+        self.button_difficulty["button"] = self.parent.button(coords=self.button_difficulty["coords"],
+                                                                 text=self.button_difficulty["text"],
+                                                                 color=self.button_difficulty["color"],
+                                                                 font=self.button_difficulty["font"],
+                                                                 func=self.button_difficulty["func"])
+        self.buttons.append(self.button_difficulty)
+        height_base += label_color["label"].get_height()
+        # =-=-=-
         # ------ Линия
         height_base += SPACES["line"]
         line_horizontal_1 = {
@@ -357,6 +396,45 @@ class Settings:
         self.buttons.append(self.button_character_energy)
         height_base += label_character_energy["label"].get_height()
         # =-=-=-
+        # =-=-=- Строка
+        # ------ Надпись
+        height_base += SPACES["point"]
+        label_draw_map = {
+            "coords": [INDENTS[0], height_base],
+            "text": "отрисовка карты путей к персонажу",
+            "font": pygame.font.Font(self.base_style["font_path"], SIZE_LABEL)
+        }
+        label_draw_map["label"] = self.parent.label_text(coords=label_draw_map["coords"],
+                                                                 text=label_draw_map["text"],
+                                                                 font=label_draw_map["font"])
+        self.labels.append(label_draw_map)
+        # ------ Кнопка
+        delta_width = 50
+        self.button_draw_map = {
+            "font": pygame.font.Font(self.base_style["font_path"], 30),
+            "coords": [self.parent.display_w - INDENTS[1] - button_w - delta_width, height_base, button_w + delta_width,
+                       button_h],
+            "text": "выкл",
+            "color": {
+                "inactive": self.base_style["colors"]["base1"],
+                "hover": self.base_style["colors"]["base2"],
+                "pressed": self.base_style["colors"]["light"],
+                "text": self.base_style["colors"]["light"]
+            },
+            "func": lambda: self.parent.change_draw_map()
+        }
+        if self.parent.settings_var["draw_map"] == 0:
+            self.button_draw_map["text"] = "выкл"
+        elif self.parent.settings_var["draw_map"] == 1:
+            self.button_character_energy["text"] = "вкл"
+        self.button_draw_map["button"] = self.parent.button(coords=self.button_draw_map["coords"],
+                                                                    text=self.button_draw_map["text"],
+                                                                    color=self.button_draw_map["color"],
+                                                                    font=self.button_draw_map["font"],
+                                                                    func=self.button_draw_map["func"])
+        self.buttons.append(self.button_draw_map)
+        height_base += label_character_energy["label"].get_height()
+        # =-=-=-
 
     def delete_all(self):
         # print("SETT", *list(map(lambda x: x["text"] if "text" in x.keys() else x["texts"], self.buttons)), sep=" ")
@@ -365,9 +443,11 @@ class Settings:
         del self.button_music
         del self.button_color
         del self.button_format_screen
+        del self.button_difficulty
         del self.button_type_dinamic_camera
         del self.button_draw_dinamic_camera
         del self.button_character_energy
+        del self.button_draw_map
         del self.buttons
 
     def draw(self):

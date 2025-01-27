@@ -78,6 +78,12 @@ class Main:
             "character_energy": 1,
             # 0 - нет энергии у персонажа, может бесконечно бегать по полю
             # 1 - есть энергия у персонажа
+            "difficulty": 1,
+            # 0 - лёгкий
+            # 1 - сложный
+            "draw_map": 0,
+            # 0 - рисовать
+            # 1 - не рисовать
         }
 
         ########### РЕЗУЛЬТАТ ИГРЫ
@@ -92,6 +98,15 @@ class Main:
             "start_room": [1500, 1500], # [3000, 3000]
             "meeting_room": [self.display_w, self.display_h],
             "final_boss_room": [self.display_h, self.display_w]
+        }
+
+        ########### КОНСТАНТЫ ИГРЫ
+        self.const = {
+            "count_enemy": {
+                "curr": [0, 15, 20],
+                "few": [0, 6, 8],
+                "many":[0, 15, 20]
+            }
         }
 
 
@@ -249,7 +264,6 @@ class Main:
         pygame.time.wait(1000)
 
     def set_music(self):
-        print(self.type_display)
         if self.type_display == "menu":
             pygame.mixer.music.set_volume(0.3)
             pygame.mixer.music.load(self.musics['menu'])
@@ -317,6 +331,10 @@ class Main:
         self.settings_var["character_energy"] = not self.settings_var["character_energy"]
         self.holst.button_character_energy["button"].setText(["выкл", "вкл"][self.settings_var["character_energy"]])
 
+    def change_draw_map(self):
+        self.settings_var["draw_map"] = not self.settings_var["draw_map"]
+        self.holst.button_draw_map["button"].setText(["выкл", "вкл"][self.settings_var["draw_map"]])
+
     def change_color(self):
         self.settings_var["color"] = not self.settings_var["color"]
         if self.settings_var["color"] == 0:
@@ -349,6 +367,11 @@ class Main:
         self.holst.delete_all()
         self.holst.init_frontend()
         self.holst.button_format_screen["button"].setText(["выкл", "вкл"][self.settings_var["format_screen"]])
+
+    def change_difficulty(self):
+        self.settings_var["difficulty"] = not self.settings_var["difficulty"]
+        self.const["count_enemy"]["curr"] = self.const["count_enemy"][["few", "many"][self.settings_var["difficulty"]]]
+        self.holst.button_difficulty["button"].setText(["лёгкая", "сложная"][self.settings_var["difficulty"]])
 
 if __name__ == "__main__":
     menu = Main()

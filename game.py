@@ -506,8 +506,8 @@ class Game:
         self.commands = {
             pygame.KEYDOWN: {
                 pygame.K_ESCAPE: lambda: self.parent.display_change("menu"),
-                pygame.K_0: lambda: self.parent.display_change("final", dop_type="victory"),
-                pygame.K_9: lambda: self.parent.display_change("final", dop_type="fail")
+                # pygame.K_0: lambda: self.parent.display_change("final", dop_type="victory"),
+                # pygame.K_9: lambda: self.parent.display_change("final", dop_type="fail")
             },
             pygame.MOUSEBUTTONDOWN: self.mouse_state,
             pygame.MOUSEBUTTONUP: self.mouse_state
@@ -632,7 +632,6 @@ class Game:
                 # self.flag_sound = 1
             else: # elif self.flag_sound:
                 pygame.mixer.music.load(self.sounds[sound])
-                print(self.sounds[sound])
                 pygame.mixer.music.play(-1)
                 pygame.mixer.music.unpause()
                 # self.flag_sound = 0
@@ -716,8 +715,8 @@ class Game:
             self.room_now = self.list_rooms[self.type_room](self.parent, self, self.base_style)
             self.room_now.enter_rooms()
             self.init_map()
-            # print("enemys", list(filter(lambda x: "enemy" in x, self.room_now.objects.keys())))
-            # print("coords_enemy", list(self.coords_enemy.keys()))
+            print("enemys", list(filter(lambda x: "enemy" in x, self.room_now.objects.keys())))
+            print("delete_enemys", list(self.delete_enemys.values()))
         # print(self.coords_game_layer[0] - self.coords_game_layer_old[0], self.coords_game_layer[1] - self.coords_game_layer_old[1])
         self.room_now.draw()
 
@@ -743,7 +742,7 @@ class Game:
         # self.old_coords_cursor = self.coords_cursor
 
         # ------ Карта
-        # self.map.draw()
+        if self.parent.settings_var["draw_map"] == 1: self.map.draw()
 
         # ------ Условия выхода
         if self.character.character["hp"][0] <= 0:
@@ -833,12 +832,20 @@ class Game:
             self.set_label("money", f"монеты: {self.character.character["money"][0]}")
 
     def render_objects(self, draw_rects=False): # dop_buttons=None,
-        objects = list(self.room_now.objects.values())
+        objects = self.room_now.objects #list(self.room_now.objects.values())
         dop_objects_down = list(self.room_now.dop_objects_down.values())
         dop_objects_up = list(self.room_now.dop_objects_up.values())
-        # Распределение по слоям
 
-        for obj in objects:
+        delete_obj = []
+        for name, obj in objects.items():
+            if name == "DINAMIC_door_1":
+                if False not in self.delete_enemys.values() or self.delete_enemys == {}:
+                    delete_obj.append(name)
+        for _ in range(len(delete_obj)):
+            del self.room_now.objects[delete_obj[0]]
+
+        # Распределение по слоям
+        for obj in objects.values():
             if self.character.character["rect"].centery > obj.data["rect"].centery:
                 obj.data["type_render"] = 1
             else:
@@ -861,7 +868,7 @@ class Game:
         #         self.game_layer.blit(layer, (dop_but.data["coords"][0], dop_but.data["coords"][1]))
         #         # layer.fill(pygame.Color(0, 0, 0, 0))
         #     print()
-        for obj in sorted(list(filter(lambda obj: obj.data["type_render"] == 1, objects)), key=lambda obj: obj.data["rect"].y + obj.data["rect"].h):
+        for name, obj in sorted(list(filter(lambda name_obj: name_obj[1].data["type_render"] == 1, objects.items())), key=lambda name_obj: name_obj[1].data["rect"].y + name_obj[1].data["rect"].h):
             obj.draw()
         self.character.update(draw_rects)
         # if dop_buttons is not None:
@@ -870,7 +877,7 @@ class Game:
         #         dop_but.create(layer)
         #         self.game_layer.blit(layer, (dop_but.data["coords"][0], dop_but.data["coords"][1]))
         #         layer.fill(pygame.Color(0, 0, 0, 0))
-        for obj in sorted(list(filter(lambda obj: obj.data["type_render"] == 2, objects)), key=lambda obj: obj.data["rect"].y + obj.data["rect"].h):
+        for name, obj in sorted(list(filter(lambda name_obj: name_obj[1].data["type_render"] == 2, objects.items())), key=lambda name_obj: name_obj[1].data["rect"].y + name_obj[1].data["rect"].h):
             obj.draw()
         # print(self.data_layers, self.old_data_layers)
         if dop_objects_down is not None:
