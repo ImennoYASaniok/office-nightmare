@@ -303,12 +303,23 @@ def color_image(input_path, output_path, color=(20, 0, 0)):
 #             sprite=(40, 54), grid=(4, 6),
 #             inacurr=[4, 2, -5, -8], sep=(),
 #             single_inacurr=single_inacurr)
-single_inacurr = {}
-cond, dir = "walk", "side"
-for i in range(6): single_inacurr[f"{cond}_{dir}_{i}"] = [-12, 8, -5, -8]
-print("single_inacurr:", single_inacurr)
-sprite_crop(path=rf"monster_boss_wither/{cond}/_{cond}.png",
-            type_sprites=["front", "side", "delete", "back"],
-            sprite=(40, 54), grid=(4, 6),
-            inacurr=[4, 8, -5, -8], sep=(),
-            single_inacurr=single_inacurr)
+# single_inacurr = {}
+# cond, dir = "walk", "side"
+# for i in range(6): single_inacurr[f"{cond}_{dir}_{i}"] = [-12, 8, -5, -8]
+# print("single_inacurr:", single_inacurr)
+# sprite_crop(path=rf"monster_boss_wither/{cond}/_{cond}.png",
+#             type_sprites=["front", "side", "delete", "back"],
+#             sprite=(40, 54), grid=(4, 6),
+#             inacurr=[4, 8, -5, -8], sep=(),
+#             single_inacurr=single_inacurr)
+
+
+# Создание спрайтов, когда враг ударился --------------
+paths, res_paths = list(map(lambda x1: list(map(lambda x2: f"monster_boss_wither/idle/idle_{x1}_{x2}.png", range(4))), ["front", "back", "side"])), []
+for path in paths: res_paths += path
+for path in res_paths:
+    dop_path = "_".join(path.split("_")[-2:])
+    print(dop_path, path)
+    color_image(input_path=path,
+                output_path="monster_boss_wither/hit/hit_"+dop_path,
+                color=(140, -30, -30))

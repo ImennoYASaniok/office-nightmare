@@ -78,10 +78,18 @@ ENEMYS = { # Все элементы со значением None или зак�
         "size": (120, 160),
         "size_rect": (82, 30),
         "speed": [[2, 3], [0, 0]],
+    },
+    "boss_wither_enemy": {
+        # "sprite":
+        "damage": 15,
+        "speed_attack": 8,
+        "size": (200, 200),
+        "size_rect": (200, 50),
+        "speed": [[1], [0]],
     }
 }
-part_file_path = r"sprites/monster_1" + '/'
 def load_CONST():
+    part_file_path = r"sprites/monster_1" + '/'
     ENEMYS["green_enemy"]["sprite"] = {
         "walk": {
             "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
@@ -104,15 +112,10 @@ def load_CONST():
                     range(4)))
         },
         "attack": {
-            "down": list(map(lambda x: pygame.image.load(
-                part_file_path + "attack/" + f"attack_back_{x}.png").convert_alpha(), range(6))),
-            "up": list(map(lambda x: pygame.image.load(
-                part_file_path + "attack/" + f"attack_front_{x}.png").convert_alpha(), range(6))),
-            "left": list(map(lambda x: pygame.transform.flip(
-                pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), 1, 0),
-                             range(6))),
-            "right": list(map(lambda x: pygame.image.load(
-                part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), range(6)))
+            "down": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_back_{x}.png").convert_alpha(), range(6))),
+            "up": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_front_{x}.png").convert_alpha(), range(6))),
+            "left": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), 1, 0), range(6))),
+            "right": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), range(6)))
         },
         "hit": {
             "down": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_back_{x}.png").convert_alpha(), range(4))),
@@ -121,26 +124,33 @@ def load_CONST():
             "right": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_side_{x}.png").convert_alpha(), range(4)))
         }
     }
-    # ENEMYS["boss_wither_enemy"]["sprite"] = {
-    #     "walk": {
-    #         "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
-    #         "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
-    #         "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
-    #         "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
-    #     },
-    #     "idle": {
-    #         "down": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_back_{x}.png").convert_alpha(), range(4))),
-    #         "up": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_front_{x}.png").convert_alpha(), range(4))),
-    #         "left": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), 1, 0), range(4))),
-    #         "right": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), range(4)))
-    #     },
-    #     "attack": {
-    #         "down": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_back_{x}.png").convert_alpha(), range(6))),
-    #         "up": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_front_{x}.png").convert_alpha(), range(6))),
-    #         "left": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), 1, 0), range(6))),
-    #         "right": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), range(6)))
-    #     },
-    # }
+    part_file_path = r"sprites/monster_boss_wither" + '/'
+    ENEMYS["boss_wither_enemy"]["sprite"] = {
+        "walk": {
+            "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
+            "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
+            "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
+            "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
+        },
+        "idle": {
+            "down": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_back_{x}.png").convert_alpha(), range(4))),
+            "up": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_front_{x}.png").convert_alpha(), range(4))),
+            "left": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), 1, 0), range(4))),
+            "right": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), range(4)))
+        },
+        "attack": {
+            "down": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_back_{x}.png").convert_alpha(), range(6))),
+            "up": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_front_{x}.png").convert_alpha(), range(6))),
+            "left": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), 1, 0), range(6))),
+            "right": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), range(6)))
+        },
+        "hit": {
+            "down": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_back_{x}.png").convert_alpha(), range(4))),
+            "up": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_front_{x}.png").convert_alpha(), range(4))),
+            "left": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "hit/" + f"hit_side_{x}.png").convert_alpha(), 1, 0), range(4))),
+            "right": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_side_{x}.png").convert_alpha(), range(4)))
+        }
+    }
 
 
 
@@ -382,7 +392,8 @@ class Enemy(Object):
         else:
             self.search_way()
             self.move()
-            self.attack()
+            if self.data["cond"] == "attack":
+                self.attack()
         self.counting()
 
     def search_way(self):
@@ -489,14 +500,13 @@ class Enemy(Object):
         # print(self.data["cond"], self.data["dir"], self.data["number_sprite"])
 
     def attack(self):
-        if self.data["cond"] == "attack":
-            if self.data["number_sprite"] == 0:
-                self.data["flag_attack"] = 1
-            if self.data["number_sprite"] == 0 and self.data["flag_attack"]:
-                # if self.do_print: print(self.data["flag_attack"], "ATTACK")
-                self.game.character.character["hp"][0] -= ENEMYS[self.category]["damage"]
-                self.game.character.character["cond"] = "hit"
-                self.data["flag_attack"] = 0
+        if self.data["number_sprite"] == 0:
+            self.data["flag_attack"] = 1
+        if self.data["number_sprite"] == 1 and self.data["flag_attack"]:
+            # if self.do_print: print(self.data["flag_attack"], "ATTACK")
+            self.game.character.character["hp"][0] -= ENEMYS[self.category]["damage"]
+            self.game.character.character["cond"] = "hit"
+            self.data["flag_attack"] = 0
 
     def hit(self, hp, name):
         if self.data["hp"][0] - hp <= 0:
@@ -513,6 +523,97 @@ class Enemy(Object):
         self.game.character.character["money"][0] += 3
         self.game.set_label("money", f"монеты: {self.game.character.character["money"][0]}")
         # self.data["dead"] = True
+
+
+
+class Boss_wither(Enemy):
+    def __init__(self, parent, game, base_style, category, coords, size, func=None, image=None, size_rect=(0, 20), do_random_spawn=True, do_print=False):
+        super().__init__(parent=parent, game=game, base_style=base_style,
+                         category=category, coords=coords, size=size, func=func,
+                         image=image, size_rect=size_rect, do_random_spawn=do_random_spawn, do_print=do_print)
+        self.boss_wither_data = {
+            "count_hit": 1,
+            "delta_hit": 4,
+        }
+        self.data["hp"] = [250, 250]
+
+    def search_way(self):
+        for cell in self.way:
+            self.game.map.set_cell(cell[0], cell[1], 0)
+        goal = ((self.game.character.character["rect"].x+self.game.character.character["rect"].w//2) // self.game.map.rect_cell["size"][0],
+                (self.game.character.character["rect"].y+self.game.character.character["rect"].h//2) // self.game.map.rect_cell["size"][1])
+
+        try:
+            self.queue, self.visited = self.game.bfs(start=self.start,
+                                                      goal=goal,
+                                                      graph=self.game.map.graph)
+        except KeyError:
+            print('error search way')
+            self.start = (len(self.game.map.map[0]) // 2, len(self.game.map.map)//2)
+            self.queue, self.visited = self.game.bfs(start=self.start,
+                                                     goal=goal,
+                                                     graph=self.game.map.graph)
+        self.way = []
+        path_segment = goal
+        # print(path_segment)
+        while path_segment and path_segment in self.visited:
+            self.way.append(path_segment)
+            path_segment = self.visited[path_segment]
+        self.way.reverse()
+        self.way.append(self.start)
+
+
+        if len(self.way) <= 2:
+            self.way = self.old_way.copy()
+            if len(self.old_way) <= 2:
+                if self.boss_wither_data["count_hit"] % self.boss_wither_data["delta_hit"] == 0:
+                    self.data["cond"] = "attack"
+                else:
+                    self.data["cond"] = "idle"
+            else:
+                self.data["cond"] = "walk"
+        else:
+            self.data["cond"] = "walk"
+        for cell in self.way:
+            self.game.map.set_cell(cell[0], cell[1], 2)
+            # break
+        self.old_way = self.way.copy()
+        # print(self.way[0], self.way[1])
+
+    def hit(self, hp, name):
+        if self.data["hp"][0] - hp <= 0:
+            # print("DEAD")
+            self.dead(name)
+        else:
+            self.data["hp"][0] -= hp
+            self.data["cond"] = "hit"
+            self.boss_wither_data["count_hit"] += 1
+            # print("HP:", self.data["hp"])
+
+    def attack(self):
+        if self.data["number_sprite"] == 0:
+            self.data["flag_attack"] = 1
+        if self.data["number_sprite"] == 1 and self.data["flag_attack"]:
+            # if self.do_print: print(self.data["flag_attack"], "ATTACK")
+            self.boss_wither_data["count_hit"] += 1
+            category_enemy = "green_enemy"
+            start_count_enemys = self.parent.const["count_enemy"]["curr"][0] + self.parent.const["count_enemy"]["curr"][1]
+            objects = {}
+            # for i in range(-1, -5, -1):
+            #     green_enemy_i = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
+            #                           category=category_enemy,
+            #                           coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
+            #                           size=ENEMYS[category_enemy]["size"],
+            #                           image='sprites/character/base_choice/idle/idle_front_0.png',
+            #                           size_rect=ENEMYS[category_enemy]["size_rect"],
+            #                           do_random_spawn=True)  # do_print=True
+            #     objects[f"green_enemy_{i}"] = green_enemy_i
+            print(list(objects.keys()))
+
+            self.game.character.character["hp"][0] -= ENEMYS[self.category]["damage"]
+            self.game.character.character["cond"] = "hit"
+            self.data["flag_attack"] = 0
+            return objects
 
 
 
@@ -1308,15 +1409,15 @@ class Final_boss_room:
                 if name in self.objects and "enemy" in name:
                     del self.objects[name]
 
-        # category_enemy = "boss_enemy"
-        # boss_enemy = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
-        #                       category=category_enemy,
-        #                       coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
-        #                       size=ENEMYS[category_enemy]["size"],
-        #                       image='sprites/character/base_choice/idle/idle_front_0.png',
-        #                       size_rect=ENEMYS[category_enemy]["size_rect"],
-        #                       do_random_spawn=True)  # do_print=True
-        # self.objects["boss_enemy"] = boss_enemy
+        category_enemy = "boss_wither_enemy"
+        boss_enemy = Boss_wither(parent=self.parent, game=self.game, base_style=self.base_style,
+                              category=category_enemy,
+                              coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
+                              size=ENEMYS[category_enemy]["size"],
+                              image=f'sprites/monster_boss_wither/idle/idle_front_0.png',
+                              size_rect=ENEMYS[category_enemy]["size_rect"],
+                              do_random_spawn=True)  # do_print=True
+        self.objects[category_enemy] = boss_enemy
         # ------------------
         self.dop_objects_up = {}
         self.dop_objects_down = {}
@@ -1371,10 +1472,14 @@ class Final_boss_room:
         self.animate_sprite()
         self.game.render_objects()  # draw_rects=True
 
+        spawn_objects = {}
         for name, obj in self.objects.items():
             if "enemy" in name:
-                obj.base_actions()
+                spawn_objects = obj.base_actions()
                 obj.set_labels()
+        if spawn_objects not in ({}, None):
+            for k, v in spawn_objects:
+                self.objects[k] = v
 
         # print(self.doors["left"][1][0], self.game.character.character["absolute_coords_rect"][1], self.doors["left"][1][1])
         if self.doors["down"][0][0] < self.game.character.character["absolute_coords_rect"][0] < self.doors["down"][0][1] and self.game.character.character["absolute_coords_rect"][1] >= self.size_room_layer[1]:

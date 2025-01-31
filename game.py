@@ -114,7 +114,7 @@ class Character:
             "energy": [70, 0, 100, 1], # текущие, мин, макс, шаг
             "energy_counter": [0, 10, 15], # текущие, макс для уменьшения, макс для увеличения
             "hp": [100, 0, 100, 1],  # текущие, мин, макс, шаг
-            "money": [1000000000, 0], # текущие, мин
+            "money": [25, 0], # текущие, мин
             "time_hit": 0, "period_hit": 4,
             "time_attack": 0, "period_attack": None,
             "delta_coords_attack": [0, -20],
@@ -127,7 +127,7 @@ class Character:
             "give_pistol": 0,
             "bullets": {  # текущие, в обоиме
                 "arms": None,
-                "pistol": [30, 30]
+                "pistol": [0, 30]
             }
         }
         self.character["period_attack"] = self.character["speed_TO_freq"]["attack"] + 1
@@ -244,7 +244,7 @@ class Character:
             if self.character["time_hit"] < self.character["period_hit"]:
                 self.character["time_hit"] += 1
             else:
-                self.set_move(self.character["dop_old_cond"])
+                self.set_move("idle") # self.set_move(self.character["dop_old_cond"])
                 self.character["time_hit"] = 0
 
         # ----------- Атака
@@ -271,7 +271,7 @@ class Character:
         self.draw()  # !!! Для оптиммизации можно добавить основной флаг, который будет отслеживать изменился ли персонаж
 
         # ----- Звуки
-        if self.character["cond"] in ("walk", "run", "sneak", "attack"):
+        if self.character["cond"] in ("walk", "run", "sneak", "attack", "shoot_pistol"):
             self.game.set_sound(self.character["cond"])
         else:
             self.game.set_sound(None)
@@ -505,6 +505,7 @@ class Game:
             "run": 'sounds/run.mp3',
             "sneak": 'sounds/sneak.mp3',
             "attack": "sounds/attack.mp3",
+            "shoot_pistol": "sounds/shoot.mp3",
         }
         # for k, v in self.sounds.items():
         #     self.sounds[k] = pygame.mixer.music.load(v)

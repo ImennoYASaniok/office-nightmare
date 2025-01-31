@@ -103,7 +103,7 @@ class Main:
         self.const = {
             "count_enemy": {
                 "curr": [0, 15, 20],
-                "few": [0, 7, 10], # [0, 2, 1],
+                "few": [0, 7, 10], # [0, 0, 0],
                 "many": [0, 15, 20]
             }
         }
@@ -147,15 +147,14 @@ class Main:
                 color[k] = v
         # print(*color.items())
         return Button(
-            layer,  # Surface to place button array on
+            layer,
             coords[0], coords[1], coords[2], coords[3],
-            # border=100,  # Distance between buttons and edge of array
             text=text,
             font=font,
             # colour=colour,
             inactiveColour=color["inactive"],
-            hoverColour=color["hover"],  # Colour of button when being hovered over
-            pressedColour=color["pressed"],  # Colour of button when being clicked
+            hoverColour=color["hover"],
+            pressedColour=color["pressed"],
             textColour=color["text"],
             onClick=func
         )
