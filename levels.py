@@ -423,10 +423,9 @@ class Enemy(Object):
         self.way.reverse()
         self.way.append(self.start)
 
-
         if len(self.way) <= 2:
             self.way = self.old_way.copy()
-            if len(self.old_way) <= 2:
+            if (len(self.old_way) <= 2):  # and ((self.data["coords"][0] - self.game.character.character["coords"][0]) ** 2 + (self.data["coords"][1] - self.game.character.character["coords"][1]) ** 2) ** 0.5 <= 100)
                 self.data["cond"] = "attack"
             else:
                 self.data["cond"] = "walk"
@@ -436,7 +435,7 @@ class Enemy(Object):
             self.game.map.set_cell(cell[0], cell[1], 2)
             # break
         self.old_way = self.way.copy()
-        # print(self.way[0], self.way[1])
+        # print(len(self.way), len(self.old_way))
 
     def move(self): # Попробовать: если лево - точка перемещения слева, если право, точка перемещения справа
         dop_coords = self.data["coords"].copy()
@@ -568,10 +567,7 @@ class Boss_wither(Enemy):
         if len(self.way) <= 2:
             self.way = self.old_way.copy()
             if len(self.old_way) <= 2:
-                if self.boss_wither_data["count_hit"] >= self.boss_wither_data["delta_hit"]:
-                    self.data["cond"] = "attack"
-                else:
-                    self.data["cond"] = "idle"
+                self.data["cond"] = "idle"
             else:
                 self.data["cond"] = "walk"
         else:
@@ -581,8 +577,8 @@ class Boss_wither(Enemy):
             # break
         self.old_way = self.way.copy()
         # print(self.way[0], self.way[1])
-        if self.data["cond"] == "attack":
-            print(self.data["cond"])
+        if self.boss_wither_data["count_hit"] >= self.boss_wither_data["delta_hit"]:
+            self.data["cond"] = "attack"
 
     def hit(self, hp, name):
         if self.data["cond"] != "attack":
@@ -614,8 +610,8 @@ class Boss_wither(Enemy):
                 objects[f"boss_green_enemy_{i}"] = green_enemy_i
             # print(list(objects.keys()))
 
-            self.game.character.character["hp"][0] -= ENEMYS[self.category]["damage"]
-            self.game.character.character["cond"] = "hit"
+            # self.game.character.character["hp"][0] -= ENEMYS[self.category]["damage"]
+            # self.game.character.character["cond"] = "hit"
             self.boss_wither_data["count_hit"] = 0
             return objects
 

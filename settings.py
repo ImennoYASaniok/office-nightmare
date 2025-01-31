@@ -435,45 +435,6 @@ class Settings:
         self.buttons.append(self.button_draw_map)
         height_base += label_character_energy["label"].get_height()
         # =-=-=-
-        # =-=-=- Строка
-        # ------ Надпись
-        height_base += SPACES["point"]
-        label_unlimited_hp = {
-            "coords": [INDENTS[0], height_base],
-            "text": "бесконечные hp у персонажа",
-            "font": pygame.font.Font(self.base_style["font_path"], SIZE_LABEL)
-        }
-        label_unlimited_hp["label"] = self.parent.label_text(coords=label_unlimited_hp["coords"],
-                                                         text=label_unlimited_hp["text"],
-                                                         font=label_unlimited_hp["font"])
-        self.labels.append(label_unlimited_hp)
-        # ------ Кнопка
-        delta_width = 50
-        self.button_unlimited_hp = {
-            "font": pygame.font.Font(self.base_style["font_path"], 30),
-            "coords": [self.parent.display_w - INDENTS[1] - button_w - delta_width, height_base, button_w + delta_width,
-                       button_h],
-            "text": "выкл",
-            "color": {
-                "inactive": self.base_style["colors"]["base1"],
-                "hover": self.base_style["colors"]["base2"],
-                "pressed": self.base_style["colors"]["light"],
-                "text": self.base_style["colors"]["light"]
-            },
-            "func": lambda: self.parent.change_unlimited_hp()
-        }
-        if self.parent.settings_var["unlimited_hp"] == 0:
-            self.button_unlimited_hp["text"] = "выкл"
-        elif self.parent.settings_var["unlimited_hp"] == 1:
-            self.button_unlimited_hp["text"] = "вкл"
-        self.button_unlimited_hp["button"] = self.parent.button(coords=self.button_unlimited_hp["coords"],
-                                                            text=self.button_unlimited_hp["text"],
-                                                            color=self.button_unlimited_hp["color"],
-                                                            font=self.button_unlimited_hp["font"],
-                                                            func=self.button_unlimited_hp["func"])
-        self.buttons.append(self.button_unlimited_hp)
-        height_base += label_character_energy["label"].get_height()
-        # =-=-=-
 
     def delete_all(self):
         # print("SETT", *list(map(lambda x: x["text"] if "text" in x.keys() else x["texts"], self.buttons)), sep=" ")
@@ -487,7 +448,6 @@ class Settings:
         del self.button_draw_dinamic_camera
         del self.button_character_energy
         del self.button_draw_map
-        del self.button_unlimited_hp
         del self.buttons
 
     def draw(self):

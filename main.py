@@ -3,7 +3,6 @@ import pygame_widgets
 from pygame_widgets.button import ButtonArray, Button
 from pygame_widgets.slider import Slider
 from pygame_widgets.textbox import TextBox
-import numpy as np
 
 from menu import Menu
 from game import Game
@@ -19,7 +18,7 @@ class Main:
         ########### ДИСПЛЕЙ
         self.FPS = 60
         self.running = 1
-        self.display_w, self.display_h = pygame.display.Info().current_w - 10, pygame.display.Info().current_h - 50
+        self.display_w, self.display_h = 1526, 814 # pygame.display.Info().current_w - 10, pygame.display.Info().current_h - 50
         self.start_display_w, self.start_display_h = self.display_w, self.display_h
         print(self.display_w, self.display_h)
         self.list_active_surface = {'menu': Menu,
@@ -109,7 +108,7 @@ class Main:
         self.const = {
             "count_enemy": {
                 "curr": [0, 15, 20],
-                "few": [0, 0, 0], # [0, 7, 10], # [0, 0, 0],
+                "few": [0, 10, 7],
                 "many": [0, 15, 20]
             }
         }
@@ -365,11 +364,6 @@ class Main:
         self.holst.delete_all()
         self.holst.init_frontend()
         self.holst.button_format_screen["button"].setText(["выкл", "вкл"][self.settings_var["format_screen"]])
-
-    def change_difficulty(self):
-        self.settings_var["difficulty"] = not self.settings_var["difficulty"]
-        self.const["count_enemy"]["curr"] = self.const["count_enemy"][["few", "many"][self.settings_var["difficulty"]]]
-        self.holst.button_difficulty["button"].setText(["лёгкая", "сложная"][self.settings_var["difficulty"]])
 
 if __name__ == "__main__":
     menu = Main()
