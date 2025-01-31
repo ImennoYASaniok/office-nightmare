@@ -9,6 +9,7 @@ from mini_games.dash_hex import dash_hex
 
 class Character:
     def __init__(self, parent, game, base_style):
+        self.character = None
         self.parent = parent
         self.game = game
         self.base_style = base_style
@@ -41,7 +42,6 @@ class Character:
 
     def init_shell(self):
         part_file_path = r"sprites/character/base_choice" + '/'
-       # print(part_file_path)
         self.character = {
             "type_cond": {
                 # !!! Написать позже отдельную функцию загрузку спрайтов под нужны направления (dir) и cond
@@ -153,12 +153,12 @@ class Character:
         for cond in self.character["type_cond"].keys():
             if cond not in delta_size.keys():
                 delta_size[cond] = {}
-            for dir in self.character["type_cond"][cond].keys():
-                if dir not in delta_size[cond].keys():
-                    delta_size[cond][dir] = (0, 0)
+            for key in self.character["type_cond"][cond].keys():
+                if key not in delta_size[cond].keys():
+                    delta_size[cond][key] = (0, 0)
         # print("delta_size:", delta_size)
         for name_cond in self.character["type_cond"].keys():
-            for name_dir, dir in self.character["type_cond"][name_cond].items():
+            for name_dir, key in self.character["type_cond"][name_cond].items():
                 self.character["type_cond"][name_cond][name_dir] = list(map(lambda x: pygame.transform.scale(x, (self.character["coords"][2] + delta_size[name_cond][name_dir][0], self.character["coords"][3] + delta_size[name_cond][name_dir][1])), self.character["type_cond"][name_cond][name_dir]))
         self.set_sprite()
 
@@ -209,8 +209,8 @@ class Character:
 
 
     def respawn(self, coords):
-        if coords[0] != None: self.character["coords"][0] = coords[0] - self.character["coords"][2] // 2
-        if coords[1] != None: self.character["coords"][1] = coords[1] - self.character["coords"][3] // 2
+        if coords[0] is not None: self.character["coords"][0] = coords[0] - self.character["coords"][2] // 2
+        if coords[1] is not None: self.character["coords"][1] = coords[1] - self.character["coords"][3] // 2
         self.game.coords_game_layer[0] = -coords[0] + self.parent.display_w // 2
         self.game.coords_game_layer[1] = -coords[1] + self.parent.display_h // 2
         # width, height = self.parent.display_w - self.game.coords_dinamic_zone[0]*2, self.parent.display_h - self.game.coords_dinamic_zone[1]*2
