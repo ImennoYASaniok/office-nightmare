@@ -83,6 +83,12 @@ class Main:
             "draw_map": 0,
             # 0 - рисовать
             # 1 - не рисовать
+            "unlimited_hp": 0,
+            # 0 - не бесконечное hp
+            # 1 - бесконечное hp
+            "unlimited_pistol": 0,
+            # 0 - не бесконечные патроны на пистолете
+            # 1 - бесконечные патроны на пистолете
         }
 
         ########### РЕЗУЛЬТАТ ИГРЫ
@@ -103,7 +109,7 @@ class Main:
         self.const = {
             "count_enemy": {
                 "curr": [0, 15, 20],
-                "few": [0, 7, 10], # [0, 0, 0],
+                "few": [0, 0, 0], # [0, 7, 10], # [0, 0, 0],
                 "many": [0, 15, 20]
             }
         }
@@ -322,6 +328,10 @@ class Main:
     def change_draw_map(self):
         self.settings_var["draw_map"] = not self.settings_var["draw_map"]
         self.holst.button_draw_map["button"].setText(["выкл", "вкл"][self.settings_var["draw_map"]])
+
+    def change_unlimited_hp(self):
+        self.settings_var["unlimited_hp"] = not self.settings_var["unlimited_hp"]
+        self.holst.button_unlimited_hp["button"].setText(["выкл", "вкл"][self.settings_var["unlimited_hp"]])
 
     def change_color(self):
         self.settings_var["color"] = not self.settings_var["color"]

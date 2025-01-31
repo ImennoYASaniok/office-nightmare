@@ -1,11 +1,7 @@
-# import time
-# import numpy as np
 import pygame
-from pygame import PixelArray, Color
-import pygame_widgets
 from collections import deque
 
-from levels import Level1, Object, Bullet # , Hitbox_Button
+from levels import Level1, Object, Bullet
 from mini_games.dino import dino_game
 from mini_games.circle import curcle
 from mini_games.dash_hex import dash_hex
@@ -192,13 +188,13 @@ class Character:
         elif 0 < self.character["bullets"]["pistol"][0] < self.character["bullets"]["pistol"][1]:
             self.character["money"][0] -= price
             self.character["bullets"]["pistol"][0] = self.character["bullets"]["pistol"][1]
-            self.game.set_label("money", f"монеты: {self.character["money"][0]}")
+            self.game.set_label("money", f"монеты: {self.character['money'][0]}")
         elif self.character[type_weapon] == 1: self.game.set_message(f"{print_type.capitalize()} с патронами уже получен ", delay=1000)
         else:
             self.character["money"][0] -= price
             self.character[type_weapon] = 1
             self.character["bullets"]["pistol"][0] = self.character["bullets"]["pistol"][1]
-            self.game.set_label("money", f"монеты: {self.character["money"][0]}")
+            self.game.set_label("money", f"монеты: {self.character['money'][0]}")
 
     def set_move(self, cond):
         if list(self.character["flags"].values()) != [0] * len(self.character["flags"].values()) or cond == "idle":
@@ -281,7 +277,7 @@ class Character:
             self.game.set_label("bullets", "")
         elif self.character["type_weapon"] == "pistol":
             # print("PISTOL")
-            self.game.set_label("bullets", f"патроны: {self.character["bullets"]["pistol"][0]} / {self.character["bullets"]["pistol"][1]}")
+            self.game.set_label("bullets", f"патроны: {self.character['bullets']['pistol'][0]} / {self.character['bullets']['pistol'][1]}")
 
     def attack_arms(self):
         if self.character["time_attack"] == 0:
@@ -314,7 +310,7 @@ class Character:
         if self.character["time_attack"] < self.character["period_attack"]:
             self.character["time_attack"] += 1
         else:
-            name = f"bullet_{self.character["counter_bullet"]}"
+            name = f"bullet_{self.character['counter_bullet']}"
             self.game.room_now.objects[name] = Bullet(parent=self.parent, game=self.game, base_style=self.base_style,
                                                       name=name)
             if self.character["bullets"]["pistol"][0] - 1 < 0:
@@ -488,7 +484,6 @@ class Map:
             x = 0
 
 
-
 class Game:
     def __init__(self, parent, base_style):
         self.base_style = base_style
@@ -624,7 +619,7 @@ class Game:
 
         label_hp = {
             "coords": (5, 30),
-            "text": f"hp: {self.character.character["hp"][0]} / {self.character.character["hp"][2]}",
+            "text": f"hp: {self.character.character['hp'][0]} / {self.character.character['hp'][2]}",
             "font": pygame.font.Font(self.base_style["font_path"], 30)
         }
         label_hp["label"] = self.parent.label_text(coords=label_hp["coords"],
@@ -636,7 +631,7 @@ class Game:
         if self.parent.settings_var["character_energy"] == 1:
             label_energy = {
                 "coords": (5, 60),
-                "text": f"энергия: {self.character.character["energy"][0]} / {self.character.character["energy"][2]}",
+                "text": f"энергия: {self.character.character['energy'][0]} / {self.character.character['energy'][2]}",
                 "font": pygame.font.Font(self.base_style["font_path"], 30)
             }
             label_energy["label"] = self.parent.label_text(coords=label_energy["coords"],
@@ -647,7 +642,7 @@ class Game:
 
         label_money = {
             "coords": (5, 90),
-            "text": f"монеты: {self.character.character["money"][0]}",
+            "text": f"монеты: {self.character.character['money'][0]}",
             "font": pygame.font.Font(self.base_style["font_path"], 30)
         }
         label_money["label"] = self.parent.label_text(coords=label_money["coords"],
@@ -727,7 +722,7 @@ class Game:
                 self.flag_mini_games = True
                 out_many = self.mini_games[self.type_room][name_game]()
                 self.character.character["money"][0] += out_many
-                self.set_label("money", f"монеты: {self.character.character["money"][0]}")
+                self.set_label("money", f"монеты: {self.character.character['money'][0]}")
                 self.character.character["energy"][0] -= delta_energy
                 for obj in self.room_now.objects.values():
                     obj.data["func"] = 0
@@ -809,9 +804,9 @@ class Game:
             if "label" in i.keys():
                 self.parent.display.blit(i["label"], i["coords"])
         self.set_label("fps", f"fps: {self.parent.clock.get_fps():2.0f} / {self.parent.FPS}")
-        self.set_label("hp", f"hp: {self.character.character["hp"][0]} / {self.character.character["hp"][2]}")
+        self.set_label("hp", f"hp: {self.character.character['hp'][0]} / {self.character.character['hp'][2]}")
         if self.parent.settings_var["character_energy"] == 1:
-            self.set_label("energy", f"энергия: {self.character.character["energy"][0]} / {self.character.character["energy"][2]}")
+            self.set_label("energy", f"энергия: {self.character.character['energy'][0]} / {self.character.character['energy'][2]}")
 
         # ------ Карта
         if self.parent.settings_var["draw_map"] == 1: self.map.draw()
@@ -844,14 +839,9 @@ class Game:
     def set_dinamic_zone(self, type_output=0):
         if type_output == 1:
             output_flags = list(self.flags_dinamic.values())
-            print(f"{output_flags[0]} {int(self.character.character["coords_display"][1] < self.coords_dinamic_zone[1])} {self.character.character["coords_display"][1]}<{self.coords_dinamic_zone[1]}", end=" | ")
-            print(f"{output_flags[1]} {int(self.character.character["coords_display"][1] > self.coords_dinamic_zone[3])} {self.character.character["coords_display"][1]}>{self.coords_dinamic_zone[3]}", end=" | ")
-            print(f"{output_flags[2]} {int(self.character.character["coords_display"][0] < self.coords_dinamic_zone[0])} {self.character.character["coords_display"][0]}<{self.coords_dinamic_zone[0]}", end=" | ")
-            print(f"{output_flags[3]} {int(self.character.character["coords_display"][0] > self.coords_dinamic_zone[2])} {self.character.character["coords_display"][0]}>{self.coords_dinamic_zone[2]}", end=" | ")
-            print()
         elif type_output == 2:
             if list(self.flags_dinamic.values())[0] == 0: # up
-                print(f"up {self.character.character["coords_display"][1]}<{self.coords_dinamic_zone[1]}")
+                pass
         self.set_rect(layer=self.parent.display,
                       coords=(self.start_coords_dinamic_zone[0],
                               self.start_coords_dinamic_zone[1],
@@ -887,7 +877,7 @@ class Game:
         else:
             self.character.character["money"][0] -= price
             self.character.character[type_val][0] += val
-            self.set_label("money", f"монеты: {self.character.character["money"][0]}")
+            self.set_label("money", f"монеты: {self.character.character['money'][0]}")
 
     def render_objects(self, draw_rects=False): # dop_buttons=None,
         objects = self.room_now.objects #list(self.room_now.objects.values())

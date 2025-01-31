@@ -357,7 +357,7 @@ class Enemy(Object):
         label_hp = {
             "start_coords": [0, 0],
             "coords": [0, 0],
-            "text": f"hp: {self.data["hp"][0]} / {self.data["hp"][1]}",
+            "text": f"hp: {self.data['hp'][0]} / {self.data['hp'][1]}",
             "font": pygame.font.Font(self.base_style["font_path"], 20)
         }
         label_hp["label"] = self.parent.label_text(coords=label_hp["coords"],
@@ -379,10 +379,11 @@ class Enemy(Object):
         self.game.game_layer.blit(self.labels[key]["label"], self.labels[key]["coords"])
 
     def set_labels(self):
-        self.set_label("hp", f"hp: {self.data["hp"][0]} / {self.data["hp"][1]}")
+        self.set_label("hp", f"hp: {self.data['hp'][0]} / {self.data['hp'][1]}")
     # -------------
 
     def base_actions(self):
+        return_val = None
         if self.data["cond"] == "hit":
             if self.data["time_hit"] < self.data["period_hit"]:
                 self.data["time_hit"] += 1
@@ -393,8 +394,9 @@ class Enemy(Object):
             self.search_way()
             self.move()
             if self.data["cond"] == "attack":
-                self.attack()
+                return_val = self.attack()
         self.counting()
+        return return_val
 
     def search_way(self):
         for cell in self.way:
@@ -521,7 +523,7 @@ class Enemy(Object):
         del self.game.room_now.objects[name]
         self.game.delete_enemys[name] = True
         self.game.character.character["money"][0] += 3
-        self.game.set_label("money", f"монеты: {self.game.character.character["money"][0]}")
+        self.game.set_label('money', f"монеты: {self.game.character.character['money'][0]}")
         # self.data["dead"] = True
 
 
@@ -532,7 +534,7 @@ class Boss_wither(Enemy):
                          category=category, coords=coords, size=size, func=func,
                          image=image, size_rect=size_rect, do_random_spawn=do_random_spawn, do_print=do_print)
         self.boss_wither_data = {
-            "count_hit": 1,
+            "count_hit": 0,
             "delta_hit": 4,
         }
         self.data["hp"] = [250, 250]
@@ -566,7 +568,7 @@ class Boss_wither(Enemy):
         if len(self.way) <= 2:
             self.way = self.old_way.copy()
             if len(self.old_way) <= 2:
-                if self.boss_wither_data["count_hit"] % self.boss_wither_data["delta_hit"] == 0:
+                if self.boss_wither_data["count_hit"] >= self.boss_wither_data["delta_hit"]:
                     self.data["cond"] = "attack"
                 else:
                     self.data["cond"] = "idle"
@@ -579,40 +581,42 @@ class Boss_wither(Enemy):
             # break
         self.old_way = self.way.copy()
         # print(self.way[0], self.way[1])
+        if self.data["cond"] == "attack":
+            print(self.data["cond"])
 
     def hit(self, hp, name):
-        if self.data["hp"][0] - hp <= 0:
-            # print("DEAD")
-            self.dead(name)
-        else:
-            self.data["hp"][0] -= hp
-            self.data["cond"] = "hit"
-            self.boss_wither_data["count_hit"] += 1
-            # print("HP:", self.data["hp"])
+        if self.data["cond"] != "attack":
+            if self.data["hp"][0] - hp <= 0:
+                # print("DEAD")
+                self.dead(name)
+            else:
+                self.data["hp"][0] -= hp
+                self.data["cond"] = "hit"
+                self.boss_wither_data["count_hit"] += 1
+                # print("HP:", self.data["hp"])
 
     def attack(self):
         if self.data["number_sprite"] == 0:
-            self.data["flag_attack"] = 1
-        if self.data["number_sprite"] == 1 and self.data["flag_attack"]:
             # if self.do_print: print(self.data["flag_attack"], "ATTACK")
-            self.boss_wither_data["count_hit"] += 1
             category_enemy = "green_enemy"
             start_count_enemys = self.parent.const["count_enemy"]["curr"][0] + self.parent.const["count_enemy"]["curr"][1]
             objects = {}
-            # for i in range(-1, -5, -1):
-            #     green_enemy_i = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
-            #                           category=category_enemy,
-            #                           coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
-            #                           size=ENEMYS[category_enemy]["size"],
-            #                           image='sprites/character/base_choice/idle/idle_front_0.png',
-            #                           size_rect=ENEMYS[category_enemy]["size_rect"],
-            #                           do_random_spawn=True)  # do_print=True
-            #     objects[f"green_enemy_{i}"] = green_enemy_i
-            print(list(objects.keys()))
+            for i in range(5): # range(-1, -6, -1):
+                green_enemy_i = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
+                                      category=category_enemy,
+                                      coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
+                                      size=ENEMYS[category_enemy]["size"],
+                                      image='sprites/character/base_choice/idle/idle_front_0.png',
+                                      size_rect=ENEMYS[category_enemy]["size_rect"],
+                                      do_random_spawn=True)  # do_print=True
+                green_enemy_i.init_start()
+                green_enemy_i.check_random_spawn()
+                objects[f"boss_green_enemy_{i}"] = green_enemy_i
+            # print(list(objects.keys()))
 
             self.game.character.character["hp"][0] -= ENEMYS[self.category]["damage"]
             self.game.character.character["cond"] = "hit"
-            self.data["flag_attack"] = 0
+            self.boss_wither_data["count_hit"] = 0
             return objects
 
 
@@ -1472,13 +1476,13 @@ class Final_boss_room:
         self.animate_sprite()
         self.game.render_objects()  # draw_rects=True
 
-        spawn_objects = {}
+        spawn_objects = None
         for name, obj in self.objects.items():
             if "enemy" in name:
                 spawn_objects = obj.base_actions()
                 obj.set_labels()
-        if spawn_objects not in ({}, None):
-            for k, v in spawn_objects:
+        if spawn_objects != None:
+            for k, v in spawn_objects.items():
                 self.objects[k] = v
 
         # print(self.doors["left"][1][0], self.game.character.character["absolute_coords_rect"][1], self.doors["left"][1][1])
