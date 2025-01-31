@@ -34,14 +34,14 @@ def del_border(path, type_save="save", new_name=""):
         sheet.save(path)
 
 
-def sprite_crop(path, type_sprites, sprite, grid, inacurr=[0, 0, 0, 0], sep=(), single_inacurr={}, name=""):
+def sprite_crop(path, type_sprites, sprite, grid, inacurr=[0, 0, 0, 0], sep=(), single_inacurr={}):
     path = path.replace("\\", "/")
     sheet = Image.open(path)
-    if name == "":
-        name = path.split("/")[-1].split(".")[0]
-        if name[0] == "_": name = name[1:]
-    print(path)
-    print(name)
+
+    print("start_path:", path)
+    path = "/".join(path.split("/")[:-1])
+    cond = path.split("/")[-1]
+    print("cond:", cond)
 
     if len(inacurr) == 0: inacurr = [0, 0, 0, 0]
     elif len(inacurr) == 1: inacurr += [0, inacurr[0], 0]
@@ -58,21 +58,29 @@ def sprite_crop(path, type_sprites, sprite, grid, inacurr=[0, 0, 0, 0], sep=(), 
     count = 0
     for y in range(1, grid[0] + 1):
         for x in range(1, grid[1] + 1):
+            name = f"{path}/{cond}_{type_sprites[y-1]}_{count}.png"
             res_x = x * sep[0]
             res_y = y * sep[1]
-            res_x1 = res_x-sep[0]+(sep[0]-sprite[0])/2 + inacurr[0]
-            res_y1 = res_y-sep[1]+(sep[1]-sprite[1])/2 + inacurr[1]
-            res_x2 = res_x-(sep[0]-sprite[0])/2 + inacurr[2]
-            res_y2 = res_y-(sep[1]-sprite[1])/2 + inacurr[3]
+            res_x1 = res_x-sep[0]+(sep[0]-sprite[0])/2
+            res_y1 = res_y-sep[1]+(sep[1]-sprite[1])/2
+            res_x2 = res_x-(sep[0]-sprite[0])/2
+            res_y2 = res_y-(sep[1]-sprite[1])/2
             for k, v in single_inacurr.items():
-                if k[1]+1 == x and k[0]+1 == y:
+                if k == f"{cond}_{type_sprites[y-1]}_{count}":
                     res_x1 += v[0]
                     res_y1 += v[1]
                     res_x2 += v[2]
                     res_y2 += v[3]
+                    print("single inacurr", name)
+                    break
+            else:
+                res_x1 += inacurr[0]
+                res_y1 += inacurr[1]
+                res_x2 += inacurr[2]
+                res_y2 += inacurr[3]
+                print("standart inacurr", name)
             icon = sheet.crop((res_x1, res_y1, res_x2, res_y2))
-            print("/".join(path.split("/")[:-1] + [name + f"_{type_sprites[y - 1]}_{count}.png"]))
-            icon.save("/".join(path.split("/")[:-1]+[name+f"_{type_sprites[y-1]}_{count}.png"]))
+            icon.save(name)
             count += 1
         count = 0
 
@@ -258,11 +266,49 @@ def color_image(input_path, output_path, color=(20, 0, 0)):
 #                     size=32,
 #                     type_side="width",
 #                     quality=95)
+
 # Пикселизация спрайтов крови --------------
-for i in range(1, 6):
-    set_image_expansion(input_path=f"scary_decor/blood_{i}.png",
-                        output_path=f"scary_decor/blood_{i}.png",
-                        k=None,
-                        size=16,
-                        type_side="width",
-                        quality=95)
+# for i in range(1, 6):
+#     set_image_expansion(input_path=f"scary_decor/blood_{i}.png",
+#                         output_path=f"scary_decor/blood_{i}.png",
+#                         k=None,
+#                         size=16,
+#                         type_side="width",
+#                         quality=95)
+
+# Пикселизация пули --------------
+# set_image_expansion(input_path="bullet.png",
+#                         output_path="bullet.png",
+#                         k=None,
+#                         size=50,
+#                         type_side="width",
+#                         quality=95)
+
+# Обрезка спрайтов босса --------------
+# single_inacurr = {}
+# cond, dir = "idle", "side"
+# for i in range(4): single_inacurr[f"{cond}_{dir}_{i}"] = [-8, 8, -5, -8]
+# print("single_inacurr:", single_inacurr)
+# sprite_crop(path=r"monster_boss_wither/idle/_idle.png",
+#             type_sprites=["front", "side", "delete", "back"],
+#             sprite=(40, 54), grid=(4, 4),
+#             inacurr=[4, 8, -5, -8], sep=(),
+#             single_inacurr=single_inacurr)
+# single_inacurr = {}
+# cond, dir = "attack", "side"
+# for i in range(6): single_inacurr[f"{cond}_{dir}_{i}"] = [0, 2, -5, -8]
+# print("single_inacurr:", single_inacurr)
+# sprite_crop(path=rf"monster_boss_wither/{cond}/_{cond}.png",
+#             type_sprites=["front", "side", "delete", "back"],
+#             sprite=(40, 54), grid=(4, 6),
+#             inacurr=[4, 2, -5, -8], sep=(),
+#             single_inacurr=single_inacurr)
+single_inacurr = {}
+cond, dir = "walk", "side"
+for i in range(6): single_inacurr[f"{cond}_{dir}_{i}"] = [-12, 8, -5, -8]
+print("single_inacurr:", single_inacurr)
+sprite_crop(path=rf"monster_boss_wither/{cond}/_{cond}.png",
+            type_sprites=["front", "side", "delete", "back"],
+            sprite=(40, 54), grid=(4, 6),
+            inacurr=[4, 8, -5, -8], sep=(),
+            single_inacurr=single_inacurr)

@@ -71,13 +71,13 @@ TYPE_BUTTONS = {
     }
 }
 ENEMYS = { # Все элементы со значением None или закоменченные ключи, заполняются ниже в коде
-    "speed": [[2, 3, 4], [0, 0, 0]],
     "green_enemy": {
         # "sprite":
         "damage": 5,
         "speed_attack": 8,
         "size": (120, 160),
         "size_rect": (82, 30),
+        "speed": [[2, 3], [0, 0]],
     }
 }
 part_file_path = r"sprites/monster_1" + '/'
@@ -121,6 +121,26 @@ def load_CONST():
             "right": list(map(lambda x: pygame.image.load(part_file_path + "hit/" + f"hit_side_{x}.png").convert_alpha(), range(4)))
         }
     }
+    # ENEMYS["boss_wither_enemy"]["sprite"] = {
+    #     "walk": {
+    #         "down": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_front_{x}.png").convert_alpha(), range(6))),
+    #         "up": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_back_{x}.png").convert_alpha(), range(6))),
+    #         "left": list(map(lambda x: pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), range(6))),
+    #         "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "walk/" + f"walk_side_{x}.png").convert_alpha(), 1, 0), range(6)))
+    #     },
+    #     "idle": {
+    #         "down": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_back_{x}.png").convert_alpha(), range(4))),
+    #         "up": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_front_{x}.png").convert_alpha(), range(4))),
+    #         "left": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), 1, 0), range(4))),
+    #         "right": list(map(lambda x: pygame.image.load(part_file_path + "idle/" + f"idle_side_{x}.png").convert_alpha(), range(4)))
+    #     },
+    #     "attack": {
+    #         "down": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_back_{x}.png").convert_alpha(), range(6))),
+    #         "up": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_front_{x}.png").convert_alpha(), range(6))),
+    #         "left": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), 1, 0), range(6))),
+    #         "right": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), range(6)))
+    #     },
+    # }
 
 
 
@@ -253,13 +273,13 @@ class Enemy(Object):
         # print("TYPE_COND:", *self.data["type_cond"].items(), sep="\n")
 
         # ------- Скорость
-        speeds = ENEMYS["speed"][0].copy()
+        speeds = ENEMYS[category]["speed"][0].copy()
         shuffle(speeds)
-        if ENEMYS["speed"][1] == [0] * len(ENEMYS["speed"][1]):
+        if ENEMYS[category]["speed"][1] == [0] * len(ENEMYS[category]["speed"][1]):
             speed = speeds[0]
         else:
-            speed = ENEMYS["speed"][0][ENEMYS["speed"][1].index(min(ENEMYS["speed"][1]))]
-        ENEMYS["speed"][1][ENEMYS["speed"][0].index(speed)] += 1
+            speed = ENEMYS[category]["speed"][0][ENEMYS[category]["speed"][1].index(min(ENEMYS[category]["speed"][1]))]
+        ENEMYS[category]["speed"][1][ENEMYS[category]["speed"][0].index(speed)] += 1
         self.data["speed"] = {"idle": 0, "walk": speed, "attack": 0, "hit": 0} # {"idle": 0, "sneak": 2, "walk": 4, "run": 6}
         self.data["speed_TO_freq"] = {"idle": 20, "walk": 7, "attack": ENEMYS[category]["speed_attack"], "hit": 3} # {"idle": 20, "sneak": 8, "walk": 7, "run": 4}
         self.data["val_speed"] = self.data["speed"][self.data["cond"]]
@@ -371,9 +391,16 @@ class Enemy(Object):
         goal = ((self.game.character.character["rect"].x+self.game.character.character["rect"].w//2) // self.game.map.rect_cell["size"][0],
                 (self.game.character.character["rect"].y+self.game.character.character["rect"].h//2) // self.game.map.rect_cell["size"][1])
 
-        self.queue, self.visited = self.game.bfs(start=self.start,
-                                                  goal=goal,
-                                                  graph=self.game.map.graph)
+        try:
+            self.queue, self.visited = self.game.bfs(start=self.start,
+                                                      goal=goal,
+                                                      graph=self.game.map.graph)
+        except KeyError:
+            print('error search way')
+            self.start = (len(self.game.map.map[0]) // 2, len(self.game.map.map)//2)
+            self.queue, self.visited = self.game.bfs(start=self.start,
+                                                     goal=goal,
+                                                     graph=self.game.map.graph)
         self.way = []
         path_segment = goal
         # print(path_segment)
@@ -465,7 +492,7 @@ class Enemy(Object):
         if self.data["cond"] == "attack":
             if self.data["number_sprite"] == 0:
                 self.data["flag_attack"] = 1
-            if self.data["number_sprite"] == 1 and self.data["flag_attack"]:
+            if self.data["number_sprite"] == 0 and self.data["flag_attack"]:
                 # if self.do_print: print(self.data["flag_attack"], "ATTACK")
                 self.game.character.character["hp"][0] -= ENEMYS[self.category]["damage"]
                 self.game.character.character["cond"] = "hit"
@@ -490,6 +517,89 @@ class Enemy(Object):
 
 
 
+class Bullet(Object):
+    def __init__(self, parent, game, name, base_style):
+        self.parent = parent
+        self.game = game
+        self.base_style = base_style
+
+        # ------ Дополнительные данные
+        self.bullet_data = {
+            "name": name,
+            "speed": 40,
+            "dir": "right",
+            "delete": 0,
+            "damage": 0,
+            "type_damage": {
+                "pistol": 20
+            }
+        }
+        # -------- Стартовые данные
+        start_data = {
+            "coords": [
+                self.game.character.character["coords"][0] + self.game.character.character["coords"][2] // 2,
+                self.game.character.character["coords"][1] + self.game.character.character["coords"][3] // 2,
+                7, 14],
+            "image": "sprites/bullet.png"
+        }
+
+        # -------- Обработка доп данных (перед созданием объекта)
+        self.bullet_data["dir"] = {"front": "down", "back": "up", "right": "right", "left": "left"}[self.game.character.character["dir"]]
+
+        if self.bullet_data["dir"] == "right":
+            start_data["coords"][0] += self.game.character.character["coords"][2] // 2
+        elif self.bullet_data["dir"] == "left":
+            start_data["coords"][0] -= self.game.character.character["coords"][2] // 2
+        elif self.bullet_data["dir"] == "down":
+            start_data["coords"][1] += self.game.character.character["coords"][3] // 2
+        elif self.bullet_data["dir"] == "up":
+            start_data["coords"][1] -= self.game.character.character["coords"][3] // 2
+
+        for k, v in self.bullet_data["type_damage"].items():
+            if k in self.game.character.character["type_weapon"]:
+                self.bullet_data["damage"] = v
+                break
+
+        # ------ Создание объекта
+        super().__init__(parent=parent, game=game, base_style=base_style,
+                         image=start_data["image"], coords=[start_data["coords"][0], start_data["coords"][1]],
+                         size=(start_data["coords"][2], start_data["coords"][3]),
+                         size_rect=(start_data["coords"][2], start_data["coords"][3]))
+
+        # -------- Обработка основных данных (после создания объекта)
+        if self.bullet_data["dir"] == "right":
+            self.data["sprite"] = pygame.transform.rotate(self.data["sprite"], 90)
+        elif self.bullet_data["dir"] == "left":
+            self.data["sprite"] = pygame.transform.rotate(self.data["sprite"], 270)
+        elif self.bullet_data["dir"] == "down":
+            self.data["sprite"] = pygame.transform.rotate(self.data["sprite"], 180)
+
+    def draw(self):
+        super().draw()
+        self.set_sprite()
+
+    def update(self):
+        if self.bullet_data["dir"] == "right": self.data["coords"][0] += self.bullet_data["speed"]
+        elif self.bullet_data["dir"] == "left": self.data["coords"][0] -= self.bullet_data["speed"]
+        elif self.bullet_data["dir"] == "up": self.data["coords"][1] -= self.bullet_data["speed"]
+        elif self.bullet_data["dir"] == "down": self.data["coords"][1] += self.bullet_data["speed"]
+
+        collide_objects = self.game.collide(base_object=self.data,
+                                            objects=dict(list(filter(lambda x: "bullet" not in x[0], self.game.room_now.objects.items()))),
+                                            draw_rects=False, type_collide="sprite", type_return="objcts")
+        if collide_objects != {}:
+            name, object = list(collide_objects.items())[0]
+            if "enemy" in name:
+                object.hit(self.bullet_data["damage"], name)
+            self.delete()
+
+    def delete(self):
+        self.bullet_data["delete"] = 1
+
+
+
+
+
 class Level1:
     def __init__(self, parent, game, base_style):
         self.parent = parent
@@ -501,6 +611,7 @@ class Level1:
             "meeting_room": Meeting_room,
             "final_boss_room": Final_boss_room
         }
+
 
 
 
@@ -747,6 +858,19 @@ class Start_room:
                            ),
                            size_button=(-20, -30), coords_button=(10, 30),
                            size_rect=(0, -100))
+        coords_avtomat_weapon = [700, 0]
+        coords_avtomat_weapon = [THICKNESS_WALL + coords_avtomat_weapon[0], THICKNESS_WALL + coords_avtomat_weapon[1]]
+        avtomat_weapon = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                           coords=coords_avtomat_weapon,
+                           size=SPRITES["avtomat_size"],
+                           # +100+delta_wall_right_3_x
+                           image="sprites/avtomat/avtomat_weapon.png",
+                           func=lambda: self.game.character.give_weapon(
+                               type_weapon="give_pistol",
+                               price=25,
+                           ),
+                           size_button=(-20, -30), coords_button=(10, 30),
+                           size_rect=(0, -100))
         # ------ Кулер 1
         self.kuler_sprites = ['sprites/kuler/1.png', 'sprites/kuler/2.png', 'sprites/kuler/3.png', 'sprites/kuler/4.png',
                                'sprites/kuler/5.png', 'sprites/kuler/6.png', 'sprites/kuler/7.png', 'sprites/kuler/8.png',
@@ -807,7 +931,7 @@ class Start_room:
             "computer_1": computer_1, "computer_2": computer_2, "computer_3": computer_3,
             "chair_1": chair_1, "chair_2": chair_2, "chair_3": chair_3,
             "kuler_1": kuler_1, "kuler_2": kuler_2,
-            "avtomat_1": avtomat_1,
+            "avtomat_1": avtomat_1, "avtomat_weapon": avtomat_weapon,
             "plant_2": plant_2,
             # Живые объекты:
             # ВАЖНО: Программа отличает живые объекты от статичных по тексту "enemy" в ключу к объекту.
@@ -1183,6 +1307,16 @@ class Final_boss_room:
             if value == True:
                 if name in self.objects and "enemy" in name:
                     del self.objects[name]
+
+        # category_enemy = "boss_enemy"
+        # boss_enemy = Enemy(parent=self.parent, game=self.game, base_style=self.base_style,
+        #                       category=category_enemy,
+        #                       coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
+        #                       size=ENEMYS[category_enemy]["size"],
+        #                       image='sprites/character/base_choice/idle/idle_front_0.png',
+        #                       size_rect=ENEMYS[category_enemy]["size_rect"],
+        #                       do_random_spawn=True)  # do_print=True
+        # self.objects["boss_enemy"] = boss_enemy
         # ------------------
         self.dop_objects_up = {}
         self.dop_objects_down = {}

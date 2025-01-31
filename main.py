@@ -77,7 +77,7 @@ class Main:
             "character_energy": 1,
             # 0 - нет энергии у персонажа, может бесконечно бегать по полю
             # 1 - есть энергия у персонажа
-            "difficulty": 1,
+            "difficulty": 0, # 1
             # 0 - лёгкий
             # 1 - сложный
             "draw_map": 0,
@@ -103,10 +103,11 @@ class Main:
         self.const = {
             "count_enemy": {
                 "curr": [0, 15, 20],
-                "few": [0, 6, 8],
-                "many":[0, 15, 20]
+                "few": [0, 7, 10], # [0, 2, 1],
+                "many": [0, 15, 20]
             }
         }
+        self.const["count_enemy"]["curr"] = self.const["count_enemy"][["few", "many"][self.settings_var["difficulty"]]]
 
 
     def buttons(self, coords, layout, texts, color, fonts, funcs):

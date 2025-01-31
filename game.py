@@ -5,7 +5,7 @@ from pygame import PixelArray, Color
 import pygame_widgets
 from collections import deque
 
-from levels import Level1, Object # , Hitbox_Button
+from levels import Level1, Object, Bullet # , Hitbox_Button
 from mini_games.dino import dino_game
 from mini_games.circle import curcle
 from mini_games.dash_hex import dash_hex
@@ -22,13 +22,15 @@ class Character:
         self.init_shell()
         self.commands = { # если val - list тогда, [(f1, flag1), (f2, flag2)], где 0-ой элемент на нажатие а 1-ый на отпускание,
             pygame.KEYDOWN: {
-                (pygame.K_DOWN, pygame.K_s): lambda: self.set_flag("key_down", 1), # lambda: print("character - front"),
-                (pygame.K_UP, pygame.K_w): lambda: self.set_flag("key_up", 1), # lambda: print("character - back"),
-                (pygame.K_LEFT, pygame.K_a): lambda: self.set_flag("key_left", 1), # lambda: print("character - left"),
-                (pygame.K_RIGHT, pygame.K_d): lambda: self.set_flag("key_right", 1), # lambda: print("character - right")
+                (pygame.K_DOWN, pygame.K_s): lambda: self.set_flag("key_down", 1),
+                (pygame.K_UP, pygame.K_w): lambda: self.set_flag("key_up", 1),
+                (pygame.K_LEFT, pygame.K_a): lambda: self.set_flag("key_left", 1),
+                (pygame.K_RIGHT, pygame.K_d): lambda: self.set_flag("key_right", 1),
                 (pygame.K_SPACE, pygame.K_RETURN): lambda: self.set_flag("key_space", 1),
                 (pygame.K_RCTRL, pygame.K_LCTRL): lambda: self.set_move("sneak"),
-                (pygame.K_RSHIFT, pygame.K_LSHIFT): lambda: self.set_move("run")
+                (pygame.K_RSHIFT, pygame.K_LSHIFT): lambda: self.set_move("run"),
+                pygame.K_1: lambda: self.set_type_weapon(1),
+                pygame.K_2: lambda: self.set_type_weapon(2),
             },
             pygame.KEYUP: {
                 (pygame.K_DOWN, pygame.K_s): lambda: self.set_flag("key_down", 0),
@@ -40,7 +42,6 @@ class Character:
             }
         }
         self.commands = self.parent.format_commands(self.commands)
-        #print("CHARACTER: ", self.commands)
 
     def init_shell(self):
         part_file_path = r"sprites/character/base_choice" + '/'
@@ -84,6 +85,12 @@ class Character:
                     "back": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_back_{x}.png").convert_alpha(), range(3))),
                     "left": list(map(lambda x: pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), range(3))),
                     "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "attack/" + f"attack_side_{x}.png").convert_alpha(), 1, 0), range(3)))
+                },
+                "shoot_pistol": {
+                    "front": list(map(lambda x: pygame.image.load(part_file_path + "shoot_pistol/" + f"shoot_pistol_front.png").convert_alpha(), range(1))),
+                    "back": list(map(lambda x: pygame.image.load(part_file_path + "shoot_pistol/" + f"shoot_pistol_back.png").convert_alpha(), range(1))),
+                    "left": list(map(lambda x: pygame.image.load(part_file_path + "shoot_pistol/" + f"shoot_pistol_side.png").convert_alpha(), range(1))),
+                    "right": list(map(lambda x: pygame.transform.flip(pygame.image.load(part_file_path + "shoot_pistol/" + f"shoot_pistol_side.png").convert_alpha(), 1, 0), range(1)))
                 }
             },
             "flags": {
@@ -98,8 +105,8 @@ class Character:
             "number_sprite": 0,
             "freq_sprite": 20,
             "counter_sprite": 0,
-            "speed": {"idle": 0, "sneak": 2, "walk": 4, "run": 5, "attack": 0, "hit": 0},
-            "speed_TO_freq": {"idle": 20, "sneak": 8, "walk": 7, "run": 4, "attack": 8, "hit": 0},
+            "speed": {"idle": 0, "sneak": 2, "walk": 4, "run": 5, "attack": 0, "hit": 0, "shoot_pistol": 0},
+            "speed_TO_freq": {"idle": 20, "sneak": 8, "walk": 7, "run": 4, "attack": 8, "hit": 0, "shoot_pistol": 0},
             "val_speed": 4,
             "coords": [self.parent.display_w // 2, self.parent.display_h // 2+100, 100, 140], # 50, 70
             # "center_coords": [0, 0],
@@ -107,11 +114,21 @@ class Character:
             "energy": [70, 0, 100, 1], # текущие, мин, макс, шаг
             "energy_counter": [0, 10, 15], # текущие, макс для уменьшения, макс для увеличения
             "hp": [100, 0, 100, 1],  # текущие, мин, макс, шаг
-            "money": [0, 0], # текущие, мин
+            "money": [1000000000, 0], # текущие, мин
             "time_hit": 0, "period_hit": 4,
             "time_attack": 0, "period_attack": None,
             "delta_coords_attack": [0, -20],
             "damage": 10,
+            # ------- Оружие
+            "type_weapon": "arms",
+            # клавиша 1 - "arms" - руки
+            # клавиша 2 - "pistol" - пистолет
+            "counter_bullet": 0,
+            "give_pistol": 0,
+            "bullets": {  # текущие, в обоиме
+                "arms": None,
+                "pistol": [30, 30]
+            }
         }
         self.character["period_attack"] = self.character["speed_TO_freq"]["attack"] + 1
 
@@ -123,7 +140,6 @@ class Character:
                 self.character["coords_rect"][i] = self.character["coords"][i]
             elif self.character["coords_rect"][i] < 0:
                 self.character["coords_rect"][i] = self.character["coords"][i] - abs(self.character["coords_rect"][i])
-        #print(self.character)
         self.character["coords"][0] -= self.character["coords"][2] / 2
         self.character["coords"][1] -= self.character["coords"][3] / 2
 
@@ -152,8 +168,11 @@ class Character:
 
     def set_flag(self, key, val):
         self.character["flags"][key] = val
-        if key == "key_space" and self.character["cond"] != "attack":
-            self.set_move("attack")
+        if key == "key_space":
+            if self.character["type_weapon"] == "arms" and self.character["cond"] != "attack":
+                self.set_move("attack")
+            elif self.character["type_weapon"] == "pistol" and self.character["cond"] != "shoot_pistol" and self.character["give_pistol"] == 1:
+                self.set_move("shoot_pistol")
         elif key in ("key_right", "key_left", "key_down", "key_up"):
             self.set_move(self.character["dop_old_cond"])
         else:
@@ -161,10 +180,30 @@ class Character:
                 self.set_move(self.character["old_cond"])
                 self.flag_walk = 0
 
+    def set_type_weapon(self, key_press):
+        self.character["type_weapon"] = ["arms", "pistol"][key_press-1]
+
+    def give_weapon(self, type_weapon, price):
+        if type_weapon == "give_pistol":
+            print_type = "пистолет"
+        else:
+            print_type = "*ошибка*"
+        if self.character["money"][0] - price < 0: self.game.set_message(f"Не хватает денег, для {print_type} нужно {price} монет ")
+        elif 0 < self.character["bullets"]["pistol"][0] < self.character["bullets"]["pistol"][1]:
+            self.character["money"][0] -= price
+            self.character["bullets"]["pistol"][0] = self.character["bullets"]["pistol"][1]
+            self.game.set_label("money", f"монеты: {self.character["money"][0]}")
+        elif self.character[type_weapon] == 1: self.game.set_message(f"{print_type.capitalize()} с патронами уже получен ", delay=1000)
+        else:
+            self.character["money"][0] -= price
+            self.character[type_weapon] = 1
+            self.character["bullets"]["pistol"][0] = self.character["bullets"]["pistol"][1]
+            self.game.set_label("money", f"монеты: {self.character["money"][0]}")
+
     def set_move(self, cond):
         if list(self.character["flags"].values()) != [0] * len(self.character["flags"].values()) or cond == "idle":
             self.character["val_speed"] = self.character["speed"][cond]
-            if cond == "attack": self.character["old_cond"] = self.character["cond"]
+            if cond in ("attack", "shoot_pistol"): self.character["old_cond"] = self.character["cond"]
             if cond == "walk": self.character["dop_old_cond"] = "walk"
             elif cond == "run": self.character["dop_old_cond"] = "run"
             elif cond == "sneak": self.character["dop_old_cond"] = "sneak"
@@ -200,55 +239,97 @@ class Character:
         # self.character["center_coords"] = (self.character["coords"][0] + self.character["coords"][2]//2, self.character["coords"][1] + self.character["coords"][3]//2)
 
     def update(self, draw_rects):
-        dir_collides = self.game.collide(base_object=self.character,
-                                         objects=list(self.game.room_now.objects.values())+list(self.game.room_now.dop_objects_up.values())+list(self.game.room_now.dop_objects_down.values()),
-                                         draw_rects=draw_rects)
-
+        # ----------- Урон
         if self.character["cond"] == "hit":
             if self.character["time_hit"] < self.character["period_hit"]:
                 self.character["time_hit"] += 1
             else:
                 self.set_move(self.character["dop_old_cond"])
                 self.character["time_hit"] = 0
-        elif self.character["cond"] == "attack":
-            if self.character["time_attack"] == 0:
-                collide_enemys = self.game.collide(base_object=self.character,
-                                  objects=dict(list(filter(lambda x:  hasattr(x[1], 'category') and "enemy" in x[1].category, self.game.room_now.objects.items()))),
-                                  type_return="objcts",
-                                  type_collide="rect",
-                                  draw_rects=False)
-                list(map(lambda name_enemy: name_enemy[1].hit(self.character["damage"], name_enemy[0]), collide_enemys.items()))
-                self.character["coords"][0] += self.character["delta_coords_attack"][0]
-                self.character["coords"][1] += self.character["delta_coords_attack"][1]
-            if self.character["time_attack"] < self.character["period_attack"]:
-                self.character["time_attack"] += 1
-            else:
-                self.set_move(self.character["old_cond"])
 
-                self.character["coords"][0] -= self.character["delta_coords_attack"][0]
-                self.character["coords"][1] -= self.character["delta_coords_attack"][1]
-                self.character["time_attack"] = 0
-                self.character["flags"]["key_space"] = 0
-                if self.character["energy"][0] - 3 >= self.character["energy"][1]:
-                    self.character["energy"][0] -= 3
-                self.set_sprite()
-        else:
+        # ----------- Атака
+        if self.character["cond"] == "attack":
+            self.attack_arms()
+        elif self.character["cond"] == "shoot_pistol" and self.character["give_pistol"] == 1:
+            self.shoot_pistol()
+
+        # -------- Перемещение
+        dir_collides = self.game.collide(base_object=self.character,
+                                         objects=list(self.game.room_now.objects.values())
+                                                 + list(self.game.room_now.dop_objects_up.values())
+                                                 + list(self.game.room_now.dop_objects_down.values()),
+                                         draw_rects=draw_rects)
+        if self.character["cond"] not in ("hit", "attack", "shoot_pistol"):
             self.move(dir_collides)
         # print(self.character["time_attack"], self.character["dir"], self.character["cond"])
 
+        # ----- Подсчёт значений
         self.counting()
 
+        # ----- Обновление спрайта персонажа
         self.set_sprite()
         self.draw()  # !!! Для оптиммизации можно добавить основной флаг, который будет отслеживать изменился ли персонаж
 
+        # ----- Звуки
         if self.character["cond"] in ("walk", "run", "sneak", "attack"):
             self.game.set_sound(self.character["cond"])
         else:
             self.game.set_sound(None)
 
+        # ----- Создание выводящихся данных
+        if self.character["type_weapon"] == "arms":
+            self.game.set_label("bullets", "")
+        elif self.character["type_weapon"] == "pistol":
+            # print("PISTOL")
+            self.game.set_label("bullets", f"патроны: {self.character["bullets"]["pistol"][0]} / {self.character["bullets"]["pistol"][1]}")
+
+    def attack_arms(self):
+        if self.character["time_attack"] == 0:
+            collide_enemys = self.game.collide(base_object=self.character,
+                                               objects=dict(list(filter(
+                                                   lambda x: hasattr(x[1], 'category') and "enemy" in x[1].category,
+                                                   self.game.room_now.objects.items()))),
+                                               type_return="objcts",
+                                               type_collide="rect",
+                                               draw_rects=False)
+            print(*list(collide_enemys.keys()))
+            list(map(lambda name_enemy: name_enemy[1].hit(self.character["damage"], name_enemy[0]),
+                     collide_enemys.items()))
+            self.character["coords"][0] += self.character["delta_coords_attack"][0]
+            self.character["coords"][1] += self.character["delta_coords_attack"][1]
+        if self.character["time_attack"] < self.character["period_attack"]:
+            self.character["time_attack"] += 1
+        else:
+            self.set_move(self.character["old_cond"])
+
+            self.character["coords"][0] -= self.character["delta_coords_attack"][0]
+            self.character["coords"][1] -= self.character["delta_coords_attack"][1]
+            self.character["time_attack"] = 0
+            self.character["flags"]["key_space"] = 0
+            if self.character["energy"][0] - 3 >= self.character["energy"][1]:
+                self.character["energy"][0] -= 3
+            # self.set_sprite()
+
+    def shoot_pistol(self):
+        if self.character["time_attack"] < self.character["period_attack"]:
+            self.character["time_attack"] += 1
+        else:
+            name = f"bullet_{self.character["counter_bullet"]}"
+            self.game.room_now.objects[name] = Bullet(parent=self.parent, game=self.game, base_style=self.base_style,
+                                                      name=name)
+            if self.character["bullets"]["pistol"][0] - 1 < 0:
+                self.character["give_pistol"] = 0
+            else:
+                self.character["bullets"]["pistol"][0] -= 1
+            self.character["counter_bullet"] += 1
+            self.set_move(self.character["old_cond"])
+            self.character["time_attack"] = 0
+            self.character["flags"]["key_space"] = 0
+            if self.character["energy"][0] - 1 >= self.character["energy"][1]:
+                self.character["energy"][0] -= 1
+            # self.set_sprite()
 
     def move(self, dir_collides):
-        # print(set(dir_collides))
         flag_change = 0
         flag_changes = {"down": 1, "up": 1, "right": 1, "left": 1}
         if "down" not in dir_collides and self.character["flags"]["key_down"] and flag_changes["down"] == 1:
@@ -335,7 +416,6 @@ class Character:
                     self.character["energy_counter"][0] = 0
             if self.character["energy"][0] == self.character["energy"][1] and self.character["cond"] == "run":
                 self.set_move("walk")
-            # print(self.character["energy"][0],  self.character["energy_counter"][0])
 
     def draw(self):
         self.game.game_layer.blit(self.character["sprite"], self.character["coords"])
@@ -387,8 +467,6 @@ class Map:
         return [(x + dx, y + dy) for dx, dy in ways if check_next_node(x + dx, y + dy)]
 
     def set_object(self, coords, name=None, old_coords=None):
-        # if name == "partition_side_1":
-        # print(coords, list(range(coords[1], coords[3])), list(range(coords[0], coords[2])), old_coords, name)
         if coords[1] == coords[3]: coords[3] += 1
         if coords[0] == coords[2]: coords[2] += 1
         for y in range(coords[1], coords[3]):
@@ -402,7 +480,6 @@ class Map:
         for i_row in range(len(self.map)):
             for i_cell in range(len(self.map[i_row])):
                 color = self.rect_cell["color"][str(self.map[i_row][i_cell])]
-                # print([x, y, self.rect_cell["size"][0], self.rect_cell["size"][1]], color)
                 self.game.set_rect(layer=self.game.game_layer, coords=[x, y, self.rect_cell["size"][0], self.rect_cell["size"][1]],
                                    color_base=color, color_border=self.rect_cell["color"]["border"],
                                    thickness_border=self.rect_cell["thickness_border"])
@@ -483,7 +560,6 @@ class Game:
         self.character = Character(self.parent, self, self.base_style)
         self.character.respawn(self.start_spawn)
         self.start2_coords_dinamic_zone = self.coords_dinamic_zone.copy()
-
 
         # ------ Команды и горячие клавиши
         self.commands = {
@@ -579,6 +655,18 @@ class Game:
                                                        color=self.base_style["colors"]["light"])
         self.labels["money"] = label_money
 
+        label_bullets = {
+            "coords": [5, self.parent.display_h - 50],
+            "text": f"патроны:",
+            "font": pygame.font.Font(self.base_style["font_path"], 30)
+        }
+        # label_bullets["label"] = self.parent.label_text(coords=label_bullets["coords"],
+        #                                               text=label_bullets["text"],
+        #                                               font=label_bullets["font"],
+        #                                               color=self.base_style["colors"]["light"],
+        #                                               type_blit=False)
+        self.labels["bullets"] = label_bullets
+
     def set_label(self, key, text):
         self.labels[key]["text"] = text
         self.labels[key]["label"] = self.parent.label_text(coords=self.labels[key]["coords"],
@@ -611,7 +699,6 @@ class Game:
         if self.curr_sound != sound:
             if sound == None:
                 pygame.mixer.music.pause()
-                # print("INTO")
                 # self.flag_sound = 1
             else: # elif self.flag_sound:
                 pygame.mixer.music.load(self.sounds[sound])
@@ -698,14 +785,28 @@ class Game:
             self.room_now = self.list_rooms[self.type_room](self.parent, self, self.base_style)
             self.room_now.enter_rooms()
             self.init_map()
-            print("enemys", list(filter(lambda x: "enemy" in x, self.room_now.objects.keys())))
-            print("delete_enemys", list(self.delete_enemys.values()))
+            # print()
+            # print("enemys", list(filter(lambda x: "enemy" in x, self.room_now.objects.keys())))
+            # print("coords_enemys", list(self.coords_enemy.keys()))
+            # print("delete_enemys", list(self.delete_enemys.keys()))
         # print(self.coords_game_layer[0] - self.coords_game_layer_old[0], self.coords_game_layer[1] - self.coords_game_layer_old[1])
         self.room_now.draw()
 
+        # ------ Пули
+        delete_bullet = []
+        for name, bullet in dict(list(filter(lambda x: "bullet" in x[0], self.room_now.objects.items()))).items():
+            bullet.update()
+            if bullet.bullet_data["delete"] == 1: delete_bullet.append(bullet.bullet_data["name"])
+        # print(list(dict(list(filter(lambda x: "bullet" in x[0], self.room_now.objects.items()))).keys()))
+        for _ in range(len(delete_bullet)):
+            if delete_bullet[0] in self.room_now.objects.keys():
+                del self.room_now.objects[delete_bullet[0]]
+
         # ------ Вывод значений и данных о игре
         # if self.flag_message_energy == 1: self.set_message()
-        for i in self.labels.values(): self.parent.display.blit(i["label"], i["coords"])
+        for i in self.labels.values():
+            if "label" in i.keys():
+                self.parent.display.blit(i["label"], i["coords"])
         self.set_label("fps", f"fps: {self.parent.clock.get_fps():2.0f} / {self.parent.FPS}")
         self.set_label("hp", f"hp: {self.character.character["hp"][0]} / {self.character.character["hp"][2]}")
         if self.parent.settings_var["character_energy"] == 1:
@@ -781,7 +882,7 @@ class Game:
 
     def hp_character_up(self, price, val, type_val):
         if self.character.character["money"][0] - price < 0: self.set_message(f"Не хватает денег, для {val} {type_val} нужно {price} монет ")
-        elif self.character.character[type_val][0] + val > self.character.character[type_val][2]: self.set_message(f"Всё hp {type_val} восстановлено (макс. {self.character.character[type_val][2]} {type_val}) ")
+        elif self.character.character[type_val][0] + val > self.character.character[type_val][2]: self.set_message(f"Всё {type_val} восстановлено (макс. {self.character.character[type_val][2]} {type_val}) ")
         else:
             self.character.character["money"][0] -= price
             self.character.character[type_val][0] += val
@@ -842,8 +943,15 @@ class Game:
 
         i = 0
         for obj in objects:
-            if base_rect.colliderect(obj.data["rect"]):
-                obj_rect = obj.data["rect"]
+            if type_collide == "sprite":
+                if "sprite" in obj.data:
+                    obj_rect = obj.data["sprite"].get_rect()
+                    obj_rect.x = obj.data["coords"][0]
+                    obj_rect.y = obj.data["coords"][1]
+                else:
+                    obj_rect = obj.data["rect"]
+            else: obj_rect = obj.data["rect"]
+            if base_rect.colliderect(obj_rect):
                 collision_area = base_rect.clip(obj_rect)
                 if type_return == "objcts": collide_objcts[names_objects[i]] = obj
                 if collision_area.width > collision_area.height:
@@ -856,7 +964,7 @@ class Game:
                         dir_collides.append("right")
                     else:
                         dir_collides.append("left")
-                i += 1
+            i += 1
 
         if dir_collides == []: dir_collides = [None]
         dir_collides = list(set(dir_collides))
