@@ -38,6 +38,7 @@ class Settings:
         self.height_base = 0
         SIZE_LABEL = 35
         button_w, button_h = 80, 50
+        w_textbox = 167
 
         # ------ Кнопка
         button_ToMenu = {
@@ -259,9 +260,8 @@ class Settings:
         self.labels.append(label_money)
         prefix_w += label_money["label"].get_width() + delta_w
         # ------ Поле ввода
-        w_textbox_money = 165
         textbox_money = {
-            "coords": [prefix_w, self.height_base, w_textbox_money, SPACES["point"]+10],
+            "coords": [prefix_w, self.height_base, w_textbox, SPACES["point"]+10],
             "start_text": str(self.parent.settings_var["money"]),
             "font": pygame.font.Font(self.base_style["font_path"], SIZE_LABEL),
             "color": {
@@ -289,9 +289,8 @@ class Settings:
         self.labels.append(label_hp)
         prefix_w += label_hp["label"].get_width() + delta_w
         # ------ Поле ввода
-        w_textbox_money = 165
         textbox_hp = {
-            "coords": [prefix_w, self.height_base, w_textbox_money, SPACES["point"] + 10],
+            "coords": [prefix_w, self.height_base, w_textbox, SPACES["point"] + 10],
             "start_text": str(self.parent.settings_var["hp"]),
             "font": pygame.font.Font(self.base_style["font_path"], SIZE_LABEL),
             "color": {
@@ -338,9 +337,8 @@ class Settings:
         self.labels.append(label_bullets_pistol)
         prefix_w += label_bullets_pistol["label"].get_width() + delta_w
         # ------ Поле ввода
-        w_textbox_bullets = 165
         textbox_bullets_pistol = {
-            "coords": [prefix_w, self.height_base, w_textbox_bullets, SPACES["point"] + 10],
+            "coords": [prefix_w, self.height_base, w_textbox, SPACES["point"] + 10],
             "start_text": str(self.parent.settings_var["max_bullets_pistol"]),
             "font": pygame.font.Font(self.base_style["font_path"], SIZE_LABEL),
             "color": {
@@ -369,9 +367,8 @@ class Settings:
         self.labels.append(label_bullets_automat)
         prefix_w += label_bullets_automat["label"].get_width() + delta_w
         # ------ Поле ввода
-        w_textbox_bullets = 165
         textbox_bullets_automat = {
-            "coords": [prefix_w, self.height_base, w_textbox_bullets, SPACES["point"] + 10],
+            "coords": [prefix_w, self.height_base, w_textbox, SPACES["point"] + 10],
             "start_text": str(self.parent.settings_var["max_bullets_automat"]),
             "font": pygame.font.Font(self.base_style["font_path"], SIZE_LABEL),
             "color": {
@@ -547,7 +544,7 @@ class Settings:
         # Отрисовка текстовых полей
         for name, textbox in self.textboxs.items():
             textbox["textbox"].draw()
-            if textbox["textbox"].getText().isdigit():
+            if textbox["textbox"].getText().isdigit() and len(textbox["textbox"].getText()) < 8:
                 self.parent.settings_var[name] = int(textbox["textbox"].getText())
 
 
