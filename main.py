@@ -14,6 +14,7 @@ class Main:
     def __init__(self):
         pygame.init()
         pygame.mixer.init()
+        self.events = None
 
         ########### ДИСПЛЕЙ
         self.FPS = 60
@@ -171,7 +172,7 @@ class Main:
         color = self.style["colors"]["light"] if not color else color
         f = font
         res_label = f.render(text, True, color)
-        if type_blit == True: self.display.blit(res_label, coords)
+        if type_blit is True: self.display.blit(res_label, coords)
         # pygame.display.update()
         return res_label
 
@@ -194,12 +195,12 @@ class Main:
         )
         return textbox
 
-    def slider(self, coords, color, handle_color, min, max, step, border_color, border_thickness=0, start=None, vertical=False, layer=None):
+    def slider(self, coords, color, handle_color, min_slider, max_slider, step, border_color, border_thickness=0, start=None, vertical=False, layer=None):
         if layer is None: layer = self.display
-        if start is None: start = (min + max) // 2
+        if start is None: start = (min_slider + max_slider) // 2
         return Slider(layer,
                       coords[0], coords[1], coords[2], coords[3],
-                      min=min, max=max, step=step, initial=start,
+                      min=min_slider, max=max_slider, step=step, initial=start,
                       colour=color, handleColour=handle_color,
                       vertical=vertical, handleRadius=int(coords[2 if vertical else 3] / 1.5),
                       borderColour=border_color, borderThickness=border_thickness)
@@ -222,7 +223,7 @@ class Main:
             coords[1] = (self.display.get_height() - obj.get_height()) // 2 + inacurr_h
         else:
             raise TypeError("Align type must be 'horizontal' or 'vertical' or 'center'")
-        if type_blit == True:
+        if type_blit is True:
             if type(obj) == pygame.surface.Surface:
                 self.display.blit(obj, coords)
         return obj, coords
@@ -230,9 +231,9 @@ class Main:
     def resize_image(self, size, type_side="width"):
         print(size)
         if type_side == "width":
-            return (self.display_w, int(size[0] * (self.display_h / size[1])))
+            return self.display_w, int(size[0] * (self.display_h / size[1]))
         elif type_side == "height":
-            return (int(size[0] * (self.display_h / size[1])), self.display_w)
+            return int(size[0] * (self.display_h / size[1])), self.display_w
 
     def format_commands(self, commands):
         res_commands = {}
@@ -253,7 +254,7 @@ class Main:
 
     def display_change(self, type_display, dop_type=None):
         self.changes_holst = 1
-        if dop_type != None: 
+        if dop_type is not None:
             if type_display == "final":
                 self.type_final = dop_type
                 print("CHANGE FINAL", self.type_final)

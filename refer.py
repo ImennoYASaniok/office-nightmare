@@ -51,7 +51,7 @@ class Refer:
             "thickness": 10,
         }
         self.base_slider["slider"] = self.parent.slider(coords=self.base_slider["coords"],
-                                              min=self.base_slider["min"], max=self.base_slider["max"], step=self.base_slider["step"], start=self.base_slider["start"],
+                                              min_slider=self.base_slider["min"], max_slider=self.base_slider["max"], step=self.base_slider["step"], start=self.base_slider["start"],
                                               color=self.base_slider["color"]["base_part"], handle_color=self.base_slider["color"]["handle"],
                                               vertical=self.base_slider["vertical"],
                                               border_color=self.base_slider["color"]["border"], border_thickness=self.base_slider["thickness"])
