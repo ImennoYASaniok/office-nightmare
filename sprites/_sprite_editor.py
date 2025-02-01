@@ -8,20 +8,20 @@ def del_border(path, type_save="save", new_name=""):
     data = sheet.load()
     crop_coords = []
     for y1 in range(sheet.size[1]):
-        if list(filter(lambda x: x != 0, map(lambda x: data[x, y1][3], range(sheet.size[0])))) != []:
+        if list(filter(lambda x: x != 0, map(lambda x: data[x, y1][3], range(sheet.size[0])))) is not []:
             crop_coords.append(y1)
             break
     for x1 in range(sheet.size[0]):
-        if list(filter(lambda y: y != 0, map(lambda y: data[x1, y][3], range(sheet.size[1])))) != []:
+        if list(filter(lambda y: y != 0, map(lambda y: data[x1, y][3], range(sheet.size[1]))))  is not []:
             crop_coords.append(x1)
             break
     for x2 in range(sheet.size[0]-1, 0, -1):
-        if list(filter(lambda y: y != 0, map(lambda y: data[x2, y][3], range(sheet.size[1]-1, -1, -1)))) != []:
+        if list(filter(lambda y: y != 0, map(lambda y: data[x2, y][3], range(sheet.size[1]-1, -1, -1)))) is not []:
             crop_coords.append(x2)
             break
     for y2 in range(sheet.size[1]-1, 0, -1):
         # print(list(filter(lambda x: x != 0, map(lambda x: data[x, y2][3], range(sheet.size[0]-1, -1, -1)))))
-        if list(filter(lambda x: x != 0, map(lambda x: data[x, y2][3], range(sheet.size[0]-1, -1, -1)))) != []:
+        if list(filter(lambda x: x != 0, map(lambda x: data[x, y2][3], range(sheet.size[0]-1, -1, -1)))) is not []:
             crop_coords.append(y2)
             break
     print("coords to crop:", *crop_coords)
@@ -53,7 +53,7 @@ def sprite_crop(path, type_sprites, sprite, grid, inacurr=[0, 0, 0, 0], sep=(), 
         elif len(v) == 2: single_inacurr[k] += [v[0], v[1]]
         elif len(v) == 3: single_inacurr[k] += [v[1]]
 
-    if sep == None or sep == (): sep = (sheet.size[0]//grid[1], sheet.size[1]//grid[0])
+    if sep is None or sep == (): sep = (sheet.size[0]//grid[1], sheet.size[1]//grid[0])
     print("sep:", sep)
     count = 0
     for y in range(1, grid[0] + 1):
@@ -87,12 +87,12 @@ def sprite_crop(path, type_sprites, sprite, grid, inacurr=[0, 0, 0, 0], sep=(), 
 
 
 def set_image_expansion(input_path, output_path, k=None, size=None, type_side="width", quality=95): # изменение расширение картинки
-    if k == None and size == None:
+    if k is None and size is None:
         raise ValueError("параметр k или side должен присутствовать")
     image = Image.open(input_path)
-    if (k != None and size == None) or (k != None and size != None):
+    if (k is not None and size is None) or (k is not None and size is not None):
         image = image.reduce(k)
-    elif k == None and size != None:
+    elif k is None and size is not None:
         if type(size) == int:
             if type_side == "width":
                 image = image.resize((size, int(image.size[1] / (image.size[0] / size))))

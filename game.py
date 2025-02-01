@@ -226,8 +226,15 @@ class Character:
         need_money = int(need_money)
         need_bullets = int(need_bullets)
         # print("GIVE BULLETS: ", need_bullets, need_money)
-        if self.character["bullets"][type_weapon][0] + need_bullets > self.character["bullets"][type_weapon][1]: self.game.set_message(f"Больше нельзя получить обоим для {print_type}", delay=1000)
-        elif self.character["money"][0] < need_money: self.game.set_message(f"Не хватает денег, на обоиму для {print_type}, 1 обоима = {need_money} монет ")
+        if self.character["bullets"][type_weapon][0] == self.character["bullets"][type_weapon][1]:
+            self.game.set_message(f"{print_type.capitalize()} уже полностью заряжен ")
+        elif self.character["bullets"][type_weapon][0] + need_bullets > self.character["bullets"][type_weapon][1]:
+            self.character["bullets"][type_weapon][0] = self.character["bullets"][type_weapon][1]
+            self.character["money"][0] -= need_money
+            self.character["money"][0] = max(self.character["money"][0], 0)
+            self.game.set_label("money", f"монеты: {self.character['money'][0]}")
+        elif self.character["money"][0] < need_money:
+            self.game.set_message(f"Не хватает денег на обоиму в {print_type}е, 1 обоима = {need_money} монет ", delay=2800)
         else:
             self.character["money"][0] -= need_money
             self.character["bullets"][type_weapon][0] += need_bullets
@@ -318,8 +325,10 @@ class Character:
             self.game.set_label("weapon", self.translate_name_weapon())
             both = self.character['bullets'][self.character["type_weapon"]][0] // self.character['shoot1_counter_bullets'][self.character["type_weapon"]][1]
             max_both = self.character['bullets'][self.character["type_weapon"]][1] // self.character['shoot1_counter_bullets'][self.character["type_weapon"]][1]
-            # if both not in (0, max_both):
-            #     both += 1
+            if both == 0 and self.character['bullets'][self.character["type_weapon"]][0] != 0:
+                both += 1
+            if max_both == 0:
+                max_both = 1
             self.game.set_label("both", f"обоим: {both} / {max_both}")
             self.game.set_label("bullets", f"всего патронов: {self.character['bullets'][self.character["type_weapon"]][0]} / {self.character['bullets'][self.character["type_weapon"]][1]}")
 
@@ -363,8 +372,10 @@ class Character:
             if self.character["energy"][0] - 1 >= self.character["energy"][1]:
                 self.character["energy"][0] -= 1
 
-            self.character["shoot1_counter_bullets"][type_shoot][0] += 1
             self.character["time_attack"] = self.character["period_attack"] - 2
+            self.character["shoot1_counter_bullets"][type_shoot][0] += 1
+            if self.character["bullets"][type_shoot][0] <= 0:
+                self.character["shoot1_counter_bullets"][type_shoot][0] = self.character["shoot1_counter_bullets"][type_shoot][1]
 
         if self.character["shoot1_counter_bullets"][type_shoot][0] >= self.character["shoot1_counter_bullets"][type_shoot][1]:
             self.set_move(self.character["old_cond"])
@@ -491,6 +502,8 @@ class Map:
         self.coords_objects = []
         self.rows, self.cols = len(self.map), len(self.map[0])
 
+        self.graph = None
+
         # print("\nMAP:")
         # print(*self.map, sep="\n")
 
@@ -506,7 +519,7 @@ class Map:
         self.map[y][x] = val
 
     def get_next_nodes(self, x, y):
-        check_next_node = lambda x, y: True if 0 <= x < self.cols and 0 <= y < self.rows and not self.map[y][x] else False
+        check_next_node = lambda lx, ly: True if 0 <= lx < self.cols and 0 <= ly < self.rows and not self.map[ly][lx] else False
         ways = [-1, 0], [0, -1], [1, 0], [0, 1] # , [-1, -1], [1, -1], [1, 1], [-1, 1]
         return [(x + dx, y + dy) for dx, dy in ways if check_next_node(x + dx, y + dy)]
 
@@ -616,7 +629,6 @@ class Game:
             pygame.MOUSEBUTTONUP: self.mouse_state
         }
         self.commands = self.parent.format_commands(self.commands)
-        print("GAME: ", *self.commands.items(), sep="\n")
         self.list_comands = [self.commands, self.character.commands]
 
         # ------ Мини игры
@@ -927,8 +939,10 @@ class Game:
         pygame.time.wait(delay)
 
     def hp_character_up(self, price, val, type_val):
-        if self.character.character["money"][0] - price < 0: self.set_message(f"Не хватает денег, для {val} {type_val} нужно {price} монет ")
-        elif self.character.character[type_val][0] + val > self.character.character[type_val][2]: self.set_message(f"Всё {type_val} восстановлено (макс. {self.character.character[type_val][2]} {type_val}) ")
+        if self.character.character["money"][0] - price < 0:
+            self.set_message(f"Не хватает денег, для {val} {type_val} нужно {price} монет ")
+        elif self.character.character[type_val][0] + val > self.character.character[type_val][2]:
+            self.set_message(f"Всё {type_val} восстановлено (макс. {self.character.character[type_val][2]} {type_val}) ")
         else:
             self.character.character["money"][0] -= price
             self.character.character[type_val][0] += val

@@ -33,6 +33,7 @@ class Final:
             "text": self.types_final[self.types_final["type"]]["text"],
             "font": pygame.font.Font(self.base_style["font_path"], 50)
         }
+        label_title = dict(label_title)
         label_title["label"] = self.parent.label_text(coords=label_title["coords"],
                                                       text=label_title["text"],
                                                       font=label_title["font"])
@@ -43,7 +44,7 @@ class Final:
 
     def init_buttons(self):
         w, h = 100, 90
-        button_OK = {
+        button_ok = {
             "font": pygame.font.Font(self.base_style["font_path"], 40),
             "coords": (self.parent.display_w // 2 - w, self.parent.display_h - h - 30, w, h),
             "color": {
@@ -55,12 +56,12 @@ class Final:
             "text": "ОК",
             "func": lambda: self.parent.display_change("menu"),
         }
-        button_OK["button"] = self.parent.button(coords=button_OK["coords"],
-                                                     text=button_OK["text"],
-                                                     color=button_OK["color"],
-                                                     font=button_OK["font"],
-                                                     func=button_OK["func"])
-        self.buttons.append(button_OK)
+        button_ok["button"] = self.parent.button(coords=button_ok["coords"],
+                                                     text=button_ok["text"],
+                                                     color=button_ok["color"],
+                                                     font=button_ok["font"],
+                                                     func=button_ok["func"])
+        self.buttons.append(button_ok)
 
     def delete_all(self):
         # print("SETT", *list(map(lambda x: x["text"] if "text" in x.keys() else x["texts"], self.buttons)), sep=" ")
