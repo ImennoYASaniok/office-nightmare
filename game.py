@@ -116,16 +116,16 @@ class Character:
             "coords_rect": [7, 0, 82, 20], "absolute_coords_rect": [0, 0], "coords_display": [0, 0],
             "energy": [70, 0, 100, 1], # текущие, мин, макс, шаг
             "energy_counter": [0, 10, 15], # текущие, макс для уменьшения, макс для увеличения
-            "hp": [100, 0, 100, 1],  # текущие, мин, макс, шаг
-            "money": [40, 0], # текущие, мин # [30, 0]
+            "hp": [self.parent.settings_var["hp"], 0, self.parent.settings_var["hp"], 1],  # текущие, мин, макс, шаг
+            "money": [self.parent.settings_var["money"], 0], # текущие, мин
             "time_hit": 0, "period_hit": 4,
             "time_attack": 0, "period_attack": None,
             "delta_coords_attack": [0, -20],
             # ------- Оружие
             "damage": {
-                "arms": 10,
+                "arms": 7,
                 "pistol": 35,
-                "automat": 15,
+                "automat": 12,
             },
             "type_weapon": "arms",
             # клавиша 1 - "arms" - руки
@@ -133,11 +133,11 @@ class Character:
             "counter_bullet": 0,
             "bullets": {  # текущие, в обоиме
                 "arms": None,
-                "pistol": [0, 30],
-                "automat": [0, 80]
+                "pistol": [0, self.parent.settings_var["max_bullets_pistol"]],
+                "automat": [0, self.parent.settings_var["max_bullets_automat"]]
             },
             "bullets_price": {
-                "pistol": [5, 1],
+                "pistol": [4, 0.5],
                 "automat": [10, 2],
             },
             "shoot1_counter_bullets": {
@@ -316,10 +316,10 @@ class Character:
             self.game.set_label("bullets", "")
         elif self.character["type_weapon"] in ("pistol", "automat"):
             self.game.set_label("weapon", self.translate_name_weapon())
-            both = self.character['bullets'][self.character["type_weapon"]][0] * self.character['bullets_price'][self.character["type_weapon"]][1] // self.character['bullets_price'][self.character["type_weapon"]][0]
-            max_both = self.character['bullets'][self.character["type_weapon"]][1] * self.character['bullets_price'][self.character["type_weapon"]][1] // self.character['bullets_price'][self.character["type_weapon"]][0]
-            if both not in (0, max_both):
-                both += 1
+            both = self.character['bullets'][self.character["type_weapon"]][0] // self.character['shoot1_counter_bullets'][self.character["type_weapon"]][1]
+            max_both = self.character['bullets'][self.character["type_weapon"]][1] // self.character['shoot1_counter_bullets'][self.character["type_weapon"]][1]
+            # if both not in (0, max_both):
+            #     both += 1
             self.game.set_label("both", f"обоим: {both} / {max_both}")
             self.game.set_label("bullets", f"всего патронов: {self.character['bullets'][self.character["type_weapon"]][0]} / {self.character['bullets'][self.character["type_weapon"]][1]}")
 
@@ -357,7 +357,8 @@ class Character:
             self.game.room_now.objects[name] = Bullet(parent=self.parent, game=self.game,
                                                       base_style=self.base_style,
                                                       name=name, damage=self.character["damage"][self.character["type_weapon"]])
-            self.character["bullets"][type_shoot][0] -= 1
+            if self.character["bullets"][type_shoot][0] - 1 >= 0:
+                self.character["bullets"][type_shoot][0] -= 1
             self.character["counter_bullet"] += 1
             if self.character["energy"][0] - 1 >= self.character["energy"][1]:
                 self.character["energy"][0] -= 1
@@ -583,7 +584,6 @@ class Game:
             "right": 0,
         }
         self.type_dinamic = self.parent.settings_var["type_dinamic"]
-        self.do_draw_dinamic_zone = self.parent.settings_var["do_draw_dinamic_zone"]
         # значения self.type_dinamic:
         # 0 - динамическая камера с прямоугольной зоной
         # 1 - постоянная динамическая зона
@@ -791,7 +791,7 @@ class Game:
         self.game_layer.blit(self.room_now.floor, (0, 0))
 
         # ------ Перемещение карты (динамическая камеры)
-        if self.do_draw_dinamic_zone == 1: self.set_dinamic_zone(type_output=1)
+        # self.set_dinamic_zone(type_output=1)
         if self.type_dinamic == 0:
             if self.character.character["coords_display"][1] < self.coords_dinamic_zone[1]:
                 self.flags_dinamic["up"] = 1
@@ -942,7 +942,7 @@ class Game:
         delete_obj = []
         for name, obj in objects.items():
             if name == "DINAMIC_door_1":
-                if True in self.delete_enemys.values() or self.delete_enemys == {}:
+                if False not in self.delete_enemys.values() or self.delete_enemys == {}:
                     delete_obj.append(name)
         for _ in range(len(delete_obj)):
             del self.room_now.objects[delete_obj[0]]

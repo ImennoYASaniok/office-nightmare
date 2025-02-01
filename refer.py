@@ -83,11 +83,10 @@ class Refer:
                     "font": pygame.font.Font(self.base_style["font_path"], 25)
                 }
                 # print([label_title["text"]])
+                delta_color = -50
                 label_title["label"] = self.parent.label_text(coords=label_title["coords"],
                                                               text=label_title["text"],
-                                                              font=label_title["font"])
-                # label_title["label"], label_title["coords"] = self.parent.align(label_title["label"], label_title["coords"],
-                #                                                                inacurr=-20, type_blit=False)
+                                                              font=label_title["font"],) # color=(249+delta_color,125+delta_color,61+delta_color)
                 self.labels.append(label_title)
                 self.prefix_i += 30
             else:
@@ -130,7 +129,7 @@ class Refer:
         x_mouse, y_mouse = pygame.mouse.get_pos()
         delta_x = x_mouse // self.delta_size_image * 3
         delta_y = y_mouse // self.delta_size_image * 3
-        self.parent.display.blit(self.back_images[self.for_back_image["var"]], (delta_x-self.delta_size_image, (self.base_slider["max"]-val_slider)//self.delta_size_image*5-self.delta_size_image+delta_y)) #  delta_size
+        self.parent.display.blit(self.back_images[self.for_back_image["var"]], (-delta_x, (self.base_slider["max"]-val_slider)//self.delta_size_image*5-self.delta_size_image-delta_y)) #  delta_size
         if self.for_back_image["count"] >= self.for_back_image["freq"]:
             self.for_back_image["count"] = 0
             self.for_back_image["var"] += 1

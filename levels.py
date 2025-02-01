@@ -535,7 +535,7 @@ class Boss_wither(Enemy):
             "count_hit": 0,
             "delta_hit": 4,
         }
-        self.data["hp"] = [250, 250]
+        self.data["hp"] = [350, 350]
 
     def search_way(self):
         for cell in self.way:

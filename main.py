@@ -63,16 +63,14 @@ class Main:
             "color": 0,
             # 0 - светлая
             # 1 - тёмная
-            "format_screen": 0,
-            # 0 - выкл полно-экранный режим
-            # 1 - вкл полно-экранный режим
             # ---- Режим разработчика
+            "money": 40, "hp": 100,
+            # монеты и hp в игре задаются вводом в ячейку
+            "max_bullets_pistol": 30, "max_bullets_automat": 80,
+            # макс кол-во патронов
             "type_dinamic": 0,
             # 0 - динамическая камера с прямоугольной зоной
             # 1 - постоянная динамическая зона
-            "do_draw_dinamic_zone": 0,
-            # 0 - отрисовать
-            # 1 - не отрисовывать
             "character_energy": 1,
             # 0 - нет энергии у персонажа, может бесконечно бегать по полю
             # 1 - есть энергия у персонажа
@@ -89,6 +87,10 @@ class Main:
             # 0 - не бесконечные патроны на пистолете
             # 1 - бесконечные патроны на пистолете
         }
+        self.settings_var["start_hp"] = self.settings_var["hp"]
+        self.settings_var["start_money"] = self.settings_var["money"]
+        self.settings_var["start_max_bullets_pistol"] = self.settings_var["max_bullets_pistol"]
+        self.settings_var["start_max_bullets_automat"] = self.settings_var["max_bullets_automat"]
 
         ########### РЕЗУЛЬТАТ ИГРЫ
         self.type_final = "victory"
@@ -173,18 +175,23 @@ class Main:
         # pygame.display.update()
         return res_label
 
-    def create_textbox(self, coords, size, border_colour=(0, 0, 0), text_colour=(0, 0, 0), r=10, bd=5):
+    def create_textbox(self, coords, size, font, base_color=(0, 0, 0), dop_color=(0, 0, 0), back_color=(0, 0, 0), start_text=""):
         textbox = TextBox(
-        self.display,
-        x=coords[0],
-        y=coords[1],
-        width=size[0],
-        height=size[1],
-        fontSize=50,
-        borderColour=border_colour,
-        textColour=text_colour,
-        radius=r,
-        borderThickness=bd)
+            self.display,
+            x=coords[0],
+            y=coords[1],
+            width=size[0],
+            height=size[1],
+            font=font,
+            cursorColour=dop_color,
+            borderColour=base_color,
+            textColour=dop_color,
+            colour=back_color,
+            placeholderText=start_text,
+            placeholderTextColour=base_color,
+            radius=0,
+            borderThickness=5
+        )
         return textbox
 
     def slider(self, coords, color, handle_color, min, max, step, border_color, border_thickness=0, start=None, vertical=False, layer=None):
@@ -317,10 +324,6 @@ class Main:
         self.settings_var["type_dinamic"] = not self.settings_var["type_dinamic"]
         self.holst.button_type_dinamic_camera["button"].setText(["с зоной", "без зоны"][self.settings_var["type_dinamic"]])
 
-    def change_draw_dinamic(self):
-        self.settings_var["do_draw_dinamic_zone"] = not self.settings_var["do_draw_dinamic_zone"]
-        self.holst.button_draw_dinamic_camera["button"].setText(["выкл", "вкл"][self.settings_var["do_draw_dinamic_zone"]])
-
     def change_character_energy(self):
         self.settings_var["character_energy"] = not self.settings_var["character_energy"]
         self.holst.button_character_energy["button"].setText(["выкл", "вкл"][self.settings_var["character_energy"]])
@@ -349,18 +352,6 @@ class Main:
             }
         self.holst.init_frontend()
         self.holst.button_color["button"].setText(["светлая", "тёмная"][self.settings_var["color"]])
-
-    def change_format_screen(self):
-        self.settings_var["format_screen"] = not self.settings_var["format_screen"]
-        if self.settings_var["format_screen"] == 0:
-            self.display_w, self.display_h = self.start_display_w, self.start_display_h
-            self.display = pygame.display.set_mode((self.display_w, self.display_h))
-        else:
-            self.display = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-            self.display_w, self.display_h = pygame.display.Info().current_w, pygame.display.Info().current_h
-        self.holst.delete_all()
-        self.holst.init_frontend()
-        self.holst.button_format_screen["button"].setText(["выкл", "вкл"][self.settings_var["format_screen"]])
 
     def change_difficulty(self):
         self.settings_var["difficulty"] = not self.settings_var["difficulty"]

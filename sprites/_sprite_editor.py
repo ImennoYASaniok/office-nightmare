@@ -143,12 +143,18 @@ def color_image(input_path, output_path, color=(20, 0, 0)):
     all_pxs = img.load()
     for x in range(img.size[0]):
         for y in range(img.size[1]):
-            r, g, b, a = all_pxs[x, y]
+            if len(all_pxs[x, y]) > 3:
+                r, g, b, a = all_pxs[x, y]
+                if len(color) > 3: a += color[3]
+            else:
+                r, g, b = all_pxs[x, y]
             r += color[0]
             g += color[1]
             b += color[2]
-            if len(color) >= 4: a += color[3]
-            all_pxs[x, y] = (min(r, 255), min(g, 255), min(b, 255), min(a, 255))
+            if len(all_pxs[x, y]) > 3:
+                all_pxs[x, y] = (min(r, 255), min(g, 255), min(b, 255), min(a, 255))
+            else:
+                all_pxs[x, y] = (min(r, 255), min(g, 255), min(b, 255))
     img.save(output_path)
 
 ############################## ПРОСТРАНСТВО РЕДАКТОРА ##############################
@@ -315,11 +321,19 @@ def color_image(input_path, output_path, color=(20, 0, 0)):
 
 
 # Создание спрайтов, когда враг ударился --------------
-paths, res_paths = list(map(lambda x1: list(map(lambda x2: f"monster_boss_wither/idle/idle_{x1}_{x2}.png", range(4))), ["front", "back", "side"])), []
-for path in paths: res_paths += path
-for path in res_paths:
-    dop_path = "_".join(path.split("_")[-2:])
-    print(dop_path, path)
-    color_image(input_path=path,
-                output_path="monster_boss_wither/hit/hit_"+dop_path,
-                color=(140, -30, -30))
+# paths, res_paths = list(map(lambda x1: list(map(lambda x2: f"monster_boss_wither/idle/idle_{x1}_{x2}.png", range(4))), ["front", "back", "side"])), []
+# for path in paths: res_paths += path
+# for path in res_paths:
+#     dop_path = "_".join(path.split("_")[-2:])
+#     print(dop_path, path)
+#     color_image(input_path=path,
+#                 output_path="monster_boss_wither/hit/hit_"+dop_path,
+#                 color=(140, -30, -30))
+
+# Затемнение заднего фона справки --------------
+for start_path in list(map(lambda x: f"refer_logo/refer_logo_{x}.jpg", range(13))):
+    # end_path = "/".join(start_path.split("/")[:-1]+["CHECK_"+start_path.split("/")[-1]])
+    print(start_path) # print(start_path, end_path)
+    color_image(input_path=start_path,
+                output_path=start_path,
+                color=(-50, -50, -50))

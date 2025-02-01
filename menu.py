@@ -78,17 +78,24 @@ class Menu:
         x, y = 540, 200
         size_text = 30
         delta_y = size_text
+        i = 0
         for s in self.base_refer:
             if s not in ("", "\n", None):
                 label_i = {
                     "coords": (x, y),
                     "text": s,
-                    "font": pygame.font.Font(self.base_style["font_path"], size_text)
+                    "font": pygame.font.Font(self.base_style["font_path"], size_text),
                 }
+                if i + 3 >= len(self.base_refer):
+                    label_i["color"] = self.base_style["colors"]["base1"]
+                else:
+                    label_i["color"] = self.base_style["colors"]["light"]
                 label_i["label"] = self.parent.label_text(coords=label_i["coords"],
                                                               text=label_i["text"],
-                                                              font=label_i["font"])
+                                                              font=label_i["font"],
+                                                              color=label_i["color"])
                 self.labels.append(label_i)
+            i += 1
             y += delta_y
 
 
