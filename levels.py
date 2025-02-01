@@ -1397,10 +1397,6 @@ class Final_boss_room:
                                   size_rect=ENEMYS[category_enemy]["size_rect"],
                                   do_random_spawn=True)  # do_print=True
             self.objects[f"green_enemy_{i + start_count_enemys}"] = green_enemy_i
-        for name, value in self.game.delete_enemys.items():
-            if value == True:
-                if name in self.objects and "enemy" in name:
-                    del self.objects[name]
 
         category_enemy = "boss_wither_enemy"
         boss_enemy = Boss_wither(parent=self.parent, game=self.game, base_style=self.base_style,
@@ -1411,6 +1407,11 @@ class Final_boss_room:
                               size_rect=ENEMYS[category_enemy]["size_rect"],
                               do_random_spawn=True)  # do_print=True
         self.objects[category_enemy] = boss_enemy
+
+        for name, value in self.game.delete_enemys.items():
+            if value == True:
+                if name in self.objects and "enemy" in name:
+                    del self.objects[name]
         # ------------------
         self.dop_objects_up = {}
         self.dop_objects_down = {}
