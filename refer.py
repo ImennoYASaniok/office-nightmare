@@ -1,9 +1,6 @@
 import pygame
 from pygame_widgets.slider import Slider
 
-with open("files/refer.txt", "r", encoding="utf-8") as file_data:
-    main_text = list(file_data.readlines())
-
 class Refer:
     def __init__(self, parent, base_style):
         self.base_style = base_style
@@ -14,6 +11,9 @@ class Refer:
                 pygame.K_ESCAPE: lambda: self.parent.display_change("menu"),
             }
         }
+
+        with open("files/refer.txt", "r", encoding="utf-8") as file_data:
+            self.main_text = list(file_data.readlines())
 
         self.labels = []
         self.buttons = []
@@ -73,7 +73,7 @@ class Refer:
         self.labels.append(label_title)
 
     def init_main_text(self):
-        txt = [text for text in main_text]
+        txt = self.main_text
         self.prefix_i = 0
         for mini_t in txt:
             if mini_t not in ["", "\n"]:

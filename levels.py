@@ -409,7 +409,6 @@ class Enemy(Object):
                                                       goal=goal,
                                                       graph=self.game.map.graph)
         except KeyError:
-            print('error search way')
             self.start = (len(self.game.map.map[0]) // 2, len(self.game.map.map)//2)
             self.queue, self.visited = self.game.bfs(start=self.start,
                                                      goal=goal,
@@ -602,12 +601,15 @@ class Boss_wither(Enemy):
                                       category=category_enemy,
                                       coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
                                       size=ENEMYS[category_enemy]["size"],
-                                      image='sprites/character/base_choice/idle/idle_front_0.png',
+                                      image='sprites/monster_1/idle/idle_front_0.png',
                                       size_rect=ENEMYS[category_enemy]["size_rect"],
                                       do_random_spawn=True)  # do_print=True
                 green_enemy_i.init_start()
                 green_enemy_i.check_random_spawn()
                 objects[f"boss_green_enemy_{i}"] = green_enemy_i
+                self.game.delete_enemys[f"boss_green_enemy_{i}"] = False
+                self.game.coords_enemy[f"boss_green_enemy_{i}"] = [green_enemy_i.data["coords"][0], green_enemy_i.data["coords"][1]]
+                self.game.hp_enemys[f"boss_green_enemy_{i}"] = green_enemy_i.data["hp"]
             # print(list(objects.keys()))
 
             # self.game.character.character["hp"][0] -= ENEMYS[self.category]["damage"]
@@ -619,7 +621,7 @@ class Boss_wither(Enemy):
 
 
 class Bullet(Object):
-    def __init__(self, parent, game, name, base_style):
+    def __init__(self, parent, game, name, base_style, damage):
         self.parent = parent
         self.game = game
         self.base_style = base_style
@@ -630,10 +632,7 @@ class Bullet(Object):
             "speed": 40,
             "dir": "right",
             "delete": 0,
-            "damage": 0,
-            "type_damage": {
-                "pistol": 20
-            }
+            "damage": damage,
         }
         # -------- Стартовые данные
         start_data = {
@@ -655,11 +654,6 @@ class Bullet(Object):
             start_data["coords"][1] += self.game.character.character["coords"][3] // 2
         elif self.bullet_data["dir"] == "up":
             start_data["coords"][1] -= self.game.character.character["coords"][3] // 2
-
-        for k, v in self.bullet_data["type_damage"].items():
-            if k in self.game.character.character["type_weapon"]:
-                self.bullet_data["damage"] = v
-                break
 
         # ------ Создание объекта
         super().__init__(parent=parent, game=game, base_style=base_style,
@@ -966,10 +960,7 @@ class Start_room:
                            size=SPRITES["avtomat_size"],
                            # +100+delta_wall_right_3_x
                            image="sprites/avtomat/avtomat_weapon.png",
-                           func=lambda: self.game.character.give_weapon(
-                               type_weapon="give_pistol",
-                               price=25,
-                           ),
+                           func=lambda: self.game.character.give_weapon(),
                            size_button=(-20, -30), coords_button=(10, 30),
                            size_rect=(0, -100))
         # ------ Кулер 1
@@ -1048,7 +1039,7 @@ class Start_room:
                                   category=category_enemy,
                                   coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
                                   size=ENEMYS[category_enemy]["size"],
-                                  image='sprites/character/base_choice/idle/idle_front_0.png',
+                                  image='sprites/monster_1/idle/idle_front_0.png',
                                   size_rect=ENEMYS[category_enemy]["size_rect"],
                                   do_random_spawn=True)  # do_print=True
             self.objects[f"green_enemy_{i + start_count_enemys}"] = green_enemy_i
@@ -1152,9 +1143,10 @@ class Meeting_room:
                            size=(self.doors["up"][0][0], HEIGHT_WALL),
                            image=f'sprites/walls/wall_red_front.png',
                            size_rect=(0, 0))
+        delta_down_wall = 10
         wall_down = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-                           coords=[0, self.size_room_layer[1]],
-                           size=(self.size_room_layer[0], THICKNESS_WALL),
+                           coords=[0, self.size_room_layer[1]-delta_down_wall],
+                           size=(self.size_room_layer[0], THICKNESS_WALL+delta_down_wall),
                            image=None, size_rect=(0, 0))
         wall_left_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                               coords=[0, THICKNESS_WALL - DELTA_SIZE_NEAR_OBJECTS],
@@ -1220,7 +1212,7 @@ class Meeting_room:
                                   category=category_enemy,
                                   coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
                                   size=ENEMYS[category_enemy]["size"],
-                                  image='sprites/character/base_choice/idle/idle_front_0.png',
+                                  image='sprites/monster_1/idle/idle_front_0.png',
                                   size_rect=ENEMYS[category_enemy]["size_rect"],
                                   do_random_spawn=True) # do_print=True
             self.objects[f"green_enemy_{i+start_count_enemys}"] = green_enemy_i
@@ -1329,13 +1321,14 @@ class Final_boss_room:
                            size=(self.doors["up"][0][0], HEIGHT_WALL),
                            image=f'sprites/walls/wall_red_front.png',
                            size_rect=(0, 0))
+        delta_down_wall = 40
         wall_down_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-                           coords=[0, self.size_room_layer[1]],
-                           size=(self.doors["down"][0][0], HEIGHT_WALL),
+                           coords=[0, self.size_room_layer[1]-delta_down_wall],
+                           size=(self.doors["down"][0][0], HEIGHT_WALL+delta_down_wall),
                            image=None, size_rect=(0, 0))
         wall_down_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-                           coords=[self.doors["down"][0][1], self.size_room_layer[1]],
-                           size=(self.doors["down"][0][0], HEIGHT_WALL),
+                           coords=[self.doors["down"][0][1], self.size_room_layer[1]-delta_down_wall],
+                           size=(self.doors["down"][0][0], HEIGHT_WALL+delta_down_wall),
                            image=None, size_rect=(0, 0))
         wall_left_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                               coords=[0, THICKNESS_WALL - DELTA_SIZE_NEAR_OBJECTS],
@@ -1400,7 +1393,7 @@ class Final_boss_room:
                                   category=category_enemy,
                                   coords=[200, 200],  # [900, self.size_room_layer[1] - 200], # [700, 500],
                                   size=ENEMYS[category_enemy]["size"],
-                                  image='sprites/character/base_choice/idle/idle_front_0.png',
+                                  image='sprites/monster_1/idle/idle_front_0.png',
                                   size_rect=ENEMYS[category_enemy]["size_rect"],
                                   do_random_spawn=True)  # do_print=True
             self.objects[f"green_enemy_{i + start_count_enemys}"] = green_enemy_i

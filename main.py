@@ -107,12 +107,13 @@ class Main:
         ########### КОНСТАНТЫ ИГРЫ
         self.const = {
             "count_enemy": {
-                "curr": [0, 15, 20],
+                "curr": [0, 10, 7],
                 "few": [0, 10, 7],
-                "many": [0, 15, 20]
+                "many": [0, 24, 18]
             }
         }
         self.const["count_enemy"]["curr"] = self.const["count_enemy"][["few", "many"][self.settings_var["difficulty"]]]
+        print(self.const["count_enemy"]["curr"])
 
 
     def buttons(self, coords, layout, texts, color, fonts, funcs):
@@ -328,10 +329,6 @@ class Main:
         self.settings_var["draw_map"] = not self.settings_var["draw_map"]
         self.holst.button_draw_map["button"].setText(["выкл", "вкл"][self.settings_var["draw_map"]])
 
-    def change_unlimited_hp(self):
-        self.settings_var["unlimited_hp"] = not self.settings_var["unlimited_hp"]
-        self.holst.button_unlimited_hp["button"].setText(["выкл", "вкл"][self.settings_var["unlimited_hp"]])
-
     def change_color(self):
         self.settings_var["color"] = not self.settings_var["color"]
         if self.settings_var["color"] == 0:
@@ -364,6 +361,12 @@ class Main:
         self.holst.delete_all()
         self.holst.init_frontend()
         self.holst.button_format_screen["button"].setText(["выкл", "вкл"][self.settings_var["format_screen"]])
+
+    def change_difficulty(self):
+        self.settings_var["difficulty"] = not self.settings_var["difficulty"]
+        self.holst.button_difficulty["button"].setText(["лёгкая", "сложная"][self.settings_var["difficulty"]])
+        self.const["count_enemy"]["curr"] = self.const["count_enemy"][["few", "many"][self.settings_var["difficulty"]]]
+        print(self.const["count_enemy"]["curr"])
 
 if __name__ == "__main__":
     menu = Main()

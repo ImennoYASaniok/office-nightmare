@@ -11,6 +11,9 @@ class Menu:
             }
         }
 
+        with open("files/base_refer.txt", "r", encoding="utf-8") as file_data:
+            self.base_refer = list(file_data.readlines())
+
         name = "menu"
         self.back_images = list(map(lambda x: pygame.image.load(f"sprites/{name}_logo/{name}_logo_{x}.jpg").convert(), range(2 + 1)))
         self.delta_size_image = 100
@@ -31,7 +34,7 @@ class Menu:
     def init_buttons(self):
         buttons = {
             "font": pygame.font.Font(self.base_style["font_path"], 40),
-            "coords": (450, 200, 250, 100),
+            "coords": (250, 200, 250, 100),
             "layout": [1, 4],
             "color": {
                 "inactive": self.base_style["colors"]["base1"],
@@ -71,6 +74,22 @@ class Menu:
         label_title["label"], label_title["coords"] = self.parent.align(label_title["label"], label_title["coords"],
                                                             type_blit=False, type_align="horizontal")
         self.labels.append(label_title)
+
+        x, y = 540, 200
+        size_text = 30
+        delta_y = size_text
+        for s in self.base_refer:
+            if s not in ("", "\n", None):
+                label_i = {
+                    "coords": (x, y),
+                    "text": s,
+                    "font": pygame.font.Font(self.base_style["font_path"], size_text)
+                }
+                label_i["label"] = self.parent.label_text(coords=label_i["coords"],
+                                                              text=label_i["text"],
+                                                              font=label_i["font"])
+                self.labels.append(label_i)
+            y += delta_y
 
 
     def delete_all(self):
