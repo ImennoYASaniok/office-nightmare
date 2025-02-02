@@ -495,9 +495,10 @@ class Enemy(Object):
         self.data["freq_sprite"] = self.data["speed_TO_freq"][self.data["cond"]]
         self.start = self.set_start()
 
-        if self.start == self.way[1]:
-            self.way.pop(0)
-            self.old_way.pop(0)
+        if len(self.way) > 1 and len(self.old_way) > 0:
+            if self.start == self.way[1]:
+                self.way.pop(0)
+                self.old_way.pop(0)
         # print(self.data["cond"], self.data["dir"], self.data["number_sprite"])
 
     def attack(self):
