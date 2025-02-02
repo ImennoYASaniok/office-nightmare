@@ -953,6 +953,7 @@ class Start_room:
                            ),
                            size_button=(-20, -30), coords_button=(10, 30),
                            size_rect=(0, -100))
+        # ------ Автомат - Оружия
         coords_avtomat_weapon = [700, 0]
         coords_avtomat_weapon = [THICKNESS_WALL + coords_avtomat_weapon[0], THICKNESS_WALL + coords_avtomat_weapon[1]]
         avtomat_weapon = Object(parent=self.parent, game=self.game, base_style=self.base_style,
@@ -1195,6 +1196,17 @@ class Meeting_room:
                            ),
                            size_button=(-20, -30), coords_button=(10, 30),
                            size_rect=(0, -100))
+        # ------ Автомат - Оружия
+        coords_avtomat_weapon = [300, 0]
+        coords_avtomat_weapon = [THICKNESS_WALL + coords_avtomat_weapon[0], THICKNESS_WALL + coords_avtomat_weapon[1]]
+        avtomat_weapon = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                coords=coords_avtomat_weapon,
+                                size=SPRITES["avtomat_size"],
+                                # +100+delta_wall_right_3_x
+                                image="sprites/avtomat/avtomat_weapon.png",
+                                func=lambda: self.game.character.give_weapon(),
+                                size_button=(-20, -30), coords_button=(10, 30),
+                                size_rect=(0, -100))
 
         # ------------
         self.objects = {
@@ -1202,7 +1214,7 @@ class Meeting_room:
             "wall_down": wall_down,
             "wall_left_1":wall_left_1, "wall_left_front_1": wall_left_front_1, "wall_left_2": wall_left_2, "wall_left_front_2": wall_left_front_2,
             "wall_right_1":wall_right_1, "wall_right_front_1": wall_right_front_1,
-            "avtomat_1": avtomat_1
+            "avtomat_1": avtomat_1, "avtomat_weapon": avtomat_weapon
         }
         # ------------ Живые объекты
         category_enemy = "green_enemy"
@@ -1248,15 +1260,13 @@ class Meeting_room:
             coords_bone_i[0] = randint(THICKNESS_WALL + coords_bone_delta, self.size_room_layer[0] - THICKNESS_WALL - max_bone_w - coords_bone_delta)
             coords_bone_i[1] = randint(HEIGHT_WALL + coords_bone_delta, self.size_room_layer[1] - max_bone_h - coords_bone_delta)
             index = choice(list(range(1, 3+1)))
-            if index == 3: size_rect = (0, -8)
-            else: size_rect = (0, 15)
             bone_i = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                              coords=coords_bone_i,
                              size=SPRITES[f"bone_{index}_size"],
                              # +100+delta_wall_right_3_x
                              image=f"sprites/scary_decor/bone_{index}.png",
-                             size_rect=size_rect)
-            self.objects[f"bone_{index}"] = bone_i
+                             size_rect=None)
+            self.dop_objects_up[f"blood_{index}"] = bone_i
 
     def enter_rooms(self):
         # self.game.floor.blit(self.texture_floor, (0, 0))

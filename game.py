@@ -762,7 +762,7 @@ class Game:
 
     def set_sound(self, sound):
         if self.curr_sound != sound:
-            if sound == None:
+            if sound is None:
                 pygame.mixer.music.pause()
                 # self.flag_sound = 1
             else: # elif self.flag_sound:
@@ -787,7 +787,9 @@ class Game:
                 self.set_message(f"Не хватает энергии чтобы поиграть в игры, нужно ещё {delta_energy + 1} ")
             else:
                 self.flag_mini_games = True
+                pygame.mixer.music.pause()
                 out_many = self.mini_games[self.type_room][name_game]()
+                pygame.mixer.music.unpause()
                 self.character.character["money"][0] += out_many
                 self.set_label("money", f"монеты: {self.character.character['money'][0]}")
                 self.character.character["energy"][0] -= delta_energy
