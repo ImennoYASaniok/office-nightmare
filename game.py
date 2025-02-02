@@ -1005,14 +1005,23 @@ class Game:
 
         i = 0
         for obj in objects:
-            if type_collide == "sprite":
-                if "sprite" in obj.data:
-                    obj_rect = obj.data["sprite"].get_rect()
-                    obj_rect.x = obj.data["coords"][0]
-                    obj_rect.y = obj.data["coords"][1]
+            try:
+                if type_collide == "sprite":
+                    if "sprite" in obj.data:
+                        obj_rect = obj.data["sprite"].get_rect()
+                        obj_rect.x = obj.data["coords"][0]
+                        obj_rect.y = obj.data["coords"][1]
+
+                    else:
+                        obj_rect = obj.data["rect"]
                 else:
                     obj_rect = obj.data["rect"]
-            else: obj_rect = obj.data["rect"]
+            except AttributeError:
+                if type_collide == "sprite":
+                    obj_rect = obj.character["sprite"].get_rect()
+                else:
+                    obj_rect = obj.character["rect"]
+
             if base_rect.colliderect(obj_rect):
                 collision_area = base_rect.clip(obj_rect)
                 if type_return == "objcts": collide_objcts[names_objects[i]] = obj

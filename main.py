@@ -111,7 +111,7 @@ class Main:
         self.const = {
             "count_enemy": {
                 "curr": [0, 10, 7],
-                "few": [0, 10, 7],
+                "few": [0, 0, 1], #  [0, 10, 7],
                 "many": [0, 24, 18]
             }
         }

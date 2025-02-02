@@ -81,7 +81,7 @@ ENEMYS = { # Все элементы со значением None или зак�
     },
     "boss_wither_enemy": {
         # "sprite":
-        "damage": 15,
+        "damage": 25,
         "speed_attack": 8,
         "size": (200, 200),
         "size_rect": (200, 50),
@@ -437,47 +437,48 @@ class Enemy(Object):
         # print(len(self.way), len(self.old_way))
 
     def move(self): # Попробовать: если лево - точка перемещения слева, если право, точка перемещения справа
-        dop_coords = self.data["coords"].copy()
-        dirs = []
-        if self.way[0][0] < self.way[1][0]:
-            dirs.append("right")
-            dop_coords[0] += self.data["val_speed"]
-        elif self.way[0][0] > self.way[1][0]:
-            dirs.append("left")
-            dop_coords[0] -= self.data["val_speed"]
-        self.set_sprite(dop_coords)
-        dop_start = self.set_start()
-        if dop_start in self.game.map.coords_objects and dirs != []:
-            # print("delete:", dirs[-1])
-            dirs.pop(-1)
+        if len(self.way) > 1:
+            dop_coords = self.data["coords"].copy()
+            dirs = []
+            if self.way[0][0] < self.way[1][0]:
+                dirs.append("right")
+                dop_coords[0] += self.data["val_speed"]
+            elif self.way[0][0] > self.way[1][0]:
+                dirs.append("left")
+                dop_coords[0] -= self.data["val_speed"]
+            self.set_sprite(dop_coords)
+            dop_start = self.set_start()
+            if dop_start in self.game.map.coords_objects and dirs != []:
+                # print("delete:", dirs[-1])
+                dirs.pop(-1)
 
-        dop_coords = self.data["coords"].copy()
-        if self.way[0][1] > self.way[1][1]:
-            dirs.append("up")
-            dop_coords[1] -= self.data["val_speed"]
-        elif self.way[0][1] < self.way[1][1]:
-            dirs.append("down")
-            dop_coords[1] += self.data["val_speed"]
-        self.set_sprite(dop_coords)
-        dop_start = self.set_start()
-        if dop_start in self.game.map.coords_objects and dirs != []:
-            # print("delete:", dirs[-1])
-            dirs.pop(-1)
-        # print(dirs, self.way[0][1], self.way[1][1])
+            dop_coords = self.data["coords"].copy()
+            if self.way[0][1] > self.way[1][1]:
+                dirs.append("up")
+                dop_coords[1] -= self.data["val_speed"]
+            elif self.way[0][1] < self.way[1][1]:
+                dirs.append("down")
+                dop_coords[1] += self.data["val_speed"]
+            self.set_sprite(dop_coords)
+            dop_start = self.set_start()
+            if dop_start in self.game.map.coords_objects and dirs != []:
+                # print("delete:", dirs[-1])
+                dirs.pop(-1)
+            # print(dirs, self.way[0][1], self.way[1][1])
 
-        if dirs != []:
-            if "right" in dirs:
-                self.data["dir"] = "right"
-                if self.data["cond"] == "walk": self.data["coords"][0] += self.data["val_speed"]
-            elif "left" in dirs:
-                self.data["dir"] = "left"
-                if self.data["cond"] == "walk": self.data["coords"][0] -= self.data["val_speed"]
-            if "up" in dirs:
-                self.data["dir"] = "up"
-                if self.data["cond"] == "walk": self.data["coords"][1] -= self.data["val_speed"]
-            elif "down" in dirs:
-                self.data["dir"] = "down"
-                if self.data["cond"] == "walk": self.data["coords"][1] += self.data["val_speed"]
+            if dirs != []:
+                if "right" in dirs:
+                    self.data["dir"] = "right"
+                    if self.data["cond"] == "walk": self.data["coords"][0] += self.data["val_speed"]
+                elif "left" in dirs:
+                    self.data["dir"] = "left"
+                    if self.data["cond"] == "walk": self.data["coords"][0] -= self.data["val_speed"]
+                if "up" in dirs:
+                    self.data["dir"] = "up"
+                    if self.data["cond"] == "walk": self.data["coords"][1] -= self.data["val_speed"]
+                elif "down" in dirs:
+                    self.data["dir"] = "down"
+                    if self.data["cond"] == "walk": self.data["coords"][1] += self.data["val_speed"]
 
     def counting(self):
         if self.data["counter_sprite"] >= self.data["freq_sprite"]:
@@ -517,10 +518,10 @@ class Enemy(Object):
             self.data["cond"] = "hit"
             # print("HP:", self.data["hp"])
 
-    def dead(self, name):
+    def dead(self, name, money=3):
         del self.game.room_now.objects[name]
         self.game.delete_enemys[name] = True
-        self.game.character.character["money"][0] += 3
+        self.game.character.character["money"][0] += money
         self.game.set_label('money', f"монеты: {self.game.character.character['money'][0]}")
         # self.data["dead"] = True
 
@@ -583,7 +584,7 @@ class Boss_wither(Enemy):
         if self.data["cond"] != "attack":
             if self.data["hp"][0] - hp <= 0:
                 # print("DEAD")
-                self.dead(name)
+                self.dead(name, 15)
             else:
                 self.data["hp"][0] -= hp
                 self.data["cond"] = "hit"
@@ -607,13 +608,18 @@ class Boss_wither(Enemy):
                 green_enemy_i.init_start()
                 green_enemy_i.check_random_spawn()
                 objects[f"boss_green_enemy_{i}"] = green_enemy_i
-                self.game.delete_enemys[f"boss_green_enemy_{i}"] = False
-                self.game.coords_enemy[f"boss_green_enemy_{i}"] = [green_enemy_i.data["coords"][0], green_enemy_i.data["coords"][1]]
-                self.game.hp_enemys[f"boss_green_enemy_{i}"] = green_enemy_i.data["hp"]
-            # print(list(objects.keys()))
+                # self.game.delete_enemys[f"boss_green_enemy_{i}"] = False
+                # self.game.coords_enemy[f"boss_green_enemy_{i}"] = [green_enemy_i.data["coords"][0], green_enemy_i.data["coords"][1]]
+                # self.game.hp_enemys[f"boss_green_enemy_{i}"] = green_enemy_i.data["hp"]
 
-            # self.game.character.character["hp"][0] -= ENEMYS[self.category]["damage"]
-            # self.game.character.character["cond"] = "hit"
+            collide_enemys = self.game.collide(base_object=self.data,
+                                               objects={"character":self.game.character},
+                                               type_return="objcts",
+                                               type_collide="rect",
+                                               draw_rects=False)
+            if len(collide_enemys.values()) > 0:
+                self.game.character.character["hp"][0] -= ENEMYS[self.category]["damage"]
+                self.game.character.character["cond"] = "hit"
             self.boss_wither_data["count_hit"] = 0
             return objects
 
@@ -1309,9 +1315,9 @@ class Final_boss_room:
         self.game = game
         self.base_style = base_style
 
-        self.size_room_layer = self.parent.LAYERS["final_boss_room"]  # [3000, 3000]
+        self.size_room_layer = self.parent.LAYERS["final_boss_room"]
         self.room_layer = pygame.Surface(self.size_room_layer)
-        self.floor = pygame.transform.rotate(pygame.image.load('sprites/floor/floor_meeting_room.png'), 90)
+        self.floor = pygame.transform.scale(pygame.image.load('sprites/floor/road_2_v2.jpg'), self.size_room_layer) # pygame.transform.rotate(pygame.image.load('sprites/floor/floor_meeting_room.jpg'), 90)
         self.room_layer.blit(self.floor, (0, 0))
 
         # ------ Проходы
@@ -1343,23 +1349,30 @@ class Final_boss_room:
         wall_left_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                               coords=[0, THICKNESS_WALL - DELTA_SIZE_NEAR_OBJECTS],
                               size=(THICKNESS_WALL, self.size_room_layer[1] - HEIGHT_WALL - THICKNESS_WALL),
-                              image=f'sprites/walls/wall_red_top.png',
+                              image=None, # f'sprites/walls/wall_red_top.png'
                               size_rect=(0, 0))
         wall_left_front_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                                     coords=[wall_left_1.data["coords"][0], wall_left_1.data["coords"][1] + wall_left_1.data["coords"][3]],
                                     size=(THICKNESS_WALL, HEIGHT_WALL + DELTA_SIZE_NEAR_OBJECTS),
-                                    image=f'sprites/walls/wall_red_front.png',
+                                    image=None, #
                                     size_rect=(0, 0))
         wall_right_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                               coords=[self.size_room_layer[0] - THICKNESS_WALL, THICKNESS_WALL - DELTA_SIZE_NEAR_OBJECTS],
                               size=(THICKNESS_WALL, self.size_room_layer[1] - HEIGHT_WALL - THICKNESS_WALL),
-                              image=f'sprites/walls/wall_red_top.png',
+                              image=None, # f'sprites/walls/wall_red_top.png'
                               size_rect=(0, 0))
         wall_right_front_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
                                     coords=[wall_right_1.data["coords"][0], wall_right_1.data["coords"][1] + wall_right_1.data["coords"][3]],
                                     size=(THICKNESS_WALL, HEIGHT_WALL + DELTA_SIZE_NEAR_OBJECTS),
-                                    image=f'sprites/walls/wall_red_front.png',
+                                    image=None, # f'sprites/walls/wall_red_front.png'
                                     size_rect=(0, 0))
+        # ------ Бардюр
+        size_curb = [self.size_room_layer[0], 100]
+        curb = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                    coords=[0, self.size_room_layer[1]-size_curb[1]],
+                                    size=size_curb,
+                                    image=f'sprites/curb.png',
+                                    size_rect=None)
         # ------ Дверь 1
         coords_door_1 = [self.doors["up"][0][0],
                             self.doors["up"][1] - HEIGHT_WALL // 2]
@@ -1385,6 +1398,39 @@ class Final_boss_room:
                            ),
                            size_button=(-20, -30), coords_button=(10, 30),
                            size_rect=(0, -100))
+        # ------ Автомат 2
+        coords_avtomat_weapon = [20, 0]
+        coords_avtomat_weapon = [self.size_room_layer[0] - coords_avtomat_weapon[0] - SPRITES["avtomat_size"][0], self.size_room_layer[1] - coords_avtomat_weapon[1] - SPRITES["avtomat_size"][1]]
+        avtomat_weapon = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                coords=coords_avtomat_weapon,
+                                size=SPRITES["avtomat_size"],
+                                # +100+delta_wall_right_3_x
+                                image="sprites/avtomat/avtomat_weapon.png",
+                                func=lambda: self.game.character.give_weapon(),
+                                size_button=(-20, -30), coords_button=(10, 30),
+                                size_rect=(0, -100))
+        # ------ Машина 1
+        size_car_1 = [91, 141]
+        k_size_car_1 = 2
+        size_car_1[0] *= k_size_car_1
+        size_car_1[1] *= k_size_car_1
+        car_1 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                                coords=[0, self.size_room_layer[1] - 300 - size_car_1[1]],
+                                size=size_car_1,
+                                # +100+delta_wall_right_3_x
+                                image="sprites/car/car_1_front.png",
+                                size_rect=(0, -40))
+        # ------ Машина 2
+        size_car_2 = [91, 49]
+        k_size_car_2 = 3
+        size_car_2[0] *= k_size_car_2
+        size_car_2[1] *= k_size_car_2
+        car_2 = Object(parent=self.parent, game=self.game, base_style=self.base_style,
+                       coords=[self.size_room_layer[0]-size_car_2[0]-10, HEIGHT_WALL-80],
+                       size=size_car_2,
+                       # +100+delta_wall_right_3_x
+                       image="sprites/car/car_2_side.png",
+                       size_rect=(0, 0))
 
         # ------------
         self.objects = {
@@ -1392,8 +1438,9 @@ class Final_boss_room:
             "wall_down_1": wall_down_1, "wall_down_2": wall_down_2,
             "wall_left_1":wall_left_1, "wall_left_front_1": wall_left_front_1,
             "wall_right_1":wall_right_1, "wall_right_front_1": wall_right_front_1,
-            "avtomat_1": avtomat_1,
-            "DINAMIC_door_1": door_1
+            "avtomat_1": avtomat_1, "avtomat_weapon": avtomat_weapon,
+            "DINAMIC_door_1": door_1,
+            "car_1": car_1, "car_2": car_2
         }
         # ------------ Живые объекты
         category_enemy = "green_enemy"
@@ -1423,7 +1470,7 @@ class Final_boss_room:
                 if name in self.objects and "enemy" in name:
                     del self.objects[name]
         # ------------------
-        self.dop_objects_up = {}
+        self.dop_objects_up = {"curb": curb}
         self.dop_objects_down = {}
         # ------------ Кровь
         max_blood_w = max(list(map(lambda x: SPRITES[f"blood_{x}_size"][0], range(1, 6))))
@@ -1442,23 +1489,23 @@ class Final_boss_room:
                              size_rect=None)
             self.dop_objects_up[f"blood_{index}"] = blood_i
         # ------------ Кости
-        max_bone_w = max(list(map(lambda x: SPRITES[f"bone_{x}_size"][0], range(1, 3+1))))
-        max_bone_h = max(list(map(lambda x: SPRITES[f"bone_{x}_size"][1], range(1, 3+1))))
+        max_bone_w = max(list(map(lambda x: SPRITES[f"bone_{x}_size"][0], range(1, 3 + 1))))
+        max_bone_h = max(list(map(lambda x: SPRITES[f"bone_{x}_size"][1], range(1, 3 + 1))))
         for i in range(5):
             coords_bone_delta = 70
             coords_bone_i = [0, 0]
-            coords_bone_i[0] = randint(THICKNESS_WALL + coords_bone_delta, self.size_room_layer[0] - THICKNESS_WALL - max_bone_w - coords_bone_delta)
-            coords_bone_i[1] = randint(HEIGHT_WALL + coords_bone_delta, self.size_room_layer[1] - max_bone_h - coords_bone_delta)
-            index = choice(list(range(1, 3+1)))
-            if index == 3: size_rect = (0, -8)
-            else: size_rect = (0, 15)
+            coords_bone_i[0] = randint(THICKNESS_WALL + coords_bone_delta,
+                                       self.size_room_layer[0] - THICKNESS_WALL - max_bone_w - coords_bone_delta)
+            coords_bone_i[1] = randint(HEIGHT_WALL + coords_bone_delta,
+                                       self.size_room_layer[1] - max_bone_h - coords_bone_delta)
+            index = choice(list(range(1, 3 + 1)))
             bone_i = Object(parent=self.parent, game=self.game, base_style=self.base_style,
-                             coords=coords_bone_i,
-                             size=SPRITES[f"bone_{index}_size"],
-                             # +100+delta_wall_right_3_x
-                             image=f"sprites/scary_decor/bone_{index}.png",
-                             size_rect=size_rect)
-            self.objects[f"bone_{index}"] = bone_i
+                            coords=coords_bone_i,
+                            size=SPRITES[f"bone_{index}_size"],
+                            # +100+delta_wall_right_3_x
+                            image=f"sprites/scary_decor/bone_{index}.png",
+                            size_rect=None)
+            self.dop_objects_up[f"blood_{index}"] = bone_i
 
     def enter_rooms(self):
         # self.game.floor.blit(self.texture_floor, (0, 0))
