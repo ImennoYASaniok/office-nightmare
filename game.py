@@ -1061,12 +1061,10 @@ class Game:
         visited = {start: None} # {}
         # for start in starts:
         #     visited[start] = None
-
         while queue:
             cur_node = queue.popleft()
             if cur_node == goal:
                 break
-
             next_nodes = graph[cur_node]
             for next_node in next_nodes:
                 if next_node not in visited:
